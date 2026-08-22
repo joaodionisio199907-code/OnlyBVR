@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>ONLYBUBBLEVR</title>
+  <title>ONLYBUBBLEVR — Metaverse App</title>
   
   <!-- SDK de Supabase JS -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -19,7 +19,6 @@
       --text: #ffffff;
       --text-muted: #94a3b8;
       --grad-main: linear-gradient(135deg, #a855f7 0%, #ec4899 50%, #00f2fe 100%);
-      --grad-glow: linear-gradient(135deg, rgba(168,85,247,0.5), rgba(236,72,153,0.5));
       --radius-bubble: 28px;
     }
 
@@ -27,7 +26,7 @@
     body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; overflow-x: hidden; min-height: 100vh; padding-bottom: 80px; }
 
     /* =========================================================
-       1. ANIMACIONES Y PANTALLA DE ACCESO DE ALTO NIVEL (APP)
+       PANTALLA DE ACCESO (LOGIN / REGISTRO) CON LOGO
        ========================================================= */
     #auth-screen { 
       position: fixed; 
@@ -42,7 +41,6 @@
       overflow: hidden;
     }
 
-    /* Animación de Salida al Entrar a la App */
     #auth-screen.hide { 
       animation: exitAppScreen 0.8s cubic-bezier(0.7, 0, 0.84, 0) forwards; 
       pointer-events: none; 
@@ -52,10 +50,10 @@
       100% { opacity: 0; transform: scale(1.15) translateY(-30px); filter: blur(20px); display: none; } 
     }
 
-    /* Partículas de Fondo Animadas */
+    /* Partículas de Fondo */
     .app-bg-glow { position: absolute; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; }
     .orb { position: absolute; border-radius: 50%; filter: blur(90px); opacity: 0.6; animation: orbFloat 10s infinite alternate ease-in-out; }
-    .orb-1 { top: -10%; left: -10%; width: 320px; height: 320px; background: #8b5cf6; animation-delay: 0s; }
+    .orb-1 { top: -10%; left: -10%; width: 320px; height: 320px; background: #8b5cf6; }
     .orb-2 { bottom: -10%; right: -10%; width: 380px; height: 380px; background: #ec4899; animation-delay: -3s; }
     .orb-3 { top: 40%; left: 30%; width: 250px; height: 250px; background: #00f2fe; opacity: 0.35; animation-delay: -6s; }
 
@@ -64,21 +62,41 @@
       100% { transform: translate(30px, -40px) scale(1.15); }
     }
 
-    /* Título Superior "ONLYBUBBLEVR" Estilo Neón */
+    /* Encabezado con Logo Centrado y Neón */
     .app-title-header {
-      margin-bottom: 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
       text-align: center;
-      animation: pulseTitle 3s infinite alternate ease-in-out;
     }
+
+    .main-logo-img {
+      width: 110px;
+      height: 110px;
+      object-fit: cover;
+      border-radius: 24px;
+      margin-bottom: 12px;
+      box-shadow: 0 0 35px rgba(236, 72, 153, 0.45), 0 0 15px rgba(0, 242, 254, 0.3);
+      animation: logoPulse 3s infinite alternate ease-in-out;
+    }
+
+    @keyframes logoPulse {
+      0% { transform: scale(1); box-shadow: 0 0 30px rgba(236, 72, 153, 0.4); }
+      100% { transform: scale(1.05); box-shadow: 0 0 45px rgba(236, 72, 153, 0.7), 0 0 25px rgba(0, 242, 254, 0.5); }
+    }
+
     .app-title-header h1 {
-      font-size: 32px;
+      font-size: 28px;
       font-weight: 900;
       letter-spacing: 2px;
       background: var(--grad-main);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
-      text-shadow: 0 0 30px rgba(168, 85, 247, 0.4);
+      text-shadow: 0 0 25px rgba(168, 85, 247, 0.4);
     }
+
     .app-title-header p {
       font-size: 11px;
       color: var(--neon-cyan);
@@ -88,10 +106,6 @@
       margin-top: 2px;
       opacity: 0.9;
     }
-    @keyframes pulseTitle {
-      0% { transform: scale(1); }
-      100% { transform: scale(1.03); }
-    }
 
     /* Tarjeta Cristal de Autenticación */
     .auth-card-app { 
@@ -100,7 +114,7 @@
       -webkit-backdrop-filter: blur(30px);
       border: 1px solid var(--glass-border); 
       border-radius: var(--radius-bubble); 
-      padding: 28px 24px; 
+      padding: 24px; 
       width: 100%; 
       max-width: 380px; 
       box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(168, 85, 247, 0.2); 
@@ -111,7 +125,7 @@
       to { opacity: 1; transform: translateY(0) scale(1); }
     }
 
-    /* Tabs para Alternar entre Login y Registro */
+    /* Tabs Login / Registro */
     .auth-tabs {
       display: flex;
       background: rgba(0, 0, 0, 0.4);
@@ -130,7 +144,6 @@
       font-weight: 700;
       border-radius: 12px;
       cursor: pointer;
-      transition: all 0.2s ease;
     }
     .auth-tab-btn.active {
       background: var(--grad-main);
@@ -138,7 +151,7 @@
       box-shadow: 0 4px 15px rgba(236, 72, 153, 0.4);
     }
 
-    /* Inputs Estilo Cyber/VR */
+    /* Inputs */
     .input-group { position: relative; margin-bottom: 14px; }
     .input-app { 
       width: 100%; 
@@ -153,7 +166,6 @@
     .input-app:focus { 
       border-color: var(--neon-pink); 
       box-shadow: 0 0 15px rgba(236, 72, 153, 0.3); 
-      transform: translateY(-1px);
     }
     .input-icon {
       position: absolute;
@@ -164,7 +176,7 @@
       opacity: 0.6;
     }
 
-    /* Botón Principal Animado */
+    /* Botón Principal */
     .btn-app-main { 
       padding: 16px; 
       border-radius: 16px; 
@@ -182,23 +194,7 @@
       margin-top: 6px;
     }
     .btn-app-main:active { transform: scale(0.98); }
-    .btn-app-main::after {
-      content: '';
-      position: absolute;
-      top: -50%;
-      left: -50%;
-      width: 200%;
-      height: 200%;
-      background: linear-gradient(60deg, transparent, rgba(255,255,255,0.2), transparent);
-      transform: rotate(30deg);
-      animation: shineBtn 4s infinite;
-    }
-    @keyframes shineBtn {
-      0% { transform: translateX(-100%) rotate(30deg); }
-      20%, 100% { transform: translateX(100%) rotate(30deg); }
-    }
 
-    /* Formularios animados al alternar */
     .form-step { display: none; }
     .form-step.active { display: block; animation: fadeInStep 0.4s ease; }
     @keyframes fadeInStep {
@@ -207,11 +203,11 @@
     }
 
     /* =========================================================
-       2. ESTRUCTURA INTERNA DE LA APP (FEED / NAVEGACIÓN)
+       ESTRUCTURA INTERNA DE LA APP
        ========================================================= */
     .header { position: sticky; top: 0; z-index: 50; background: rgba(3, 2, 8, 0.85); backdrop-filter: blur(15px); border-bottom: 1px solid var(--glass-border); padding: 12px 18px; display: flex; justify-content: space-between; align-items: center; }
     .brand { display: flex; align-items: center; gap: 10px; font-weight: 900; font-size: 18px; }
-    .brand-logo-img { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 2px solid var(--neon-pink); }
+    .brand-logo-img { width: 36px; height: 36px; border-radius: 10px; object-fit: cover; border: 1px solid var(--neon-pink); }
 
     .app-body { max-width: 480px; margin: 0 auto; padding: 16px; }
 
@@ -234,34 +230,29 @@
 </head>
 <body>
 
-<!-- FONDO DINÁMICO DE ORBES -->
 <div class="app-bg-glow">
   <div class="orb orb-1"></div>
   <div class="orb orb-2"></div>
   <div class="orb orb-3"></div>
 </div>
 
-<!-- =========================================================
-     PANTALLA DE ACCESO NATIVA (LOGIN / REGISTRO)
-     ========================================================= -->
+<!-- PANTALLA DE ACCESO DE LA APP -->
 <div id="auth-screen">
 
-  <!-- ENCABEZADO SUPERIOR DE LA APP -->
   <div class="app-title-header">
+    <img src="logo.png" alt="OnlyBubble Logo" class="main-logo-img">
     <h1>ONLYBUBBLEVR</h1>
-    <p></p>
+    <p>Metaverse Social Experience</p>
   </div>
 
-  <!-- TARJETA CON EFECTO CRISTAL DE ALTA DEFINICIÓN -->
   <div class="auth-card-app">
     
-    <!-- PESTAÑAS PARA CAMBIAR ENTRE MODO LOGIN / MODO REGISTRO -->
     <div class="auth-tabs">
       <button id="tab-login-btn" class="auth-tab-btn active" onclick="switchAuthTab('login')">Iniciar Sesión</button>
       <button id="tab-signup-btn" class="auth-tab-btn" onclick="switchAuthTab('signup')">Crear Cuenta</button>
     </div>
 
-    <!-- FORMULARIO 1: INICIO DE SESIÓN -->
+    <!-- FORMULARIO LOGIN -->
     <div id="form-login" class="form-step active">
       <div class="input-group">
         <span class="input-icon">📧</span>
@@ -274,7 +265,7 @@
       <button class="btn-app-main" onclick="handleLogin()">ENTRAR A LA APP</button>
     </div>
 
-    <!-- FORMULARIO 2: REGISTRO DE CUENTA NUEVA -->
+    <!-- FORMULARIO REGISTRO -->
     <div id="form-signup" class="form-step">
       <div class="input-group">
         <span class="input-icon">📧</span>
@@ -293,7 +284,7 @@
 <!-- HEADER INTERNO -->
 <header class="header">
   <div class="brand">
-    <img src="https://picsum.photos/200/200?random=88" alt="Logo" class="brand-logo-img">
+    <img src="logo.png" alt="Logo" class="brand-logo-img">
     <span>OnlyBubble<span style="background:var(--grad-main); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">VR</span></span>
   </div>
   <button class="chip" onclick="handleLogout()">🚪 Salir</button>
@@ -305,7 +296,7 @@
   <section id="feed" class="page active">
     <div class="create-post-card">
       <div style="display:flex; gap:10px; align-items:center;">
-        <img src="https://picsum.photos/100/100?random=99" style="width:36px; height:36px; border-radius:50%;" alt="User">
+        <img src="logo.png" style="width:36px; height:36px; border-radius:50%;" alt="User">
         <input type="text" id="postInput" placeholder="¿Qué mundo de VRChat estás visitando?" style="flex:1; background:none; border:none; color:#fff; font-size:13px; outline:none;">
         <button class="chip active" onclick="publishPost()">Publicar</button>
       </div>
@@ -324,7 +315,7 @@
 
   <section id="profile" class="page">
     <div class="post-card" style="text-align:center;">
-      <img src="https://picsum.photos/150/150?random=99" style="width:80px; height:80px; border-radius:50%; border:2px solid var(--neon-cyan); margin-bottom:8px;" alt="Me">
+      <img src="logo.png" style="width:80px; height:80px; border-radius:20px; border:2px solid var(--neon-cyan); margin-bottom:8px;" alt="Me">
       <h2 id="profileEmail">Usuario</h2>
       <p style="font-size:12px; color:var(--text-muted);">VRChat User</p>
     </div>
@@ -332,7 +323,7 @@
 
 </div>
 
-<!-- NAVEGACIÓN MOBILE INFERIOR -->
+<!-- NAVEGACIÓN INFERIOR MOBILE -->
 <nav class="bottom-nav">
   <button class="nav-btn active" onclick="switchTab('feed', this)"><span class="icon">📰</span><span>Inicio</span></button>
   <button class="nav-btn" onclick="switchTab('discover', this)"><span class="icon">🫧</span><span>Burbujas</span></button>
@@ -346,7 +337,6 @@
   
   const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  // ALTERNAR PESTAÑAS DE AUTH
   function switchAuthTab(mode) {
     const tabLogin = document.getElementById('tab-login-btn');
     const tabSignup = document.getElementById('tab-signup-btn');
@@ -366,7 +356,6 @@
     }
   }
 
-  // COMPROBAR SESIÓN ACTIVA
   window.addEventListener('DOMContentLoaded', async () => {
     const { data: { session } } = await db.auth.getSession();
     if (session) {
@@ -376,7 +365,6 @@
     }
   });
 
-  // LOGIN
   async function handleLogin() {
     const email = document.getElementById('authEmail').value;
     const password = document.getElementById('authPass').value;
@@ -391,7 +379,6 @@
     loadPosts();
   }
 
-  // REGISTRO
   async function handleSignUp() {
     const email = document.getElementById('signupEmail').value;
     const password = document.getElementById('signupPass').value;
@@ -405,7 +392,6 @@
     switchAuthTab('login');
   }
 
-  // LOGOUT
   async function handleLogout() {
     await db.auth.signOut();
     const authScreen = document.getElementById('auth-screen');
@@ -419,7 +405,6 @@
     setTimeout(() => { authScreen.style.display = 'none'; }, 800);
   }
 
-  // NAVEGACIÓN SPA
   function switchTab(tabId, btn) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     if(btn) {
@@ -429,7 +414,6 @@
     document.getElementById(tabId).classList.add('active');
   }
 
-  // OBTENER PUBLICACIONES DE SUPABASE
   async function loadPosts() {
     const container = document.getElementById('postsContainer');
     const { data: posts, error } = await db.from('posts').select('*').order('created_at', { ascending: false });
@@ -447,7 +431,7 @@
     container.innerHTML = posts.map(post => `
       <div class="post-card">
         <div class="post-header">
-          <img src="https://picsum.photos/100/100?random=${post.id}" class="post-avatar" alt="Avatar">
+          <img src="logo.png" class="post-avatar" alt="Avatar">
           <div>
             <b style="font-size:14px;">Usuario VR</b>
             <p style="font-size:10px; color:var(--text-muted);">${new Date(post.created_at).toLocaleTimeString()}</p>
@@ -458,7 +442,6 @@
     `).join('');
   }
 
-  // PUBLICAR
   async function publishPost() {
     const input = document.getElementById('postInput');
     const text = input.value.trim();
