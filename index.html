@@ -3,69 +3,229 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>OnlyBubbleVR — Metaverse Social Network</title>
+  <title>ONLYBUBBLEVR</title>
   
   <!-- SDK de Supabase JS -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   
   <style>
     :root {
-      --bg: #040409;
-      --glass-card: rgba(20, 20, 38, 0.75);
-      --glass-border: rgba(0, 242, 254, 0.25);
+      --bg: #030208;
+      --glass-card: rgba(18, 11, 36, 0.65);
+      --glass-border: rgba(168, 85, 247, 0.35);
       --neon-cyan: #00f2fe;
-      --neon-pink: #ff19b5;
-      --neon-purple: #8a2be2;
+      --neon-pink: #ec4899;
+      --neon-purple: #a855f7;
       --text: #ffffff;
-      --text-muted: #a0a0c0;
-      --grad-main: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple), var(--neon-pink));
+      --text-muted: #94a3b8;
+      --grad-main: linear-gradient(135deg, #a855f7 0%, #ec4899 50%, #00f2fe 100%);
+      --grad-glow: linear-gradient(135deg, rgba(168,85,247,0.5), rgba(236,72,153,0.5));
       --radius-bubble: 28px;
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); -webkit-tap-highlight-color: transparent; }
+    * { box-sizing: border-box; margin: 0; padding: 0; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); -webkit-tap-highlight-color: transparent; }
     body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; overflow-x: hidden; min-height: 100vh; padding-bottom: 80px; }
 
-    /* FONDO DE LUZ AMBIENTAL */
-    .glow-bg { position: fixed; inset: 0; z-index: -1; pointer-events: none; }
-    .glow-1 { position: absolute; top: -15%; right: -10%; width: 350px; height: 350px; background: radial-gradient(circle, rgba(0,242,254,0.2) 0%, transparent 70%); filter: blur(70px); }
-    .glow-2 { position: absolute; bottom: 10%; left: -15%; width: 400px; height: 400px; background: radial-gradient(circle, rgba(255,25,181,0.18) 0%, transparent 70%); filter: blur(80px); }
+    /* =========================================================
+       1. ANIMACIONES Y PANTALLA DE ACCESO DE ALTO NIVEL (APP)
+       ========================================================= */
+    #auth-screen { 
+      position: fixed; 
+      inset: 0; 
+      background: var(--bg); 
+      z-index: 999; 
+      display: flex; 
+      flex-direction: column; 
+      justify-content: center; 
+      align-items: center; 
+      padding: 24px; 
+      overflow: hidden;
+    }
 
-    /* PANTALLA DE LOGIN / AUTH */
-    #auth-screen { position: fixed; inset: 0; background: var(--bg); z-index: 999; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 24px; text-align: center; }
-    #auth-screen.hide { animation: fadeOutAuth 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; pointer-events: none; }
-    @keyframes fadeOutAuth { 0% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(1.1); display: none; } }
+    /* Animación de Salida al Entrar a la App */
+    #auth-screen.hide { 
+      animation: exitAppScreen 0.8s cubic-bezier(0.7, 0, 0.84, 0) forwards; 
+      pointer-events: none; 
+    }
+    @keyframes exitAppScreen { 
+      0% { opacity: 1; transform: scale(1) translateY(0); filter: blur(0px); } 
+      100% { opacity: 0; transform: scale(1.15) translateY(-30px); filter: blur(20px); display: none; } 
+    }
 
-    .auth-card { background: var(--glass-card); backdrop-filter: blur(25px); border: 1px solid var(--glass-border); border-radius: var(--radius-bubble); padding: 32px 24px; width: 100%; max-width: 380px; box-shadow: 0 0 40px rgba(0,242,254,0.15); }
-    .auth-logo { width: 80px; height: 80px; border-radius: 50%; border: 2px solid var(--neon-pink); margin-bottom: 16px; box-shadow: 0 0 20px rgba(255,25,181,0.5); object-fit: cover; }
-    
-    .input-field { width: 100%; padding: 14px; background: rgba(0,0,0,0.6); border: 1px solid var(--glass-border); border-radius: 14px; color: #fff; font-size: 14px; outline: none; margin-bottom: 12px; }
-    .input-field:focus { border-color: var(--neon-cyan); box-shadow: 0 0 10px rgba(0,242,254,0.3); }
+    /* Partículas de Fondo Animadas */
+    .app-bg-glow { position: absolute; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; }
+    .orb { position: absolute; border-radius: 50%; filter: blur(90px); opacity: 0.6; animation: orbFloat 10s infinite alternate ease-in-out; }
+    .orb-1 { top: -10%; left: -10%; width: 320px; height: 320px; background: #8b5cf6; animation-delay: 0s; }
+    .orb-2 { bottom: -10%; right: -10%; width: 380px; height: 380px; background: #ec4899; animation-delay: -3s; }
+    .orb-3 { top: 40%; left: 30%; width: 250px; height: 250px; background: #00f2fe; opacity: 0.35; animation-delay: -6s; }
 
-    .gradient-text { background: var(--grad-main); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    .btn-grad { padding: 14px 20px; border-radius: 16px; font-weight: 800; background: var(--grad-main); color: #fff; border: none; cursor: pointer; width: 100%; font-size: 14px; box-shadow: 0 0 20px rgba(138,43,226,0.4); }
+    @keyframes orbFloat {
+      0% { transform: translate(0, 0) scale(1); }
+      100% { transform: translate(30px, -40px) scale(1.15); }
+    }
 
-    /* HEADER Y ESTRUCTURA */
-    .header { position: sticky; top: 0; z-index: 50; background: rgba(4, 4, 9, 0.85); backdrop-filter: blur(15px); border-bottom: 1px solid var(--glass-border); padding: 12px 18px; display: flex; justify-content: space-between; align-items: center; }
+    /* Título Superior "ONLYBUBBLEVR" Estilo Neón */
+    .app-title-header {
+      margin-bottom: 24px;
+      text-align: center;
+      animation: pulseTitle 3s infinite alternate ease-in-out;
+    }
+    .app-title-header h1 {
+      font-size: 32px;
+      font-weight: 900;
+      letter-spacing: 2px;
+      background: var(--grad-main);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 0 0 30px rgba(168, 85, 247, 0.4);
+    }
+    .app-title-header p {
+      font-size: 11px;
+      color: var(--neon-cyan);
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      font-weight: 700;
+      margin-top: 2px;
+      opacity: 0.9;
+    }
+    @keyframes pulseTitle {
+      0% { transform: scale(1); }
+      100% { transform: scale(1.03); }
+    }
+
+    /* Tarjeta Cristal de Autenticación */
+    .auth-card-app { 
+      background: var(--glass-card); 
+      backdrop-filter: blur(30px); 
+      -webkit-backdrop-filter: blur(30px);
+      border: 1px solid var(--glass-border); 
+      border-radius: var(--radius-bubble); 
+      padding: 28px 24px; 
+      width: 100%; 
+      max-width: 380px; 
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(168, 85, 247, 0.2); 
+      animation: cardAppear 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes cardAppear {
+      from { opacity: 0; transform: translateY(30px) scale(0.95); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    /* Tabs para Alternar entre Login y Registro */
+    .auth-tabs {
+      display: flex;
+      background: rgba(0, 0, 0, 0.4);
+      padding: 4px;
+      border-radius: 16px;
+      margin-bottom: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .auth-tab-btn {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 13px;
+      font-weight: 700;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .auth-tab-btn.active {
+      background: var(--grad-main);
+      color: #fff;
+      box-shadow: 0 4px 15px rgba(236, 72, 153, 0.4);
+    }
+
+    /* Inputs Estilo Cyber/VR */
+    .input-group { position: relative; margin-bottom: 14px; }
+    .input-app { 
+      width: 100%; 
+      padding: 16px 16px 16px 42px; 
+      background: rgba(8, 5, 20, 0.7); 
+      border: 1px solid var(--glass-border); 
+      border-radius: 16px; 
+      color: #fff; 
+      font-size: 14px; 
+      outline: none; 
+    }
+    .input-app:focus { 
+      border-color: var(--neon-pink); 
+      box-shadow: 0 0 15px rgba(236, 72, 153, 0.3); 
+      transform: translateY(-1px);
+    }
+    .input-icon {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 16px;
+      opacity: 0.6;
+    }
+
+    /* Botón Principal Animado */
+    .btn-app-main { 
+      padding: 16px; 
+      border-radius: 16px; 
+      font-weight: 800; 
+      background: var(--grad-main); 
+      color: #fff; 
+      border: none; 
+      cursor: pointer; 
+      width: 100%; 
+      font-size: 14px; 
+      letter-spacing: 1px;
+      box-shadow: 0 8px 25px rgba(168, 85, 247, 0.4); 
+      position: relative;
+      overflow: hidden;
+      margin-top: 6px;
+    }
+    .btn-app-main:active { transform: scale(0.98); }
+    .btn-app-main::after {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: linear-gradient(60deg, transparent, rgba(255,255,255,0.2), transparent);
+      transform: rotate(30deg);
+      animation: shineBtn 4s infinite;
+    }
+    @keyframes shineBtn {
+      0% { transform: translateX(-100%) rotate(30deg); }
+      20%, 100% { transform: translateX(100%) rotate(30deg); }
+    }
+
+    /* Formularios animados al alternar */
+    .form-step { display: none; }
+    .form-step.active { display: block; animation: fadeInStep 0.4s ease; }
+    @keyframes fadeInStep {
+      from { opacity: 0; transform: translateX(10px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    /* =========================================================
+       2. ESTRUCTURA INTERNA DE LA APP (FEED / NAVEGACIÓN)
+       ========================================================= */
+    .header { position: sticky; top: 0; z-index: 50; background: rgba(3, 2, 8, 0.85); backdrop-filter: blur(15px); border-bottom: 1px solid var(--glass-border); padding: 12px 18px; display: flex; justify-content: space-between; align-items: center; }
     .brand { display: flex; align-items: center; gap: 10px; font-weight: 900; font-size: 18px; }
     .brand-logo-img { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 2px solid var(--neon-pink); }
 
     .app-body { max-width: 480px; margin: 0 auto; padding: 16px; }
 
-    /* SECCIONES Y TRANSICIÓN */
     .page { display: none; }
     .page.active { display: block; animation: slideInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
     @keyframes slideInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
-    /* PUBLICACIONES Y TARJETAS */
-    .create-post-card { background: var(--glass-card); border: 1px solid var(--glass-border); border-radius: 20px; padding: 14px; margin-bottom: 16px; backdrop-filter: blur(15px); }
-    .post-card { background: var(--glass-card); border: 1px solid var(--glass-border); border-radius: 22px; padding: 16px; margin-bottom: 16px; backdrop-filter: blur(15px); }
+    .create-post-card, .post-card { background: var(--glass-card); border: 1px solid var(--glass-border); border-radius: 22px; padding: 16px; margin-bottom: 16px; backdrop-filter: blur(15px); }
     .post-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
     .post-avatar { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--neon-cyan); object-fit: cover; }
 
     .chip { padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); color: var(--text-muted); white-space: nowrap; cursor: pointer; }
     .chip.active { background: var(--grad-main); color: #fff; border-color: transparent; }
 
-    /* NAVEGACIÓN INFERIOR MOBILE */
     .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100vw; background: rgba(8, 8, 16, 0.92); backdrop-filter: blur(20px); border-top: 1px solid var(--glass-border); display: flex; justify-content: space-around; padding: 10px 0 14px; z-index: 100; }
     .nav-btn { background: none; border: none; color: var(--text-muted); font-size: 10px; font-weight: 700; display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; flex: 1; }
     .nav-btn .icon { font-size: 20px; }
@@ -74,39 +234,74 @@
 </head>
 <body>
 
-<div class="glow-bg">
-  <div class="glow-1"></div>
-  <div class="glow-2"></div>
+<!-- FONDO DINÁMICO DE ORBES -->
+<div class="app-bg-glow">
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
 </div>
 
-<!-- 1. PANTALLA AUTH / INICIO DE SESIÓN -->
+<!-- =========================================================
+     PANTALLA DE ACCESO NATIVA (LOGIN / REGISTRO)
+     ========================================================= -->
 <div id="auth-screen">
-  <div class="auth-card">
-    <img src="https://picsum.photos/200/200?random=88" alt="Logo" class="auth-logo">
-    <h1 style="font-size:24px; margin-bottom:4px;">OnlyBubble<span class="gradient-text">VR</span></h1>
-    <p style="font-size:12px; color:var(--text-muted); margin-bottom:20px;">Tu red social de avatares en el Metaverso</p>
 
-    <input type="email" id="authEmail" class="input-field" placeholder="Correo electrónico">
-    <input type="password" id="authPass" class="input-field" placeholder="Contraseña">
+  <!-- ENCABEZADO SUPERIOR DE LA APP -->
+  <div class="app-title-header">
+    <h1>ONLYBUBBLEVR</h1>
+    <p></p>
+  </div>
+
+  <!-- TARJETA CON EFECTO CRISTAL DE ALTA DEFINICIÓN -->
+  <div class="auth-card-app">
     
-    <button class="btn-grad" onclick="handleLogin()" style="margin-bottom:10px;">INICIAR SESIÓN</button>
-    <button class="chip" style="width:100%; padding:10px;" onclick="handleSignUp()">Crear Cuenta Nueva</button>
+    <!-- PESTAÑAS PARA CAMBIAR ENTRE MODO LOGIN / MODO REGISTRO -->
+    <div class="auth-tabs">
+      <button id="tab-login-btn" class="auth-tab-btn active" onclick="switchAuthTab('login')">Iniciar Sesión</button>
+      <button id="tab-signup-btn" class="auth-tab-btn" onclick="switchAuthTab('signup')">Crear Cuenta</button>
+    </div>
+
+    <!-- FORMULARIO 1: INICIO DE SESIÓN -->
+    <div id="form-login" class="form-step active">
+      <div class="input-group">
+        <span class="input-icon">📧</span>
+        <input type="email" id="authEmail" class="input-app" placeholder="Correo electrónico">
+      </div>
+      <div class="input-group">
+        <span class="input-icon">🔒</span>
+        <input type="password" id="authPass" class="input-app" placeholder="Contraseña">
+      </div>
+      <button class="btn-app-main" onclick="handleLogin()">ENTRAR A LA APP</button>
+    </div>
+
+    <!-- FORMULARIO 2: REGISTRO DE CUENTA NUEVA -->
+    <div id="form-signup" class="form-step">
+      <div class="input-group">
+        <span class="input-icon">📧</span>
+        <input type="email" id="signupEmail" class="input-app" placeholder="Tu correo electrónico">
+      </div>
+      <div class="input-group">
+        <span class="input-icon">🔒</span>
+        <input type="password" id="signupPass" class="input-app" placeholder="Crea tu contraseña">
+      </div>
+      <button class="btn-app-main" onclick="handleSignUp()">REGISTRARME AHORA</button>
+    </div>
+
   </div>
 </div>
 
-<!-- 2. HEADER -->
+<!-- HEADER INTERNO -->
 <header class="header">
   <div class="brand">
     <img src="https://picsum.photos/200/200?random=88" alt="Logo" class="brand-logo-img">
-    <span>OnlyBubble<span class="gradient-text">VR</span></span>
+    <span>OnlyBubble<span style="background:var(--grad-main); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">VR</span></span>
   </div>
   <button class="chip" onclick="handleLogout()">🚪 Salir</button>
 </header>
 
-<!-- 3. CONTENIDO PRINCIPAL (SPA) -->
+<!-- CONTENIDO PRINCIPAL -->
 <div class="app-body">
 
-  <!-- PÁGINA 1: FEED DE SEGUIDOS / INICIO -->
   <section id="feed" class="page active">
     <div class="create-post-card">
       <div style="display:flex; gap:10px; align-items:center;">
@@ -120,7 +315,6 @@
     <div id="postsContainer">Cargando publicaciones...</div>
   </section>
 
-  <!-- PÁGINA 2: DISCOVER / BURBUJAS -->
   <section id="discover" class="page">
     <div style="text-align:center; padding:40px 0; color:var(--text-muted);">
       <h2>🫧 Sección Burbujas</h2>
@@ -128,7 +322,6 @@
     </div>
   </section>
 
-  <!-- PÁGINA 3: PERFIL DE USUARIO -->
   <section id="profile" class="page">
     <div class="post-card" style="text-align:center;">
       <img src="https://picsum.photos/150/150?random=99" style="width:80px; height:80px; border-radius:50%; border:2px solid var(--neon-cyan); margin-bottom:8px;" alt="Me">
@@ -139,7 +332,7 @@
 
 </div>
 
-<!-- NAVBAR INFERIOR -->
+<!-- NAVEGACIÓN MOBILE INFERIOR -->
 <nav class="bottom-nav">
   <button class="nav-btn active" onclick="switchTab('feed', this)"><span class="icon">📰</span><span>Inicio</span></button>
   <button class="nav-btn" onclick="switchTab('discover', this)"><span class="icon">🫧</span><span>Burbujas</span></button>
@@ -152,6 +345,26 @@
   const SUPABASE_KEY = "sb_publishable_y9Yrqzf1QabeTeQV4DauBQ_tWgrL0li";
   
   const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  // ALTERNAR PESTAÑAS DE AUTH
+  function switchAuthTab(mode) {
+    const tabLogin = document.getElementById('tab-login-btn');
+    const tabSignup = document.getElementById('tab-signup-btn');
+    const formLogin = document.getElementById('form-login');
+    const formSignup = document.getElementById('form-signup');
+
+    if (mode === 'login') {
+      tabLogin.classList.add('active');
+      tabSignup.classList.remove('active');
+      formLogin.classList.add('active');
+      formSignup.classList.remove('active');
+    } else {
+      tabSignup.classList.add('active');
+      tabLogin.classList.remove('active');
+      formSignup.classList.add('active');
+      formLogin.classList.remove('active');
+    }
+  }
 
   // COMPROBAR SESIÓN ACTIVA
   window.addEventListener('DOMContentLoaded', async () => {
@@ -180,15 +393,16 @@
 
   // REGISTRO
   async function handleSignUp() {
-    const email = document.getElementById('authEmail').value;
-    const password = document.getElementById('authPass').value;
+    const email = document.getElementById('signupEmail').value;
+    const password = document.getElementById('signupPass').value;
 
     if (!email || !password) return alert("Escribe tu correo y contraseña para registrarte");
 
     const { data, error } = await db.auth.signUp({ email, password });
     if (error) return alert("Error al registrarse: " + error.message);
     
-    alert("¡Cuenta creada correctamente! Revisa tu correo si activaste confirmación en Supabase.");
+    alert("¡Cuenta creada correctamente! Ya puedes iniciar sesión.");
+    switchAuthTab('login');
   }
 
   // LOGOUT
@@ -202,10 +416,10 @@
   function hideAuthScreen() {
     const authScreen = document.getElementById('auth-screen');
     authScreen.classList.add('hide');
-    setTimeout(() => { authScreen.style.display = 'none'; }, 600);
+    setTimeout(() => { authScreen.style.display = 'none'; }, 800);
   }
 
-  // NAVEGACIÓN ENTRE PÁGINAS
+  // NAVEGACIÓN SPA
   function switchTab(tabId, btn) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     if(btn) {
@@ -244,7 +458,7 @@
     `).join('');
   }
 
-  // GUARDAR PUBLICACIÓN EN SUPABASE
+  // PUBLICAR
   async function publishPost() {
     const input = document.getElementById('postInput');
     const text = input.value.trim();
