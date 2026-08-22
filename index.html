@@ -13,6 +13,8 @@
   
   <!-- SDK de Supabase JS -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- SDK / JS de Didit Protocol -->
+  <script src="https://cdn.didit.me/v1/didit-sdk.js"></script>
   
   <style>
     :root {
@@ -353,6 +355,21 @@
       to { opacity: 1; transform: scale(1); }
     }
 
+    /* MODAL VERIFICACIÓN DIDIT */
+    #didit-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 2000;
+      background: rgba(3, 2, 8, 0.96);
+      backdrop-filter: blur(30px);
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    #didit-modal.show { display: flex; animation: cardAppear 0.4s ease; }
+
     /* =========================================================
        SECCIÓN DE DESCARGA MÓVIL (PWA - iOS & ANDROID)
        ========================================================= */
@@ -515,6 +532,7 @@
       <img src="logo.png" style="width:80px; height:80px; border-radius:20px; border:2px solid var(--neon-cyan); margin-bottom:8px;" alt="Me">
       <h2 id="profileEmail">Usuario</h2>
       <p style="font-size:12px; color:var(--text-muted);">VRChat User</p>
+      <p id="profileVerifiedBadge" style="font-size:11px; margin-top:6px; color:var(--neon-cyan); font-weight:bold;">🛡️ Estado: Verificando...</p>
     </div>
   </section>
 
@@ -525,6 +543,16 @@
   <h1 style="font-size: 38px; background: var(--grad-main); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">¡ES UN MATCH! 🎉</h1>
   <p style="font-size: 14px; margin: 12px 0 20px; color: var(--text-muted);">Habéis conectado mutuamente en el mundo virtual.</p>
   <button class="btn-app-main" style="max-width: 200px;" onclick="closeMatchModal()">¡Continuar!</button>
+</div>
+
+<!-- MODAL VERIFICACIÓN DIDIT -->
+<div id="didit-modal">
+  <div class="auth-card-app" style="text-align:center;">
+    <h2 style="color:var(--neon-pink); margin-bottom:8px;">🛡️ Verificación de Edad Required</h2>
+    <p style="font-size:12px; color:var(--text-muted); margin-bottom:16px;">Para acceder a OnlyBubbleVR debes confirmar que eres mayor de edad (+18) a través de Didit Protocol.</p>
+    <div id="didit-iframe-container" style="width:100%; min-height:300px;"></div>
+    <button class="chip" style="margin-top:14px; width:100%;" onclick="cancelDiditVerification()">Cancelar y Cerrar Sesión</button>
+  </div>
 </div>
 
 <!-- NAVEGACIÓN INFERIOR MOBILE -->
@@ -540,6 +568,10 @@
   const SUPABASE_URL = "https://wzpmgtkabsncpzpvweja.supabase.co";
   const SUPABASE_KEY = "sb_publishable_y9Yrqzf1QabeTeQV4DauBQ_tWgrL0li";
   
+  // CONFIGURACIÓN DIDIT
+  const DIDIT_WORKFLOW_ID = "489e273a-61d7-4d8d-82c3-1c17f62485aa";
+  const DIDIT_API_KEY = "cqGr-bIE2fFY94vcrur1J4j2j3TZeKqmhTpCtXcKg_8";
+
   const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
   // Perfiles de prueba dinámicos para el Match de Burbujas
@@ -589,12 +621,60 @@
   window.addEventListener('DOMContentLoaded', async () => {
     const { data: { session } } = await db.auth.getSession();
     if (session) {
+      await verifyUserAccess(session.user);
+    }
+  });
+
+  async function verifyUserAccess(user) {
+    document.getElementById('profileEmail').innerText = user.email;
+    
+    // Comprobar si está verificado en Supabase
+    const { data: profile } = await db.from('profiles').select('is_age_verified').eq('id', user.id).single();
+
+    if (profile && profile.is_age_verified) {
+      document.getElementById('profileVerifiedBadge').innerText = "🛡️ Cuenta Verificada (+18)";
       hideAuthScreen();
       loadPosts();
       renderMatchCard();
-      document.getElementById('profileEmail').innerText = session.user.email;
+    } else {
+      // Iniciar el flujo de verificación Didit
+      launchDiditVerification(user);
     }
-  });
+  }
+
+  async function launchDiditVerification(user) {
+    document.getElementById('didit-modal').classList.add('show');
+    const container = document.getElementById('didit-iframe-container');
+    container.innerHTML = '<p style="font-size:12px; color:var(--text-muted);">Cargando módulo Didit...</p>';
+
+    try {
+      // URL de Verificación con Workflow ID
+      const redirectUrl = window.location.href;
+      const verificationUrl = `https://verify.didit.me/v1/check?workflow_id=${DIDIT_WORKFLOW_ID}&vendor_data=${user.id}&redirect_url=${encodeURIComponent(redirectUrl)}`;
+
+      container.innerHTML = `<iframe src="${verificationUrl}" style="width:100%; height:380px; border:none; border-radius:16px;" allow="camera"></iframe>`;
+
+      // Listener para mensaje de finalización desde Didit
+      window.addEventListener('message', async (event) => {
+        if (event.data && event.data.type === 'DIDIT_VERIFICATION_SUCCESS') {
+          // Actualizar Supabase
+          await db.from('profiles').upsert({ id: user.id, is_age_verified: true, updated_at: new Date() });
+          document.getElementById('didit-modal').classList.remove('show');
+          document.getElementById('profileVerifiedBadge').innerText = "🛡️ Cuenta Verificada (+18)";
+          hideAuthScreen();
+          loadPosts();
+          renderMatchCard();
+        }
+      });
+    } catch(err) {
+      alert("Error al cargar la verificación Didit: " + err.message);
+    }
+  }
+
+  async function cancelDiditVerification() {
+    document.getElementById('didit-modal').classList.remove('show');
+    await handleLogout();
+  }
 
   async function handleLogin(e) {
     if (e) e.preventDefault();
@@ -606,10 +686,7 @@
     const { data, error } = await db.auth.signInWithPassword({ email, password });
     if (error) return alert("Error al iniciar sesión: " + error.message);
 
-    document.getElementById('profileEmail').innerText = data.user.email;
-    hideAuthScreen();
-    loadPosts();
-    renderMatchCard();
+    await verifyUserAccess(data.user);
   }
 
   async function handleSignUp(e) {
@@ -622,8 +699,10 @@
     const { data, error } = await db.auth.signUp({ email, password });
     if (error) return alert("Error al registrarse: " + error.message);
     
-    alert("¡Cuenta creada correctamente! Ya puedes iniciar sesión.");
-    switchAuthTab('login');
+    alert("¡Cuenta creada correctamente! Procede con la verificación de edad.");
+    if (data.user) {
+      await verifyUserAccess(data.user);
+    }
   }
 
   async function handleLogout() {
