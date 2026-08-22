@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>ONLYBUBBLEVR</title>
   
-  <!-- Soporte para App Móvil PWA (iOS y Android) -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="OnlyBubbleVR">
@@ -13,8 +12,6 @@
   
   <!-- SDK de Supabase JS -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <!-- SDK oficial de Didit Protocol -->
-  <script src="https://cdn.jsdelivr.net/npm/@didit-protocol/didit-sdk/dist/didit-sdk.umd.js"></script>
   
   <style>
     :root {
@@ -47,7 +44,6 @@
       padding-bottom: 90px; 
     }
 
-    /* PANTALLA DE ACCESO (LOGIN / REGISTRO) */
     #auth-screen { 
       position: fixed; 
       inset: 0; 
@@ -61,74 +57,24 @@
       overflow-y: auto;
     }
 
-    #auth-screen.hide { 
-      animation: exitAppScreen 0.8s cubic-bezier(0.7, 0, 0.84, 0) forwards; 
-      pointer-events: none; 
-    }
+    #auth-screen.hide { display: none; }
 
-    @keyframes exitAppScreen { 
-      0% { opacity: 1; transform: scale(1) translateY(0); filter: blur(0px); } 
-      100% { opacity: 0; transform: scale(1.15) translateY(-30px); filter: blur(20px); display: none; } 
-    }
-
-    /* Partículas de Fondo */
     .app-bg-glow { position: fixed; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; }
-    .orb { position: absolute; border-radius: 50%; filter: blur(90px); opacity: 0.6; animation: orbFloat 10s infinite alternate ease-in-out; }
+    .orb { position: absolute; border-radius: 50%; filter: blur(90px); opacity: 0.6; }
     .orb-1 { top: -10%; left: -10%; width: 320px; height: 320px; background: #8b5cf6; }
-    .orb-2 { bottom: -10%; right: -10%; width: 380px; height: 380px; background: #ec4899; animation-delay: -3s; }
-    .orb-3 { top: 40%; left: 30%; width: 250px; height: 250px; background: #00f2fe; opacity: 0.35; animation-delay: -6s; }
+    .orb-2 { bottom: -10%; right: -10%; width: 380px; height: 380px; background: #ec4899; }
 
-    @keyframes orbFloat {
-      0% { transform: translate(0, 0) scale(1); }
-      100% { transform: translate(30px, -40px) scale(1.15); }
-    }
-
-    /* Encabezado */
-    .app-title-header {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 20px;
-      text-align: center;
-    }
-
-    .main-logo-img {
-      width: 110px;
-      height: 110px;
-      object-fit: cover;
-      border-radius: 24px;
-      margin-bottom: 12px;
-      box-shadow: 0 0 35px rgba(236, 72, 153, 0.45), 0 0 15px rgba(0, 242, 254, 0.3);
-      animation: logoPulse 3s infinite alternate ease-in-out;
-    }
-
-    @keyframes logoPulse {
-      0% { transform: scale(1); box-shadow: 0 0 30px rgba(236, 72, 153, 0.4); }
-      100% { transform: scale(1.05); box-shadow: 0 0 45px rgba(236, 72, 153, 0.7), 0 0 25px rgba(0, 242, 254, 0.5); }
-    }
+    .app-title-header { display: flex; flex-direction: column; align-items: center; margin-bottom: 20px; text-align: center; }
+    .main-logo-img { width: 90px; height: 90px; border-radius: 20px; margin-bottom: 12px; object-fit: cover; }
 
     .app-title-header h1 {
-      font-size: 28px;
+      font-size: 26px;
       font-weight: 900;
-      letter-spacing: 2px;
       background: var(--grad-main);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
-      text-shadow: 0 0 25px rgba(168, 85, 247, 0.4);
     }
 
-    .app-title-header p {
-      font-size: 11px;
-      color: var(--neon-cyan);
-      letter-spacing: 3px;
-      text-transform: uppercase;
-      font-weight: 700;
-      margin-top: 2px;
-      opacity: 0.9;
-    }
-
-    /* Tarjeta Cristal de Autenticación */
     .auth-card-app { 
       background: var(--glass-card); 
       backdrop-filter: blur(30px); 
@@ -138,72 +84,15 @@
       padding: 24px; 
       width: 100%; 
       max-width: 380px; 
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(168, 85, 247, 0.2); 
-      animation: cardAppear 0.8s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
-    @keyframes cardAppear {
-      from { opacity: 0; transform: translateY(30px) scale(0.95); }
-      to { opacity: 1; transform: translateY(0) scale(1); }
-    }
+    .auth-tabs { display: flex; background: rgba(0, 0, 0, 0.4); padding: 4px; border-radius: 16px; margin-bottom: 20px; }
+    .auth-tab-btn { flex: 1; padding: 10px; border: none; background: transparent; color: var(--text-muted); font-weight: 700; border-radius: 12px; }
+    .auth-tab-btn.active { background: var(--grad-main); color: #fff; }
 
-    /* Tabs Login / Registro */
-    .auth-tabs {
-      display: flex;
-      background: rgba(0, 0, 0, 0.4);
-      padding: 4px;
-      border-radius: 16px;
-      margin-bottom: 20px;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-    }
-
-    .auth-tab-btn {
-      flex: 1;
-      padding: 10px;
-      border: none;
-      background: transparent;
-      color: var(--text-muted);
-      font-size: 13px;
-      font-weight: 700;
-      border-radius: 12px;
-      cursor: pointer;
-    }
-
-    .auth-tab-btn.active {
-      background: var(--grad-main);
-      color: #fff;
-      box-shadow: 0 4px 15px rgba(236, 72, 153, 0.4);
-    }
-
-    /* Inputs */
     .input-group { position: relative; margin-bottom: 14px; }
-    
-    .input-app { 
-      width: 100%; 
-      padding: 16px 16px 16px 42px; 
-      background: rgba(8, 5, 20, 0.7); 
-      border: 1px solid var(--glass-border); 
-      border-radius: 16px; 
-      color: #fff; 
-      font-size: 14px; 
-      outline: none; 
-    }
+    .input-app { width: 100%; padding: 16px; background: rgba(8, 5, 20, 0.7); border: 1px solid var(--glass-border); border-radius: 16px; color: #fff; font-size: 14px; outline: none; }
 
-    .input-app:focus { 
-      border-color: var(--neon-pink); 
-      box-shadow: 0 0 15px rgba(236, 72, 153, 0.3); 
-    }
-
-    .input-icon {
-      position: absolute;
-      left: 14px;
-      top: 50%;
-      transform: translateY(-50%);
-      font-size: 16px;
-      opacity: 0.6;
-    }
-
-    /* Botón Principal */
     .btn-app-main { 
       padding: 16px; 
       border-radius: 16px; 
@@ -211,273 +100,25 @@
       background: var(--grad-main); 
       color: #fff; 
       border: none; 
-      cursor: pointer; 
       width: 100%; 
       font-size: 14px; 
-      letter-spacing: 1px;
-      box-shadow: 0 8px 25px rgba(168, 85, 247, 0.4); 
-      position: relative;
-      overflow: hidden;
-      margin-top: 6px;
+      margin-top: 8px;
+      cursor: pointer;
     }
-
-    .btn-app-main:active { transform: scale(0.98); }
 
     .form-step { display: none; }
-    .form-step.active { display: block; animation: fadeInStep 0.4s ease; }
+    .form-step.active { display: block; }
 
-    @keyframes fadeInStep {
-      from { opacity: 0; transform: translateX(10px); }
-      to { opacity: 1; transform: translateX(0); }
-    }
-
-    /* ESTRUCTURA INTERNA */
-    .header { 
-      position: sticky; 
-      top: 0; 
-      z-index: 50; 
-      background: rgba(3, 2, 8, 0.85); 
-      backdrop-filter: blur(15px); 
-      -webkit-backdrop-filter: blur(15px);
-      border-bottom: 1px solid var(--glass-border); 
-      padding: 12px 18px; 
-      display: flex; 
-      justify-content: space-between; 
-      align-items: center; 
-    }
-
-    .brand { display: flex; align-items: center; gap: 10px; font-weight: 900; font-size: 18px; }
-    .brand-logo-img { width: 36px; height: 36px; border-radius: 10px; object-fit: cover; border: 1px solid var(--neon-pink); }
-
+    .header { position: sticky; top: 0; z-index: 50; background: rgba(3, 2, 8, 0.85); backdrop-filter: blur(15px); border-bottom: 1px solid var(--glass-border); padding: 12px 18px; display: flex; justify-content: space-between; align-items: center; }
     .app-body { max-width: 480px; margin: 0 auto; padding: 16px; }
-
     .page { display: none; }
-    .page.active { display: block; animation: slideInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+    .page.active { display: block; }
 
-    @keyframes slideInUp { 
-      from { opacity: 0; transform: translateY(20px); } 
-      to { opacity: 1; transform: translateY(0); } 
-    }
+    .post-card { background: var(--glass-card); border: 1px solid var(--glass-border); border-radius: 22px; padding: 16px; margin-bottom: 16px; }
 
-    .create-post-card, .post-card { 
-      background: var(--glass-card); 
-      border: 1px solid var(--glass-border); 
-      border-radius: 22px; 
-      padding: 16px; 
-      margin-bottom: 16px; 
-      backdrop-filter: blur(15px); 
-      -webkit-backdrop-filter: blur(15px);
-    }
-
-    .post-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-    .post-avatar { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--neon-cyan); object-fit: cover; }
-
-    .chip { 
-      padding: 6px 14px; 
-      border-radius: 20px; 
-      font-size: 12px; 
-      font-weight: 700; 
-      background: rgba(255,255,255,0.05); 
-      border: 1px solid var(--glass-border); 
-      color: var(--text-muted); 
-      white-space: nowrap; 
-      cursor: pointer; 
-    }
-
-    .chip.active { background: var(--grad-main); color: #fff; border-color: transparent; }
-
-    .bottom-nav { 
-      position: fixed; 
-      bottom: 0; 
-      left: 0; 
-      width: 100vw; 
-      background: rgba(8, 8, 16, 0.92); 
-      backdrop-filter: blur(20px); 
-      -webkit-backdrop-filter: blur(20px);
-      border-top: 1px solid var(--glass-border); 
-      display: flex; 
-      justify-content: space-around; 
-      padding: 10px 0 calc(10px + env(safe-area-inset-bottom)); 
-      z-index: 100; 
-    }
-
-    .nav-btn { 
-      background: none; 
-      border: none; 
-      color: var(--text-muted); 
-      font-size: 10px; 
-      font-weight: 700; 
-      display: flex; 
-      flex-direction: column; 
-      align-items: center; 
-      gap: 4px; 
-      cursor: pointer; 
-      flex: 1; 
-    }
-
-    .nav-btn .icon { font-size: 20px; }
-    .nav-btn.active { color: var(--neon-pink); text-shadow: 0 0 8px var(--neon-pink); }
-
-    /* MATCH SYSTEM */
-    .match-container {
-      position: relative;
-      height: 480px;
-      width: 100%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      perspective: 1000px;
-    }
-    
-    .match-card {
-      position: absolute;
-      width: 100%;
-      height: 100%;
-      border-radius: var(--radius-bubble);
-      background: var(--glass-card);
-      border: 2px solid var(--neon-purple);
-      backdrop-filter: blur(25px);
-      -webkit-backdrop-filter: blur(25px);
-      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6), 0 0 20px rgba(168, 85, 247, 0.25);
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      padding: 20px;
-      overflow: hidden;
-      transform-style: preserve-3d;
-    }
-
-    .match-card img.avatar-bg {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      opacity: 0.45;
-      z-index: 0;
-    }
-
-    .match-card-content {
-      position: relative;
-      z-index: 2;
-      background: linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(3,2,8,0.95) 100%);
-      padding: 16px;
-      border-radius: 20px;
-      margin-top: auto;
-    }
-
-    .match-badge {
-      display: inline-block;
-      padding: 4px 12px;
-      border-radius: 12px;
-      background: var(--grad-main);
-      font-weight: 800;
-      font-size: 11px;
-      text-transform: uppercase;
-      margin-bottom: 6px;
-    }
-
-    /* Swipe Animations */
-    .swipe-right { animation: swipeRight 0.6s ease forwards; }
-    .swipe-left { animation: swipeLeft 0.6s ease forwards; }
-
-    @keyframes swipeRight {
-      to { transform: translateX(120%) rotate(25deg); opacity: 0; }
-    }
-    @keyframes swipeLeft {
-      to { transform: translateX(-120%) rotate(-25deg); opacity: 0; }
-    }
-
-    .match-controls {
-      display: flex;
-      justify-content: center;
-      gap: 25px;
-      margin-top: 16px;
-    }
-
-    .btn-circle {
-      width: 60px;
-      height: 60px;
-      border-radius: 50%;
-      border: none;
-      font-size: 24px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      box-shadow: 0 0 20px rgba(0,0,0,0.5);
-    }
-
-    .btn-pass { background: rgba(239, 68, 68, 0.2); border: 2px solid #ef4444; color: #ef4444; }
-    .btn-like { background: rgba(34, 197, 94, 0.2); border: 2px solid #22c55e; color: #22c55e; }
-    .btn-circle:active { transform: scale(0.85); }
-
-    /* Modal Match */
-    #match-modal {
-      display: none;
-      position: fixed;
-      inset: 0;
-      z-index: 1000;
-      background: rgba(3, 2, 8, 0.95);
-      backdrop-filter: blur(25px);
-      -webkit-backdrop-filter: blur(25px);
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      padding: 20px;
-    }
-
-    #match-modal.show { display: flex; animation: zoomIn 0.5s ease; }
-
-    @keyframes zoomIn {
-      from { opacity: 0; transform: scale(0.5); }
-      to { opacity: 1; transform: scale(1); }
-    }
-
-    /* MODAL VERIFICACIÓN DIDIT */
-    #didit-modal {
-      display: none;
-      position: fixed;
-      inset: 0;
-      z-index: 2000;
-      background: rgba(3, 2, 8, 0.96);
-      backdrop-filter: blur(30px);
-      -webkit-backdrop-filter: blur(30px);
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-    }
-
-    #didit-modal.show { display: flex; animation: cardAppear 0.4s ease; }
-
-    /* SECCIÓN DESCARGA MÓVIL */
-    .download-card {
-      background: var(--glass-card);
-      border: 1px solid var(--glass-border);
-      border-radius: 24px;
-      padding: 20px;
-      margin-bottom: 16px;
-    }
-
-    .platform-btn {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
-      width: 100%;
-      padding: 14px;
-      border-radius: 16px;
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid var(--glass-border);
-      color: #fff;
-      font-weight: 700;
-      margin-top: 10px;
-      cursor: pointer;
-    }
-
-    .platform-btn:hover { background: rgba(255, 255, 255, 0.12); }
+    .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100vw; background: rgba(8, 8, 16, 0.92); backdrop-filter: blur(20px); border-top: 1px solid var(--glass-border); display: flex; justify-content: space-around; padding: 10px 0 calc(10px + env(safe-area-inset-bottom)); z-index: 100; }
+    .nav-btn { background: none; border: none; color: var(--text-muted); font-size: 10px; font-weight: 700; display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; }
+    .nav-btn.active { color: var(--neon-pink); }
   </style>
 </head>
 <body>
@@ -485,451 +126,112 @@
 <div class="app-bg-glow">
   <div class="orb orb-1"></div>
   <div class="orb orb-2"></div>
-  <div class="orb orb-3"></div>
 </div>
 
-<!-- PANTALLA DE ACCESO DE LA APP -->
 <div id="auth-screen">
-
   <div class="app-title-header">
-    <img src="logo.png" alt="OnlyBubble Logo" class="main-logo-img">
+    <img src="logo.png" alt="OnlyBubble Logo" class="main-logo-img" onerror="this.src='https://picsum.photos/100'">
     <h1>ONLYBUBBLEVR</h1>
-    <p>UNIVERSO VIRTUAL MATCH</p>
   </div>
 
   <div class="auth-card-app">
-    
     <div class="auth-tabs">
       <button id="tab-login-btn" class="auth-tab-btn active" onclick="switchAuthTab('login')">Iniciar Sesión</button>
       <button id="tab-signup-btn" class="auth-tab-btn" onclick="switchAuthTab('signup')">Crear Cuenta</button>
     </div>
 
-    <!-- FORMULARIO LOGIN -->
     <form id="form-login" class="form-step active" onsubmit="handleLogin(event)">
       <div class="input-group">
-        <span class="input-icon">📧</span>
         <input type="email" id="authEmail" class="input-app" placeholder="Correo electrónico" required>
       </div>
       <div class="input-group">
-        <span class="input-icon">🔒</span>
         <input type="password" id="authPass" class="input-app" placeholder="Contraseña" required>
       </div>
       <button type="submit" class="btn-app-main">ENTRAR A LA APP</button>
       
-      <!-- BOTÓN DIRECTO LOGIN DIDIT OIDC -->
-      <button type="button" class="btn-app-main" onclick="handleDiditDirectLogin()" style="background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%); margin-top: 10px;">
-        🆔 ENTRAR CON DIDIT
+      <!-- BOTÓN REDIRECCIÓN DIRECTA A DIDIT -->
+      <button type="button" class="btn-app-main" onclick="redirectToDidit()" style="background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);">
+        🆔 VERIFICAR / ENTRAR CON DIDIT
       </button>
     </form>
 
-    <!-- FORMULARIO REGISTRO -->
     <form id="form-signup" class="form-step" onsubmit="handleSignUp(event)">
       <div class="input-group">
-        <span class="input-icon">📧</span>
         <input type="email" id="signupEmail" class="input-app" placeholder="Tu correo electrónico" required>
       </div>
       <div class="input-group">
-        <span class="input-icon">🔒</span>
         <input type="password" id="signupPass" class="input-app" placeholder="Crea tu contraseña" required>
       </div>
-      <button type="submit" class="btn-app-main">REGISTRARME AHORA</button>
+      <button type="submit" class="btn-app-main">REGISTRARME Y VERIFICAR</button>
     </form>
-
   </div>
 </div>
 
-<!-- HEADER INTERNO -->
 <header class="header">
-  <div class="brand">
-    <img src="logo.png" alt="Logo" class="brand-logo-img">
-    <span>OnlyBubble<span style="background:var(--grad-main); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">VR</span></span>
-  </div>
-  <button class="chip" onclick="handleLogout()">🚪 Salir</button>
+  <div style="font-weight:900;">OnlyBubble<span style="color:var(--neon-pink);">VR</span></div>
+  <button onclick="handleLogout()" style="background:none; border:none; color:#fff; font-size:12px;">🚪 Salir</button>
 </header>
 
-<!-- CONTENIDO PRINCIPAL -->
 <div class="app-body">
-
-  <!-- INICIO / FEED -->
   <section id="feed" class="page active">
-    <div class="create-post-card">
-      <form onsubmit="publishPost(event)" style="display:flex; gap:10px; align-items:center;">
-        <img src="logo.png" style="width:36px; height:36px; border-radius:50%; object-fit:cover;" alt="User">
-        <input type="text" id="postInput" placeholder="¿Qué mundo de VRChat estás visitando?" style="flex:1; background:none; border:none; color:#fff; font-size:13px; outline:none;">
-        <button type="submit" class="chip active">Publicar</button>
-      </form>
-    </div>
-
-    <h3 style="font-size:15px; color:var(--text-muted); margin-bottom:12px;">Publicaciones de la comunidad</h3>
-    <div id="postsContainer">Cargando publicaciones...</div>
-  </section>
-
-  <!-- SECCIÓN BURBUJAS / MATCH SYSTEM -->
-  <section id="discover" class="page">
-    <div style="text-align:center; margin-bottom: 14px;">
-      <h2>🫧 Encuentra tu Bubble</h2>
-      <p style="font-size:12px; color:var(--text-muted);">Conecta con otros avatares y usuarios en VR</p>
-    </div>
-
-    <div class="match-container" id="matchContainer">
-      <!-- Tarjetas dinámicas -->
-    </div>
-
-    <div class="match-controls">
-      <button class="btn-circle btn-pass" onclick="actionMatch('pass')">✖</button>
-      <button class="btn-circle btn-like" onclick="actionMatch('like')">💖</button>
+    <div class="post-card">
+      <h3>¡Bienvenido a OnlyBubbleVR!</h3>
+      <p style="font-size:12px; color:var(--text-muted); margin-top:6px;">Sesión iniciada correctamente.</p>
     </div>
   </section>
-
-  <!-- SECCIÓN DESCARGAR PARA MÓVIL (iOS / ANDROID) -->
-  <section id="download" class="page">
-    <div style="text-align:center; margin-bottom: 16px;">
-      <h2>📱 Descarga la App Móvil</h2>
-      <p style="font-size:12px; color:var(--text-muted);">Instala OnlyBubbleVR en tu Smartphone sin pasar por las tiendas</p>
-    </div>
-
-    <div class="download-card">
-      <h3 style="color:var(--neon-cyan); margin-bottom:8px;">🍏 iPhone / iPad (iOS)</h3>
-      <p style="font-size:12px; color:var(--text-muted); line-height: 1.4;">
-        1. Abre este enlace desde <b>Safari</b>.<br>
-        2. Toca el botón de <b>Compartir</b> (icono de la flecha arriba).<br>
-        3. Selecciona <b>"Añadir a la pantalla de inicio"</b>.<br>
-        4. ¡Listo! La tendrás guardada como App original.
-      </p>
-      <button class="platform-btn" onclick="alert('Para instalar en iOS: Pulsa el botón Compartir de Safari y selecciona Añadir a la pantalla de inicio.')">
-        <span> Instalador para iOS</span>
-      </button>
-    </div>
-
-    <div class="download-card">
-      <h3 style="color:var(--neon-pink); margin-bottom:8px;">🤖 Android (Samsung, Xiaomi, Google...)</h3>
-      <p style="font-size:12px; color:var(--text-muted); line-height: 1.4;">
-        1. Abre este sitio web en <b>Google Chrome</b>.<br>
-        2. Toca los <b>tres puntos</b> de la esquina superior derecha.<br>
-        3. Pulsa en <b>"Instalar aplicación"</b> o <b>"Añadir a pantalla de inicio"</b>.
-      </p>
-      <button class="platform-btn" id="btn-android-install" onclick="installPWA()">
-        <span>🤖 Instalar en Android</span>
-      </button>
-    </div>
-  </section>
-
-  <!-- PERFIL -->
-  <section id="profile" class="page">
-    <div class="post-card" style="text-align:center;">
-      <img src="logo.png" style="width:80px; height:80px; border-radius:20px; border:2px solid var(--neon-cyan); margin-bottom:8px; object-fit:cover;" alt="Me">
-      <h2 id="profileEmail">Usuario</h2>
-      <p style="font-size:12px; color:var(--text-muted);">VRChat User</p>
-      <p id="profileVerifiedBadge" style="font-size:11px; margin-top:6px; color:var(--neon-cyan); font-weight:bold;">🛡️ Estado: Activo</p>
-    </div>
-  </section>
-
 </div>
 
-<!-- CELEBRACIÓN DE MATCH MODAL -->
-<div id="match-modal">
-  <h1 style="font-size: 38px; background: var(--grad-main); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">¡ES UN MATCH! 🎉</h1>
-  <p style="font-size: 14px; margin: 12px 0 20px; color: var(--text-muted);">Habéis conectado mutuamente en el mundo virtual.</p>
-  <button class="btn-app-main" style="max-width: 200px;" onclick="closeMatchModal()">¡Continuar!</button>
-</div>
-
-<!-- MODAL VERIFICACIÓN DIDIT -->
-<div id="didit-modal">
-  <div class="auth-card-app" style="text-align:center;">
-    <h2 style="color:var(--neon-pink); margin-bottom:8px;">🛡️ Verificación de Edad Requerida</h2>
-    <p style="font-size:12px; color:var(--text-muted); margin-bottom:16px;">Para completar tu registro en OnlyBubbleVR debes confirmar que eres mayor de edad (+18) a través de Didit Protocol.</p>
-    <div id="didit-status-container" style="padding: 20px 0; font-size:13px; color:var(--neon-cyan);">Cargando flujo de verificación...</div>
-    <button class="chip" style="margin-top:14px; width:100%;" onclick="cancelDiditVerification()">Cancelar y Cerrar Sesión</button>
-  </div>
-</div>
-
-<!-- NAVEGACIÓN INFERIOR MOBILE -->
 <nav class="bottom-nav">
-  <button class="nav-btn active" onclick="switchTab('feed', this)"><span class="icon">📰</span><span>Inicio</span></button>
-  <button class="nav-btn" onclick="switchTab('discover', this)"><span class="icon">🫧</span><span>Burbujas</span></button>
-  <button class="nav-btn" onclick="switchTab('download', this)"><span class="icon">📲</span><span>App Móvil</span></button>
-  <button class="nav-btn" onclick="switchTab('profile', this)"><span class="icon">👤</span><span>Perfil</span></button>
+  <button class="nav-btn active"><span style="font-size:18px;">📰</span><span>Inicio</span></button>
 </nav>
 
 <script>
-  // CONFIGURACIÓN SUPABASE
   const SUPABASE_URL = "https://wzpmgtkabsncpzpvweja.supabase.co";
   const SUPABASE_KEY = "sb_publishable_y9Yrqzf1QabeTeQV4DauBQ_tWgrL0li";
   
-  // TU ENLACE UNILINK DE DIDIT INTEGRADO
-  const DIDIT_UNILINK_URL = "https://verify.didit.me/u/SJ4nOmHXTY2CwxwX9iSFqg"; 
+  // REEMPLAZA ESTA URL POR LA URL REAL DE TU SESIÓN/WORKFLOW EN DIDIT DEVELOPER CONSOLE
+  const DIDIT_FLOW_URL = "https://verify.didit.me/u/SJ4nOmHXTY2CwxwX9iSFqg";
 
   const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  // Perfiles de prueba dinámicos
-  const mockProfiles = [
-    { id: '1', username: 'Aura_VR', platform: 'Meta Quest 3', bio: 'Exploradora de mundos nocturnos en VRChat 🌌', avatar_url: 'https://picsum.photos/400/600?random=1' },
-    { id: '2', username: 'Kitsune_Neko', platform: 'PCVR / FullBody', bio: 'Bailarina y creadora de avatares 🦊✨', avatar_url: 'https://picsum.photos/400/600?random=2' },
-    { id: '3', username: 'Cyber_Phantom', platform: 'SteamVR', bio: 'Buscando grupo para DJ Sets en VR 🎧', avatar_url: 'https://picsum.photos/400/600?random=3' }
-  ];
-
-  let currentProfileIndex = 0;
-  let deferredPrompt;
-
-  window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-  });
-
-  function installPWA() {
-    if (deferredPrompt) {
-      deferredPrompt.prompt();
-      deferredPrompt.userChoice.then(() => { deferredPrompt = null; });
-    } else {
-      alert("Para instalar en Android: Abre el menú del navegador (tres puntos) y selecciona 'Instalar aplicación'.");
-    }
-  }
-
   function switchAuthTab(mode) {
-    const tabLogin = document.getElementById('tab-login-btn');
-    const tabSignup = document.getElementById('tab-signup-btn');
-    const formLogin = document.getElementById('form-login');
-    const formSignup = document.getElementById('form-signup');
-
-    if (mode === 'login') {
-      tabLogin.classList.add('active');
-      tabSignup.classList.remove('active');
-      formLogin.classList.add('active');
-      formSignup.classList.remove('active');
-    } else {
-      tabSignup.classList.add('active');
-      tabLogin.classList.remove('active');
-      formSignup.classList.add('active');
-      formLogin.classList.remove('active');
-    }
+    document.getElementById('tab-login-btn').classList.toggle('active', mode === 'login');
+    document.getElementById('tab-signup-btn').classList.toggle('active', mode === 'signup');
+    document.getElementById('form-login').classList.toggle('active', mode === 'login');
+    document.getElementById('form-signup').classList.toggle('active', mode === 'signup');
   }
 
-  window.addEventListener('DOMContentLoaded', async () => {
-    const { data: { session } } = await db.auth.getSession();
-    if (session) {
-      enterAppDirectly(session.user);
-    }
-  });
-
-  function enterAppDirectly(user) {
-    document.getElementById('profileEmail').innerText = user.email || 'Usuario VR';
-    document.getElementById('profileVerifiedBadge').innerText = "🛡️ Sesión Activa";
-    hideAuthScreen();
-    loadPosts();
-    renderMatchCard();
-  }
-
-  // INTEGRACIÓN SDK DIDIT (UNILINK)
-  async function launchDiditVerification(user) {
-    const modal = document.getElementById('didit-modal');
-    const statusContainer = document.getElementById('didit-status-container');
-    
-    modal.classList.add('show');
-    statusContainer.innerText = "Abriendo ventana de verificación...";
-
-    // Verificar disponibilidad del SDK Didit
-    if (window.DiditSDK && window.DiditSDK.DiditSdk) {
-      const { DiditSdk } = window.DiditSDK;
-
-      // Listener cuando el usuario complete el proceso en la ventana Didit
-      DiditSdk.shared.onComplete = async (result) => {
-        modal.classList.remove('show');
-
-        if (result.type === 'completed' || result.status === 'approved') {
-          // Guardar estado verificado en Supabase
-          const { error } = await db
-            .from('profiles')
-            .upsert({ 
-              id: user.id, 
-              is_age_verified: true, 
-              updated_at: new Date() 
-            });
-
-          if (error) {
-            console.error("Error al actualizar Supabase:", error);
-            alert("Verificación completada, pero hubo un error actualizando la base de datos.");
-            return;
-          }
-
-          alert("¡Verificación completada exitosamente!");
-          enterAppDirectly(user);
-        } else {
-          alert("Verificación cancelada o no completada.");
-          await handleLogout();
-        }
-      };
-
-      // Lanzar modal de verificación Didit mediante el UniLink
-      DiditSdk.shared.startVerification({ url: DIDIT_UNILINK_URL });
-
-    } else {
-      // Si por alguna razón de red falla la CDN, abrir pestaña de respaldo
-      statusContainer.innerText = "Redirigiendo a verificación externa...";
-      window.open(DIDIT_UNILINK_URL, '_blank');
-    }
-  }
-
-  async function cancelDiditVerification() {
-    document.getElementById('didit-modal').classList.remove('show');
-    await handleLogout();
+  function redirectToDidit() {
+    // Redirección directa para evitar fallos del SDK en navegadores móviles
+    window.location.href = DIDIT_FLOW_URL;
   }
 
   async function handleLogin(e) {
-    if (e) e.preventDefault();
+    e.preventDefault();
     const email = document.getElementById('authEmail').value;
     const password = document.getElementById('authPass').value;
 
-    if (!email || !password) return alert("Escribe tu correo y contraseña");
-
     const { data, error } = await db.auth.signInWithPassword({ email, password });
-    if (error) return alert("Error al iniciar sesión: " + error.message);
+    if (error) return alert("Error al entrar: " + error.message);
 
-    enterAppDirectly(data.user);
-  }
-
-  async function handleDiditDirectLogin() {
-    const { data, error } = await db.auth.signInWithOAuth({
-      provider: 'custom:didit',
-      options: {
-        redirectTo: window.location.origin
-      }
-    });
-
-    if (error) alert("Error al conectar con Didit: " + error.message);
+    document.getElementById('auth-screen').classList.add('hide');
   }
 
   async function handleSignUp(e) {
-    if (e) e.preventDefault();
+    e.preventDefault();
     const email = document.getElementById('signupEmail').value;
     const password = document.getElementById('signupPass').value;
-
-    if (!email || !password) return alert("Escribe tu correo y contraseña para registrarte");
 
     const { data, error } = await db.auth.signUp({ email, password });
     if (error) return alert("Error al registrarse: " + error.message);
     
-    if (data.user) {
-      alert("¡Cuenta creada! Procede con la verificación de edad.");
-      launchDiditVerification(data.user);
-    }
+    alert("Cuenta creada. Redirigiendo a verificación de identidad...");
+    redirectToDidit();
   }
 
   async function handleLogout() {
     await db.auth.signOut();
-    const authScreen = document.getElementById('auth-screen');
-    authScreen.style.display = 'flex';
-    authScreen.classList.remove('hide');
-  }
-
-  function hideAuthScreen() {
-    const authScreen = document.getElementById('auth-screen');
-    authScreen.classList.add('hide');
-    setTimeout(() => { authScreen.style.display = 'none'; }, 800);
-  }
-
-  function switchTab(tabId, btn) {
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    if (btn) {
-      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-    }
-    document.getElementById(tabId).classList.add('active');
-  }
-
-  async function loadPosts() {
-    const container = document.getElementById('postsContainer');
-    const { data: posts, error } = await db.from('posts').select('*').order('created_at', { ascending: false });
-
-    if (error) {
-      container.innerHTML = `<p style="color:var(--text-muted); font-size:12px;">Error cargando publicaciones: ${error.message}</p>`;
-      return;
-    }
-
-    if (!posts || posts.length === 0) {
-      container.innerHTML = `<p style="color:var(--text-muted); font-size:13px; text-align:center;">Aún no hay publicaciones creadas.</p>`;
-      return;
-    }
-
-    container.innerHTML = posts.map(post => `
-      <div class="post-card">
-        <div class="post-header">
-          <img src="logo.png" class="post-avatar" alt="Avatar">
-          <div>
-            <b style="font-size:14px;">Usuario VR</b>
-            <p style="font-size:10px; color:var(--text-muted);">${new Date(post.created_at).toLocaleTimeString()}</p>
-          </div>
-        </div>
-        <p style="font-size:13px; line-height:1.4;">${post.content}</p>
-      </div>
-    `).join('');
-  }
-
-  async function publishPost(e) {
-    if (e) e.preventDefault();
-    const input = document.getElementById('postInput');
-    const text = input.value.trim();
-    if (!text) return;
-
-    const { data: { session } } = await db.auth.getSession();
-    if (!session) return alert("Debes iniciar sesión para publicar");
-
-    const { error } = await db.from('posts').insert([
-      { content: text, user_id: session.user.id }
-    ]);
-
-    if (error) return alert("Error al publicar: " + error.message);
-
-    input.value = '';
-    loadPosts();
-  }
-
-  /* SISTEMA DE MATCH */
-  function renderMatchCard() {
-    const container = document.getElementById('matchContainer');
-    if (currentProfileIndex >= mockProfiles.length) {
-      container.innerHTML = `
-        <div class="match-card" style="justify-content:center; text-align:center;">
-          <h2>🫧 Sin más burbujas</h2>
-          <p style="font-size:12px; color:var(--text-muted); margin-top:8px;">Has visto todos los avatares disponibles por hoy.</p>
-        </div>
-      `;
-      return;
-    }
-
-    const item = mockProfiles[currentProfileIndex];
-    container.innerHTML = `
-      <div class="match-card" id="activeCard">
-        <img src="${item.avatar_url}" class="avatar-bg" alt="Avatar">
-        <div class="match-card-content">
-          <span class="match-badge">${item.platform}</span>
-          <h2>${item.username}</h2>
-          <p style="font-size:12px; color:var(--text-muted); margin-top:4px;">${item.bio}</p>
-        </div>
-      </div>
-    `;
-  }
-
-  async function actionMatch(type) {
-    const card = document.getElementById('activeCard');
-    if (!card) return;
-
-    if (type === 'like') {
-      card.classList.add('swipe-right');
-      setTimeout(() => {
-        document.getElementById('match-modal').classList.add('show');
-      }, 300);
-    } else {
-      card.classList.add('swipe-left');
-    }
-
-    setTimeout(() => {
-      currentProfileIndex++;
-      renderMatchCard();
-    }, 600);
-  }
-
-  function closeMatchModal() {
-    document.getElementById('match-modal').classList.remove('show');
+    document.getElementById('auth-screen').classList.remove('hide');
   }
 </script>
 
