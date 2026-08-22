@@ -30,8 +30,22 @@
       --radius-bubble: 28px;
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); -webkit-tap-highlight-color: transparent; }
-    body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; overflow-x: hidden; min-height: 100vh; padding-bottom: 80px; }
+    * { 
+      box-sizing: border-box; 
+      margin: 0; 
+      padding: 0; 
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); 
+      -webkit-tap-highlight-color: transparent; 
+    }
+
+    body { 
+      background: var(--bg); 
+      color: var(--text); 
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+      overflow-x: hidden; 
+      min-height: 100vh; 
+      padding-bottom: 90px; 
+    }
 
     /* =========================================================
        PANTALLA DE ACCESO (LOGIN / REGISTRO) CON LOGO
@@ -46,20 +60,21 @@
       justify-content: center; 
       align-items: center; 
       padding: 24px; 
-      overflow: hidden;
+      overflow-y: auto;
     }
 
     #auth-screen.hide { 
       animation: exitAppScreen 0.8s cubic-bezier(0.7, 0, 0.84, 0) forwards; 
       pointer-events: none; 
     }
+
     @keyframes exitAppScreen { 
       0% { opacity: 1; transform: scale(1) translateY(0); filter: blur(0px); } 
       100% { opacity: 0; transform: scale(1.15) translateY(-30px); filter: blur(20px); display: none; } 
     }
 
     /* Partículas de Fondo */
-    .app-bg-glow { position: absolute; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; }
+    .app-bg-glow { position: fixed; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; }
     .orb { position: absolute; border-radius: 50%; filter: blur(90px); opacity: 0.6; animation: orbFloat 10s infinite alternate ease-in-out; }
     .orb-1 { top: -10%; left: -10%; width: 320px; height: 320px; background: #8b5cf6; }
     .orb-2 { bottom: -10%; right: -10%; width: 380px; height: 380px; background: #ec4899; animation-delay: -3s; }
@@ -128,6 +143,7 @@
       box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(168, 85, 247, 0.2); 
       animation: cardAppear 0.8s cubic-bezier(0.16, 1, 0.3, 1);
     }
+
     @keyframes cardAppear {
       from { opacity: 0; transform: translateY(30px) scale(0.95); }
       to { opacity: 1; transform: translateY(0) scale(1); }
@@ -142,6 +158,7 @@
       margin-bottom: 20px;
       border: 1px solid rgba(255, 255, 255, 0.08);
     }
+
     .auth-tab-btn {
       flex: 1;
       padding: 10px;
@@ -153,6 +170,7 @@
       border-radius: 12px;
       cursor: pointer;
     }
+
     .auth-tab-btn.active {
       background: var(--grad-main);
       color: #fff;
@@ -161,6 +179,7 @@
 
     /* Inputs */
     .input-group { position: relative; margin-bottom: 14px; }
+    
     .input-app { 
       width: 100%; 
       padding: 16px 16px 16px 42px; 
@@ -171,10 +190,12 @@
       font-size: 14px; 
       outline: none; 
     }
+
     .input-app:focus { 
       border-color: var(--neon-pink); 
       box-shadow: 0 0 15px rgba(236, 72, 153, 0.3); 
     }
+
     .input-icon {
       position: absolute;
       left: 14px;
@@ -201,10 +222,12 @@
       overflow: hidden;
       margin-top: 6px;
     }
+
     .btn-app-main:active { transform: scale(0.98); }
 
     .form-step { display: none; }
     .form-step.active { display: block; animation: fadeInStep 0.4s ease; }
+
     @keyframes fadeInStep {
       from { opacity: 0; transform: translateX(10px); }
       to { opacity: 1; transform: translateX(0); }
@@ -213,7 +236,20 @@
     /* =========================================================
        ESTRUCTURA INTERNA DE LA APP
        ========================================================= */
-    .header { position: sticky; top: 0; z-index: 50; background: rgba(3, 2, 8, 0.85); backdrop-filter: blur(15px); border-bottom: 1px solid var(--glass-border); padding: 12px 18px; display: flex; justify-content: space-between; align-items: center; }
+    .header { 
+      position: sticky; 
+      top: 0; 
+      z-index: 50; 
+      background: rgba(3, 2, 8, 0.85); 
+      backdrop-filter: blur(15px); 
+      -webkit-backdrop-filter: blur(15px);
+      border-bottom: 1px solid var(--glass-border); 
+      padding: 12px 18px; 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center; 
+    }
+
     .brand { display: flex; align-items: center; gap: 10px; font-weight: 900; font-size: 18px; }
     .brand-logo-img { width: 36px; height: 36px; border-radius: 10px; object-fit: cover; border: 1px solid var(--neon-pink); }
 
@@ -221,17 +257,68 @@
 
     .page { display: none; }
     .page.active { display: block; animation: slideInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
-    @keyframes slideInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
-    .create-post-card, .post-card { background: var(--glass-card); border: 1px solid var(--glass-border); border-radius: 22px; padding: 16px; margin-bottom: 16px; backdrop-filter: blur(15px); }
+    @keyframes slideInUp { 
+      from { opacity: 0; transform: translateY(20px); } 
+      to { opacity: 1; transform: translateY(0); } 
+    }
+
+    .create-post-card, .post-card { 
+      background: var(--glass-card); 
+      border: 1px solid var(--glass-border); 
+      border-radius: 22px; 
+      padding: 16px; 
+      margin-bottom: 16px; 
+      backdrop-filter: blur(15px); 
+      -webkit-backdrop-filter: blur(15px);
+    }
+
     .post-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
     .post-avatar { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--neon-cyan); object-fit: cover; }
 
-    .chip { padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); color: var(--text-muted); white-space: nowrap; cursor: pointer; }
+    .chip { 
+      padding: 6px 14px; 
+      border-radius: 20px; 
+      font-size: 12px; 
+      font-weight: 700; 
+      background: rgba(255,255,255,0.05); 
+      border: 1px solid var(--glass-border); 
+      color: var(--text-muted); 
+      white-space: nowrap; 
+      cursor: pointer; 
+    }
+
     .chip.active { background: var(--grad-main); color: #fff; border-color: transparent; }
 
-    .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100vw; background: rgba(8, 8, 16, 0.92); backdrop-filter: blur(20px); border-top: 1px solid var(--glass-border); display: flex; justify-content: space-around; padding: 10px 0 14px; z-index: 100; }
-    .nav-btn { background: none; border: none; color: var(--text-muted); font-size: 10px; font-weight: 700; display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; flex: 1; }
+    .bottom-nav { 
+      position: fixed; 
+      bottom: 0; 
+      left: 0; 
+      width: 100vw; 
+      background: rgba(8, 8, 16, 0.92); 
+      backdrop-filter: blur(20px); 
+      -webkit-backdrop-filter: blur(20px);
+      border-top: 1px solid var(--glass-border); 
+      display: flex; 
+      justify-content: space-around; 
+      padding: 10px 0 calc(10px + env(safe-area-inset-bottom)); 
+      z-index: 100; 
+    }
+
+    .nav-btn { 
+      background: none; 
+      border: none; 
+      color: var(--text-muted); 
+      font-size: 10px; 
+      font-weight: 700; 
+      display: flex; 
+      flex-direction: column; 
+      align-items: center; 
+      gap: 4px; 
+      cursor: pointer; 
+      flex: 1; 
+    }
+
     .nav-btn .icon { font-size: 20px; }
     .nav-btn.active { color: var(--neon-pink); text-shadow: 0 0 8px var(--neon-pink); }
 
@@ -256,6 +343,7 @@
       background: var(--glass-card);
       border: 2px solid var(--neon-purple);
       backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
       box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6), 0 0 20px rgba(168, 85, 247, 0.25);
       display: flex;
       flex-direction: column;
@@ -296,12 +384,8 @@
     }
 
     /* Animaciones de Swipe */
-    .swipe-right {
-      animation: swipeRight 0.6s ease forwards;
-    }
-    .swipe-left {
-      animation: swipeLeft 0.6s ease forwards;
-    }
+    .swipe-right { animation: swipeRight 0.6s ease forwards; }
+    .swipe-left { animation: swipeLeft 0.6s ease forwards; }
 
     @keyframes swipeRight {
       to { transform: translateX(120%) rotate(25deg); opacity: 0; }
@@ -342,12 +426,14 @@
       z-index: 1000;
       background: rgba(3, 2, 8, 0.95);
       backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
       flex-direction: column;
       align-items: center;
       justify-content: center;
       text-align: center;
       padding: 20px;
     }
+
     #match-modal.show { display: flex; animation: zoomIn 0.5s ease; }
 
     @keyframes zoomIn {
@@ -363,11 +449,13 @@
       z-index: 2000;
       background: rgba(3, 2, 8, 0.96);
       backdrop-filter: blur(30px);
+      -webkit-backdrop-filter: blur(30px);
       flex-direction: column;
       align-items: center;
       justify-content: center;
       padding: 20px;
     }
+
     #didit-modal.show { display: flex; animation: cardAppear 0.4s ease; }
 
     /* =========================================================
@@ -380,9 +468,11 @@
       padding: 20px;
       margin-bottom: 16px;
     }
+
     .platform-btn {
       display: flex;
       align-items: center;
+      justify-content: center;
       gap: 12px;
       width: 100%;
       padding: 14px;
@@ -394,6 +484,7 @@
       margin-top: 10px;
       cursor: pointer;
     }
+
     .platform-btn:hover { background: rgba(255, 255, 255, 0.12); }
   </style>
 </head>
@@ -471,7 +562,7 @@
   <section id="feed" class="page active">
     <div class="create-post-card">
       <form onsubmit="publishPost(event)" style="display:flex; gap:10px; align-items:center;">
-        <img src="logo.png" style="width:36px; height:36px; border-radius:50%;" alt="User">
+        <img src="logo.png" style="width:36px; height:36px; border-radius:50%; object-fit:cover;" alt="User">
         <input type="text" id="postInput" placeholder="¿Qué mundo de VRChat estás visitando?" style="flex:1; background:none; border:none; color:#fff; font-size:13px; outline:none;">
         <button type="submit" class="chip active">Publicar</button>
       </form>
@@ -508,9 +599,9 @@
     <div class="download-card">
       <h3 style="color:var(--neon-cyan); margin-bottom:8px;">🍏 iPhone / iPad (iOS)</h3>
       <p style="font-size:12px; color:var(--text-muted); line-height: 1.4;">
-        1. Abre este enlace desde **Safari**.<br>
-        2. Toca el botón de **Compartir** (icono de la flecha arriba).<br>
-        3. Selecciona **"Añadir a la pantalla de inicio"**.<br>
+        1. Abre este enlace desde <b>Safari</b>.<br>
+        2. Toca el botón de <b>Compartir</b> (icono de la flecha arriba).<br>
+        3. Selecciona <b>"Añadir a la pantalla de inicio"</b>.<br>
         4. ¡Listo! La tendrás guardada como App original.
       </p>
       <button class="platform-btn" onclick="alert('Para instalar en iOS: Pulsa el botón Compartir de Safari y selecciona Añadir a la pantalla de inicio.')">
@@ -521,9 +612,9 @@
     <div class="download-card">
       <h3 style="color:var(--neon-pink); margin-bottom:8px;">🤖 Android (Samsung, Xiaomi, Google...)</h3>
       <p style="font-size:12px; color:var(--text-muted); line-height: 1.4;">
-        1. Abre este sitio web en **Google Chrome**.<br>
-        2. Toca los **tres puntos** de la esquina superior derecha.<br>
-        3. Pulsa en **"Instalar aplicación"** o **"Añadir a pantalla de inicio"**.
+        1. Abre este sitio web en <b>Google Chrome</b>.<br>
+        2. Toca los <b>tres puntos</b> de la esquina superior derecha.<br>
+        3. Pulsa en <b>"Instalar aplicación"</b> o <b>"Añadir a pantalla de inicio"</b>.
       </p>
       <button class="platform-btn" id="btn-android-install" onclick="installPWA()">
         <span>🤖 Instalar en Android</span>
@@ -534,7 +625,7 @@
   <!-- PERFIL -->
   <section id="profile" class="page">
     <div class="post-card" style="text-align:center;">
-      <img src="logo.png" style="width:80px; height:80px; border-radius:20px; border:2px solid var(--neon-cyan); margin-bottom:8px;" alt="Me">
+      <img src="logo.png" style="width:80px; height:80px; border-radius:20px; border:2px solid var(--neon-cyan); margin-bottom:8px; object-fit:cover;" alt="Me">
       <h2 id="profileEmail">Usuario</h2>
       <p style="font-size:12px; color:var(--text-muted);">VRChat User</p>
       <p id="profileVerifiedBadge" style="font-size:11px; margin-top:6px; color:var(--neon-cyan); font-weight:bold;">🛡️ Estado: Activo</p>
@@ -553,7 +644,7 @@
 <!-- MODAL VERIFICACIÓN DIDIT -->
 <div id="didit-modal">
   <div class="auth-card-app" style="text-align:center;">
-    <h2 style="color:var(--neon-pink); margin-bottom:8px;">🛡️ Verificación de Edad Required</h2>
+    <h2 style="color:var(--neon-pink); margin-bottom:8px;">🛡️ Verificación de Edad Requerida</h2>
     <p style="font-size:12px; color:var(--text-muted); margin-bottom:16px;">Para completar tu registro en OnlyBubbleVR debes confirmar que eres mayor de edad (+18) a través de Didit Protocol.</p>
     <div id="didit-iframe-container" style="width:100%; min-height:300px;"></div>
     <button class="chip" style="margin-top:14px; width:100%;" onclick="cancelDiditVerification()">Cancelar y Cerrar Sesión</button>
@@ -633,7 +724,7 @@
 
   // Función para dar acceso directo a la aplicación (en Login)
   function enterAppDirectly(user) {
-    document.getElementById('profileEmail').innerText = user.email;
+    document.getElementById('profileEmail').innerText = user.email || 'Usuario VR';
     document.getElementById('profileVerifiedBadge').innerText = "🛡️ Sesión Activa";
     hideAuthScreen();
     loadPosts();
@@ -730,7 +821,7 @@
 
   function switchTab(tabId, btn) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    if(btn) {
+    if (btn) {
       document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
     }
@@ -769,7 +860,7 @@
     if (e) e.preventDefault();
     const input = document.getElementById('postInput');
     const text = input.value.trim();
-    if(!text) return;
+    if (!text) return;
 
     const { data: { session } } = await db.auth.getSession();
     if (!session) return alert("Debes iniciar sesión para publicar");
