@@ -13,8 +13,8 @@
   
   <!-- SDK de Supabase JS -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <!-- SDK / JS de Didit Protocol -->
-  <script src="https://cdn.didit.me/v1/didit-sdk.js"></script>
+  <!-- SDK oficial de Didit Protocol -->
+  <script src="https://cdn.jsdelivr.net/npm/@didit-protocol/didit-sdk/dist/didit-sdk.umd.js"></script>
   
   <style>
     :root {
@@ -47,9 +47,7 @@
       padding-bottom: 90px; 
     }
 
-    /* =========================================================
-       PANTALLA DE ACCESO (LOGIN / REGISTRO) CON LOGO
-       ========================================================= */
+    /* PANTALLA DE ACCESO (LOGIN / REGISTRO) */
     #auth-screen { 
       position: fixed; 
       inset: 0; 
@@ -85,7 +83,7 @@
       100% { transform: translate(30px, -40px) scale(1.15); }
     }
 
-    /* Encabezado con Logo Centrado y Neón */
+    /* Encabezado */
     .app-title-header {
       display: flex;
       flex-direction: column;
@@ -233,9 +231,7 @@
       to { opacity: 1; transform: translateX(0); }
     }
 
-    /* =========================================================
-       ESTRUCTURA INTERNA DE LA APP
-       ========================================================= */
+    /* ESTRUCTURA INTERNA */
     .header { 
       position: sticky; 
       top: 0; 
@@ -322,9 +318,7 @@
     .nav-btn .icon { font-size: 20px; }
     .nav-btn.active { color: var(--neon-pink); text-shadow: 0 0 8px var(--neon-pink); }
 
-    /* =========================================================
-       SECCIÓN DE BURBUJAS (MATCH SYSTEM INTERACTIVO)
-       ========================================================= */
+    /* MATCH SYSTEM */
     .match-container {
       position: relative;
       height: 480px;
@@ -383,7 +377,7 @@
       margin-bottom: 6px;
     }
 
-    /* Animaciones de Swipe */
+    /* Swipe Animations */
     .swipe-right { animation: swipeRight 0.6s ease forwards; }
     .swipe-left { animation: swipeLeft 0.6s ease forwards; }
 
@@ -418,7 +412,7 @@
     .btn-like { background: rgba(34, 197, 94, 0.2); border: 2px solid #22c55e; color: #22c55e; }
     .btn-circle:active { transform: scale(0.85); }
 
-    /* Modal de MATCH CELEBRATION */
+    /* Modal Match */
     #match-modal {
       display: none;
       position: fixed;
@@ -458,9 +452,7 @@
 
     #didit-modal.show { display: flex; animation: cardAppear 0.4s ease; }
 
-    /* =========================================================
-       SECCIÓN DE DESCARGA MÓVIL (PWA - iOS & ANDROID)
-       ========================================================= */
+    /* SECCIÓN DESCARGA MÓVIL */
     .download-card {
       background: var(--glass-card);
       border: 1px solid var(--glass-border);
@@ -580,7 +572,7 @@
     </div>
 
     <div class="match-container" id="matchContainer">
-      <!-- Las tarjetas se generan dinámicamente -->
+      <!-- Tarjetas dinámicas -->
     </div>
 
     <div class="match-controls">
@@ -646,7 +638,7 @@
   <div class="auth-card-app" style="text-align:center;">
     <h2 style="color:var(--neon-pink); margin-bottom:8px;">🛡️ Verificación de Edad Requerida</h2>
     <p style="font-size:12px; color:var(--text-muted); margin-bottom:16px;">Para completar tu registro en OnlyBubbleVR debes confirmar que eres mayor de edad (+18) a través de Didit Protocol.</p>
-    <div id="didit-iframe-container" style="width:100%; min-height:300px;"></div>
+    <div id="didit-status-container" style="padding: 20px 0; font-size:13px; color:var(--neon-cyan);">Cargando flujo de verificación...</div>
     <button class="chip" style="margin-top:14px; width:100%;" onclick="cancelDiditVerification()">Cancelar y Cerrar Sesión</button>
   </div>
 </div>
@@ -660,17 +652,16 @@
 </nav>
 
 <script>
-  // CONFIGURACIÓN SUPABASE CONECTADA
+  // CONFIGURACIÓN SUPABASE
   const SUPABASE_URL = "https://wzpmgtkabsncpzpvweja.supabase.co";
   const SUPABASE_KEY = "sb_publishable_y9Yrqzf1QabeTeQV4DauBQ_tWgrL0li";
   
-  // CONFIGURACIÓN DIDIT
-  const DIDIT_WORKFLOW_ID = "489e273a-61d7-4d8d-82c3-1c17f62485aa";
-  const DIDIT_API_KEY = "cqGr-bIE2fFY94vcrur1J4j2j3TZeKqmhTpCtXcKg_8";
+  // TU ENLACE UNILINK DE DIDIT INTEGRADO
+  const DIDIT_UNILINK_URL = "https://verify.didit.me/u/SJ4nOmHXTY2CwxwX9iSFqg"; 
 
   const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  // Perfiles de prueba dinámicos para el Match de Burbujas
+  // Perfiles de prueba dinámicos
   const mockProfiles = [
     { id: '1', username: 'Aura_VR', platform: 'Meta Quest 3', bio: 'Exploradora de mundos nocturnos en VRChat 🌌', avatar_url: 'https://picsum.photos/400/600?random=1' },
     { id: '2', username: 'Kitsune_Neko', platform: 'PCVR / FullBody', bio: 'Bailarina y creadora de avatares 🦊✨', avatar_url: 'https://picsum.photos/400/600?random=2' },
@@ -680,7 +671,6 @@
   let currentProfileIndex = 0;
   let deferredPrompt;
 
-  // Registrar evento de instalación PWA
   window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     deferredPrompt = e;
@@ -717,12 +707,10 @@
   window.addEventListener('DOMContentLoaded', async () => {
     const { data: { session } } = await db.auth.getSession();
     if (session) {
-      // Si el usuario ya tiene sesión iniciada, entra directo
       enterAppDirectly(session.user);
     }
   });
 
-  // Función para dar acceso directo a la aplicación (en Login)
   function enterAppDirectly(user) {
     document.getElementById('profileEmail').innerText = user.email || 'Usuario VR';
     document.getElementById('profileVerifiedBadge').innerText = "🛡️ Sesión Activa";
@@ -731,29 +719,53 @@
     renderMatchCard();
   }
 
+  // INTEGRACIÓN SDK DIDIT (UNILINK)
   async function launchDiditVerification(user) {
-    document.getElementById('didit-modal').classList.add('show');
-    const container = document.getElementById('didit-iframe-container');
-    container.innerHTML = '<p style="font-size:12px; color:var(--text-muted);">Cargando módulo Didit...</p>';
+    const modal = document.getElementById('didit-modal');
+    const statusContainer = document.getElementById('didit-status-container');
+    
+    modal.classList.add('show');
+    statusContainer.innerText = "Abriendo ventana de verificación...";
 
-    try {
-      // URL de Verificación con Workflow ID
-      const redirectUrl = window.location.href;
-      const verificationUrl = `https://verify.didit.me/v1/check?workflow_id=${DIDIT_WORKFLOW_ID}&vendor_data=${user.id}&redirect_url=${encodeURIComponent(redirectUrl)}`;
+    // Verificar disponibilidad del SDK Didit
+    if (window.DiditSDK && window.DiditSDK.DiditSdk) {
+      const { DiditSdk } = window.DiditSDK;
 
-      container.innerHTML = `<iframe src="${verificationUrl}" style="width:100%; height:380px; border:none; border-radius:16px;" allow="camera"></iframe>`;
+      // Listener cuando el usuario complete el proceso en la ventana Didit
+      DiditSdk.shared.onComplete = async (result) => {
+        modal.classList.remove('show');
 
-      // Listener para mensaje de finalización desde Didit
-      window.addEventListener('message', async (event) => {
-        if (event.data && event.data.type === 'DIDIT_VERIFICATION_SUCCESS') {
+        if (result.type === 'completed' || result.status === 'approved') {
           // Guardar estado verificado en Supabase
-          await db.from('profiles').upsert({ id: user.id, is_age_verified: true, updated_at: new Date() });
-          document.getElementById('didit-modal').classList.remove('show');
+          const { error } = await db
+            .from('profiles')
+            .upsert({ 
+              id: user.id, 
+              is_age_verified: true, 
+              updated_at: new Date() 
+            });
+
+          if (error) {
+            console.error("Error al actualizar Supabase:", error);
+            alert("Verificación completada, pero hubo un error actualizando la base de datos.");
+            return;
+          }
+
+          alert("¡Verificación completada exitosamente!");
           enterAppDirectly(user);
+        } else {
+          alert("Verificación cancelada o no completada.");
+          await handleLogout();
         }
-      });
-    } catch(err) {
-      alert("Error al cargar la verificación Didit: " + err.message);
+      };
+
+      // Lanzar modal de verificación Didit mediante el UniLink
+      DiditSdk.shared.startVerification({ url: DIDIT_UNILINK_URL });
+
+    } else {
+      // Si por alguna razón de red falla la CDN, abrir pestaña de respaldo
+      statusContainer.innerText = "Redirigiendo a verificación externa...";
+      window.open(DIDIT_UNILINK_URL, '_blank');
     }
   }
 
@@ -762,7 +774,6 @@
     await handleLogout();
   }
 
-  // ACCESO POR INICIO DE SESIÓN (LOGIN): Entra directamente sin pedir edad
   async function handleLogin(e) {
     if (e) e.preventDefault();
     const email = document.getElementById('authEmail').value;
@@ -773,11 +784,9 @@
     const { data, error } = await db.auth.signInWithPassword({ email, password });
     if (error) return alert("Error al iniciar sesión: " + error.message);
 
-    // Acceso directo a la app sin pedir verificación
     enterAppDirectly(data.user);
   }
 
-  // LOGIN DIRECTO CON DIDIT MEDIANTE OIDC DE SUPABASE
   async function handleDiditDirectLogin() {
     const { data, error } = await db.auth.signInWithOAuth({
       provider: 'custom:didit',
@@ -789,7 +798,6 @@
     if (error) alert("Error al conectar con Didit: " + error.message);
   }
 
-  // ACCESO POR REGISTRO (SIGNUP): Exige la verificación de edad con Didit
   async function handleSignUp(e) {
     if (e) e.preventDefault();
     const email = document.getElementById('signupEmail').value;
@@ -801,7 +809,7 @@
     if (error) return alert("Error al registrarse: " + error.message);
     
     if (data.user) {
-      alert("¡Cuenta creada correctamente! Procede con la verificación de edad.");
+      alert("¡Cuenta creada! Procede con la verificación de edad.");
       launchDiditVerification(data.user);
     }
   }
@@ -875,9 +883,7 @@
     loadPosts();
   }
 
-  /* =========================================================
-     LÓGICA DEL SISTEMA DE MATCH (BURBUJAS)
-     ========================================================= */
+  /* SISTEMA DE MATCH */
   function renderMatchCard() {
     const container = document.getElementById('matchContainer');
     if (currentProfileIndex >= mockProfiles.length) {
@@ -919,12 +925,13 @@
     setTimeout(() => {
       currentProfileIndex++;
       renderMatchCard();
-    }, 500);
+    }, 600);
   }
 
   function closeMatchModal() {
     document.getElementById('match-modal').classList.remove('show');
   }
 </script>
+
 </body>
 </html>
