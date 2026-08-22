@@ -5,6 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>ONLYBUBBLEVR</title>
   
+  <!-- Soporte para App Móvil PWA (iOS y Android) -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="OnlyBubbleVR">
+  <link rel="apple-touch-icon" href="logo.png">
+  
   <!-- SDK de Supabase JS -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   
@@ -226,6 +232,152 @@
     .nav-btn { background: none; border: none; color: var(--text-muted); font-size: 10px; font-weight: 700; display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; flex: 1; }
     .nav-btn .icon { font-size: 20px; }
     .nav-btn.active { color: var(--neon-pink); text-shadow: 0 0 8px var(--neon-pink); }
+
+    /* =========================================================
+       SECCIÓN DE BURBUJAS (MATCH SYSTEM INTERACTIVO)
+       ========================================================= */
+    .match-container {
+      position: relative;
+      height: 480px;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      perspective: 1000px;
+    }
+    
+    .match-card {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border-radius: var(--radius-bubble);
+      background: var(--glass-card);
+      border: 2px solid var(--neon-purple);
+      backdrop-filter: blur(25px);
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6), 0 0 20px rgba(168, 85, 247, 0.25);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 20px;
+      overflow: hidden;
+      transform-style: preserve-3d;
+    }
+
+    .match-card img.avatar-bg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0.45;
+      z-index: 0;
+    }
+
+    .match-card-content {
+      position: relative;
+      z-index: 2;
+      background: linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(3,2,8,0.95) 100%);
+      padding: 16px;
+      border-radius: 20px;
+      margin-top: auto;
+    }
+
+    .match-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 12px;
+      background: var(--grad-main);
+      font-weight: 800;
+      font-size: 11px;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    /* Animaciones de Swipe */
+    .swipe-right {
+      animation: swipeRight 0.6s ease forwards;
+    }
+    .swipe-left {
+      animation: swipeLeft 0.6s ease forwards;
+    }
+
+    @keyframes swipeRight {
+      to { transform: translateX(120%) rotate(25deg); opacity: 0; }
+    }
+    @keyframes swipeLeft {
+      to { transform: translateX(-120%) rotate(-25deg); opacity: 0; }
+    }
+
+    .match-controls {
+      display: flex;
+      justify-content: center;
+      gap: 25px;
+      margin-top: 16px;
+    }
+
+    .btn-circle {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      border: none;
+      font-size: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    }
+
+    .btn-pass { background: rgba(239, 68, 68, 0.2); border: 2px solid #ef4444; color: #ef4444; }
+    .btn-like { background: rgba(34, 197, 94, 0.2); border: 2px solid #22c55e; color: #22c55e; }
+    .btn-circle:active { transform: scale(0.85); }
+
+    /* Modal de MATCH CELEBRATION */
+    #match-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      background: rgba(3, 2, 8, 0.95);
+      backdrop-filter: blur(25px);
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 20px;
+    }
+    #match-modal.show { display: flex; animation: zoomIn 0.5s ease; }
+
+    @keyframes zoomIn {
+      from { opacity: 0; transform: scale(0.5); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    /* =========================================================
+       SECCIÓN DE DESCARGA MÓVIL (PWA - iOS & ANDROID)
+       ========================================================= */
+    .download-card {
+      background: var(--glass-card);
+      border: 1px solid var(--glass-border);
+      border-radius: 24px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+    .platform-btn {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+      padding: 14px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--glass-border);
+      color: #fff;
+      font-weight: 700;
+      margin-top: 10px;
+      cursor: pointer;
+    }
+    .platform-btn:hover { background: rgba(255, 255, 255, 0.12); }
   </style>
 </head>
 <body>
@@ -242,7 +394,7 @@
   <div class="app-title-header">
     <img src="logo.png" alt="OnlyBubble Logo" class="main-logo-img">
     <h1>ONLYBUBBLEVR</h1>
-    <p></p>
+    <p>UNIVERSO VIRTUAL MATCH</p>
   </div>
 
   <div class="auth-card-app">
@@ -293,6 +445,7 @@
 <!-- CONTENIDO PRINCIPAL -->
 <div class="app-body">
 
+  <!-- INICIO / FEED -->
   <section id="feed" class="page active">
     <div class="create-post-card">
       <form onsubmit="publishPost(event)" style="display:flex; gap:10px; align-items:center;">
@@ -306,13 +459,57 @@
     <div id="postsContainer">Cargando publicaciones...</div>
   </section>
 
+  <!-- SECCIÓN BURBUJAS / MATCH SYSTEM -->
   <section id="discover" class="page">
-    <div style="text-align:center; padding:40px 0; color:var(--text-muted);">
-      <h2>🫧 Sección Burbujas</h2>
-      <p style="font-size:13px; margin-top:8px;">Buscando avatares y usuarios conectados...</p>
+    <div style="text-align:center; margin-bottom: 14px;">
+      <h2>🫧 Encuentra tu Bubble</h2>
+      <p style="font-size:12px; color:var(--text-muted);">Conecta con otros avatares y usuarios en VR</p>
+    </div>
+
+    <div class="match-container" id="matchContainer">
+      <!-- Las tarjetas se generan dinámicamente -->
+    </div>
+
+    <div class="match-controls">
+      <button class="btn-circle btn-pass" onclick="actionMatch('pass')">✖</button>
+      <button class="btn-circle btn-like" onclick="actionMatch('like')">💖</button>
     </div>
   </section>
 
+  <!-- SECCIÓN DESCARGAR PARA MÓVIL (iOS / ANDROID) -->
+  <section id="download" class="page">
+    <div style="text-align:center; margin-bottom: 16px;">
+      <h2>📱 Descarga la App Móvil</h2>
+      <p style="font-size:12px; color:var(--text-muted);">Instala OnlyBubbleVR en tu Smartphone sin pasar por las tiendas</p>
+    </div>
+
+    <div class="download-card">
+      <h3 style="color:var(--neon-cyan); margin-bottom:8px;">🍏 iPhone / iPad (iOS)</h3>
+      <p style="font-size:12px; color:var(--text-muted); line-height: 1.4;">
+        1. Abre este enlace desde **Safari**.<br>
+        2. Toca el botón de **Compartir** (icono de la flecha arriba).<br>
+        3. Selecciona **"Añadir a la pantalla de inicio"**.<br>
+        4. ¡Listo! La tendrás guardada como App original.
+      </p>
+      <button class="platform-btn" onclick="alert('Para instalar en iOS: Pulsa el botón Compartir de Safari y selecciona Añadir a la pantalla de inicio.')">
+        <span> Instalador para iOS</span>
+      </button>
+    </div>
+
+    <div class="download-card">
+      <h3 style="color:var(--neon-pink); margin-bottom:8px;">🤖 Android (Samsung, Xiaomi, Google...)</h3>
+      <p style="font-size:12px; color:var(--text-muted); line-height: 1.4;">
+        1. Abre este sitio web en **Google Chrome**.<br>
+        2. Toca los **tres puntos** de la esquina superior derecha.<br>
+        3. Pulsa en **"Instalar aplicación"** o **"Añadir a pantalla de inicio"**.
+      </p>
+      <button class="platform-btn" id="btn-android-install" onclick="installPWA()">
+        <span>🤖 Instalar en Android</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- PERFIL -->
   <section id="profile" class="page">
     <div class="post-card" style="text-align:center;">
       <img src="logo.png" style="width:80px; height:80px; border-radius:20px; border:2px solid var(--neon-cyan); margin-bottom:8px;" alt="Me">
@@ -323,10 +520,18 @@
 
 </div>
 
+<!-- CELEBRACIÓN DE MATCH MODAL -->
+<div id="match-modal">
+  <h1 style="font-size: 38px; background: var(--grad-main); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">¡ES UN MATCH! 🎉</h1>
+  <p style="font-size: 14px; margin: 12px 0 20px; color: var(--text-muted);">Habéis conectado mutuamente en el mundo virtual.</p>
+  <button class="btn-app-main" style="max-width: 200px;" onclick="closeMatchModal()">¡Continuar!</button>
+</div>
+
 <!-- NAVEGACIÓN INFERIOR MOBILE -->
 <nav class="bottom-nav">
   <button class="nav-btn active" onclick="switchTab('feed', this)"><span class="icon">📰</span><span>Inicio</span></button>
   <button class="nav-btn" onclick="switchTab('discover', this)"><span class="icon">🫧</span><span>Burbujas</span></button>
+  <button class="nav-btn" onclick="switchTab('download', this)"><span class="icon">📲</span><span>App Móvil</span></button>
   <button class="nav-btn" onclick="switchTab('profile', this)"><span class="icon">👤</span><span>Perfil</span></button>
 </nav>
 
@@ -336,6 +541,31 @@
   const SUPABASE_KEY = "sb_publishable_y9Yrqzf1QabeTeQV4DauBQ_tWgrL0li";
   
   const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  // Perfiles de prueba dinámicos para el Match de Burbujas
+  const mockProfiles = [
+    { id: '1', username: 'Aura_VR', platform: 'Meta Quest 3', bio: 'Exploradora de mundos nocturnos en VRChat 🌌', avatar_url: 'https://picsum.photos/400/600?random=1' },
+    { id: '2', username: 'Kitsune_Neko', platform: 'PCVR / FullBody', bio: 'Bailarina y creadora de avatares 🦊✨', avatar_url: 'https://picsum.photos/400/600?random=2' },
+    { id: '3', username: 'Cyber_Phantom', platform: 'SteamVR', bio: 'Buscando grupo para DJ Sets en VR 🎧', avatar_url: 'https://picsum.photos/400/600?random=3' }
+  ];
+
+  let currentProfileIndex = 0;
+  let deferredPrompt;
+
+  // Registrar evento de instalación PWA
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+  });
+
+  function installPWA() {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then(() => { deferredPrompt = null; });
+    } else {
+      alert("Para instalar en Android: Abre el menú del navegador (tres puntos) y selecciona 'Instalar aplicación'.");
+    }
+  }
 
   function switchAuthTab(mode) {
     const tabLogin = document.getElementById('tab-login-btn');
@@ -361,6 +591,7 @@
     if (session) {
       hideAuthScreen();
       loadPosts();
+      renderMatchCard();
       document.getElementById('profileEmail').innerText = session.user.email;
     }
   });
@@ -378,6 +609,7 @@
     document.getElementById('profileEmail').innerText = data.user.email;
     hideAuthScreen();
     loadPosts();
+    renderMatchCard();
   }
 
   async function handleSignUp(e) {
@@ -461,6 +693,58 @@
 
     input.value = '';
     loadPosts();
+  }
+
+  /* =========================================================
+     LÓGICA DEL SISTEMA DE MATCH (BURBUJAS)
+     ========================================================= */
+  function renderMatchCard() {
+    const container = document.getElementById('matchContainer');
+    if (currentProfileIndex >= mockProfiles.length) {
+      container.innerHTML = `
+        <div class="match-card" style="justify-content:center; text-align:center;">
+          <h2>🫧 Sin más burbujas</h2>
+          <p style="font-size:12px; color:var(--text-muted); margin-top:8px;">Has visto todos los avatares disponibles por hoy.</p>
+        </div>
+      `;
+      return;
+    }
+
+    const item = mockProfiles[currentProfileIndex];
+    container.innerHTML = `
+      <div class="match-card" id="activeCard">
+        <img src="${item.avatar_url}" class="avatar-bg" alt="Avatar">
+        <div class="match-card-content">
+          <span class="match-badge">${item.platform}</span>
+          <h2>${item.username}</h2>
+          <p style="font-size:12px; color:var(--text-muted); margin-top:4px;">${item.bio}</p>
+        </div>
+      </div>
+    `;
+  }
+
+  async function actionMatch(type) {
+    const card = document.getElementById('activeCard');
+    if (!card) return;
+
+    if (type === 'like') {
+      card.classList.add('swipe-right');
+      // Si le da Me gusta, mostramos el efecto visual de MATCH
+      setTimeout(() => {
+        document.getElementById('match-modal').classList.add('show');
+      }, 300);
+    } else {
+      card.classList.add('swipe-left');
+    }
+
+    setTimeout(() => {
+      currentProfileIndex++;
+      renderMatchCard();
+    }, 500);
+  }
+
+  function closeMatchModal() {
+    document.getElementById('match-modal').classList.remove('show');
   }
 </script>
 </body>
