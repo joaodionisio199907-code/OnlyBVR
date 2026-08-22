@@ -432,6 +432,11 @@
         <input type="password" id="authPass" class="input-app" placeholder="Contraseña" required>
       </div>
       <button type="submit" class="btn-app-main">ENTRAR A LA APP</button>
+      
+      <!-- BOTÓN DIRECTO LOGIN DIDIT OIDC -->
+      <button type="button" class="btn-app-main" onclick="handleDiditDirectLogin()" style="background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%); margin-top: 10px;">
+        🆔 ENTRAR CON DIDIT
+      </button>
     </form>
 
     <!-- FORMULARIO REGISTRO -->
@@ -532,7 +537,7 @@
       <img src="logo.png" style="width:80px; height:80px; border-radius:20px; border:2px solid var(--neon-cyan); margin-bottom:8px;" alt="Me">
       <h2 id="profileEmail">Usuario</h2>
       <p style="font-size:12px; color:var(--text-muted);">VRChat User</p>
-      <p id="profileVerifiedBadge" style="font-size:11px; margin-top:6px; color:var(--neon-cyan); font-weight:bold;">🛡️ Estado: Verificando...</p>
+      <p id="profileVerifiedBadge" style="font-size:11px; margin-top:6px; color:var(--neon-cyan); font-weight:bold;">🛡️ Estado: Activo</p>
     </div>
   </section>
 
@@ -549,7 +554,7 @@
 <div id="didit-modal">
   <div class="auth-card-app" style="text-align:center;">
     <h2 style="color:var(--neon-pink); margin-bottom:8px;">🛡️ Verificación de Edad Required</h2>
-    <p style="font-size:12px; color:var(--text-muted); margin-bottom:16px;">Para acceder a OnlyBubbleVR debes confirmar que eres mayor de edad (+18) a través de Didit Protocol.</p>
+    <p style="font-size:12px; color:var(--text-muted); margin-bottom:16px;">Para completar tu registro en OnlyBubbleVR debes confirmar que eres mayor de edad (+18) a través de Didit Protocol.</p>
     <div id="didit-iframe-container" style="width:100%; min-height:300px;"></div>
     <button class="chip" style="margin-top:14px; width:100%;" onclick="cancelDiditVerification()">Cancelar y Cerrar Sesión</button>
   </div>
@@ -621,25 +626,18 @@
   window.addEventListener('DOMContentLoaded', async () => {
     const { data: { session } } = await db.auth.getSession();
     if (session) {
-      await verifyUserAccess(session.user);
+      // Si el usuario ya tiene sesión iniciada, entra directo
+      enterAppDirectly(session.user);
     }
   });
 
-  async function verifyUserAccess(user) {
+  // Función para dar acceso directo a la aplicación (en Login)
+  function enterAppDirectly(user) {
     document.getElementById('profileEmail').innerText = user.email;
-    
-    // Comprobar si está verificado en Supabase
-    const { data: profile } = await db.from('profiles').select('is_age_verified').eq('id', user.id).single();
-
-    if (profile && profile.is_age_verified) {
-      document.getElementById('profileVerifiedBadge').innerText = "🛡️ Cuenta Verificada (+18)";
-      hideAuthScreen();
-      loadPosts();
-      renderMatchCard();
-    } else {
-      // Iniciar el flujo de verificación Didit
-      launchDiditVerification(user);
-    }
+    document.getElementById('profileVerifiedBadge').innerText = "🛡️ Sesión Activa";
+    hideAuthScreen();
+    loadPosts();
+    renderMatchCard();
   }
 
   async function launchDiditVerification(user) {
@@ -657,13 +655,10 @@
       // Listener para mensaje de finalización desde Didit
       window.addEventListener('message', async (event) => {
         if (event.data && event.data.type === 'DIDIT_VERIFICATION_SUCCESS') {
-          // Actualizar Supabase
+          // Guardar estado verificado en Supabase
           await db.from('profiles').upsert({ id: user.id, is_age_verified: true, updated_at: new Date() });
           document.getElementById('didit-modal').classList.remove('show');
-          document.getElementById('profileVerifiedBadge').innerText = "🛡️ Cuenta Verificada (+18)";
-          hideAuthScreen();
-          loadPosts();
-          renderMatchCard();
+          enterAppDirectly(user);
         }
       });
     } catch(err) {
@@ -676,6 +671,7 @@
     await handleLogout();
   }
 
+  // ACCESO POR INICIO DE SESIÓN (LOGIN): Entra directamente sin pedir edad
   async function handleLogin(e) {
     if (e) e.preventDefault();
     const email = document.getElementById('authEmail').value;
@@ -686,9 +682,23 @@
     const { data, error } = await db.auth.signInWithPassword({ email, password });
     if (error) return alert("Error al iniciar sesión: " + error.message);
 
-    await verifyUserAccess(data.user);
+    // Acceso directo a la app sin pedir verificación
+    enterAppDirectly(data.user);
   }
 
+  // LOGIN DIRECTO CON DIDIT MEDIANTE OIDC DE SUPABASE
+  async function handleDiditDirectLogin() {
+    const { data, error } = await db.auth.signInWithOAuth({
+      provider: 'custom:didit',
+      options: {
+        redirectTo: window.location.origin
+      }
+    });
+
+    if (error) alert("Error al conectar con Didit: " + error.message);
+  }
+
+  // ACCESO POR REGISTRO (SIGNUP): Exige la verificación de edad con Didit
   async function handleSignUp(e) {
     if (e) e.preventDefault();
     const email = document.getElementById('signupEmail').value;
@@ -699,9 +709,9 @@
     const { data, error } = await db.auth.signUp({ email, password });
     if (error) return alert("Error al registrarse: " + error.message);
     
-    alert("¡Cuenta creada correctamente! Procede con la verificación de edad.");
     if (data.user) {
-      await verifyUserAccess(data.user);
+      alert("¡Cuenta creada correctamente! Procede con la verificación de edad.");
+      launchDiditVerification(data.user);
     }
   }
 
@@ -808,7 +818,6 @@
 
     if (type === 'like') {
       card.classList.add('swipe-right');
-      // Si le da Me gusta, mostramos el efecto visual de MATCH
       setTimeout(() => {
         document.getElementById('match-modal').classList.add('show');
       }, 300);
