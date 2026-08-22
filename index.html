@@ -253,30 +253,30 @@
     </div>
 
     <!-- FORMULARIO LOGIN -->
-    <div id="form-login" class="form-step active">
+    <form id="form-login" class="form-step active" onsubmit="handleLogin(event)">
       <div class="input-group">
         <span class="input-icon">📧</span>
-        <input type="email" id="authEmail" class="input-app" placeholder="Correo electrónico">
+        <input type="email" id="authEmail" class="input-app" placeholder="Correo electrónico" required>
       </div>
       <div class="input-group">
         <span class="input-icon">🔒</span>
-        <input type="password" id="authPass" class="input-app" placeholder="Contraseña">
+        <input type="password" id="authPass" class="input-app" placeholder="Contraseña" required>
       </div>
-      <button class="btn-app-main" onclick="handleLogin()">ENTRAR A LA APP</button>
-    </div>
+      <button type="submit" class="btn-app-main">ENTRAR A LA APP</button>
+    </form>
 
     <!-- FORMULARIO REGISTRO -->
-    <div id="form-signup" class="form-step">
+    <form id="form-signup" class="form-step" onsubmit="handleSignUp(event)">
       <div class="input-group">
         <span class="input-icon">📧</span>
-        <input type="email" id="signupEmail" class="input-app" placeholder="Tu correo electrónico">
+        <input type="email" id="signupEmail" class="input-app" placeholder="Tu correo electrónico" required>
       </div>
       <div class="input-group">
         <span class="input-icon">🔒</span>
-        <input type="password" id="signupPass" class="input-app" placeholder="Crea tu contraseña">
+        <input type="password" id="signupPass" class="input-app" placeholder="Crea tu contraseña" required>
       </div>
-      <button class="btn-app-main" onclick="handleSignUp()">REGISTRARME AHORA</button>
-    </div>
+      <button type="submit" class="btn-app-main">REGISTRARME AHORA</button>
+    </form>
 
   </div>
 </div>
@@ -295,11 +295,11 @@
 
   <section id="feed" class="page active">
     <div class="create-post-card">
-      <div style="display:flex; gap:10px; align-items:center;">
+      <form onsubmit="publishPost(event)" style="display:flex; gap:10px; align-items:center;">
         <img src="logo.png" style="width:36px; height:36px; border-radius:50%;" alt="User">
         <input type="text" id="postInput" placeholder="¿Qué mundo de VRChat estás visitando?" style="flex:1; background:none; border:none; color:#fff; font-size:13px; outline:none;">
-        <button class="chip active" onclick="publishPost()">Publicar</button>
-      </div>
+        <button type="submit" class="chip active">Publicar</button>
+      </form>
     </div>
 
     <h3 style="font-size:15px; color:var(--text-muted); margin-bottom:12px;">Publicaciones de la comunidad</h3>
@@ -365,7 +365,8 @@
     }
   });
 
-  async function handleLogin() {
+  async function handleLogin(e) {
+    if (e) e.preventDefault();
     const email = document.getElementById('authEmail').value;
     const password = document.getElementById('authPass').value;
 
@@ -379,7 +380,8 @@
     loadPosts();
   }
 
-  async function handleSignUp() {
+  async function handleSignUp(e) {
+    if (e) e.preventDefault();
     const email = document.getElementById('signupEmail').value;
     const password = document.getElementById('signupPass').value;
 
@@ -442,7 +444,8 @@
     `).join('');
   }
 
-  async function publishPost() {
+  async function publishPost(e) {
+    if (e) e.preventDefault();
     const input = document.getElementById('postInput');
     const text = input.value.trim();
     if(!text) return;
