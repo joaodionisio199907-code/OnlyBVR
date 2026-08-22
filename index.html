@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>OnlyBubbleVR — Metaverse Social Network</title>
   
-  <!-- SDK de Supabase desde CDN -->
+  <!-- SDK de Supabase JS -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   
   <style>
@@ -16,7 +16,6 @@
       --neon-cyan: #00f2fe;
       --neon-pink: #ff19b5;
       --neon-purple: #8a2be2;
-      --neon-green: #00ff88;
       --text: #ffffff;
       --text-muted: #a0a0c0;
       --grad-main: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple), var(--neon-pink));
@@ -26,12 +25,12 @@
     * { box-sizing: border-box; margin: 0; padding: 0; transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); -webkit-tap-highlight-color: transparent; }
     body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; overflow-x: hidden; min-height: 100vh; padding-bottom: 80px; }
 
-    /* Fondo Ambiance */
+    /* FONDO DE LUZ AMBIENTAL */
     .glow-bg { position: fixed; inset: 0; z-index: -1; pointer-events: none; }
     .glow-1 { position: absolute; top: -15%; right: -10%; width: 350px; height: 350px; background: radial-gradient(circle, rgba(0,242,254,0.2) 0%, transparent 70%); filter: blur(70px); }
     .glow-2 { position: absolute; bottom: 10%; left: -15%; width: 400px; height: 400px; background: radial-gradient(circle, rgba(255,25,181,0.18) 0%, transparent 70%); filter: blur(80px); }
 
-    /* PANTALLA AUTH / LOGIN (OVERLAY FULLSCREEN) */
+    /* PANTALLA DE LOGIN / AUTH */
     #auth-screen { position: fixed; inset: 0; background: var(--bg); z-index: 999; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 24px; text-align: center; }
     #auth-screen.hide { animation: fadeOutAuth 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; pointer-events: none; }
     @keyframes fadeOutAuth { 0% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(1.1); display: none; } }
@@ -45,49 +44,32 @@
     .gradient-text { background: var(--grad-main); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
     .btn-grad { padding: 14px 20px; border-radius: 16px; font-weight: 800; background: var(--grad-main); color: #fff; border: none; cursor: pointer; width: 100%; font-size: 14px; box-shadow: 0 0 20px rgba(138,43,226,0.4); }
 
-    /* LAYOUT APP */
+    /* HEADER Y ESTRUCTURA */
     .header { position: sticky; top: 0; z-index: 50; background: rgba(4, 4, 9, 0.85); backdrop-filter: blur(15px); border-bottom: 1px solid var(--glass-border); padding: 12px 18px; display: flex; justify-content: space-between; align-items: center; }
     .brand { display: flex; align-items: center; gap: 10px; font-weight: 900; font-size: 18px; }
     .brand-logo-img { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 2px solid var(--neon-pink); }
 
     .app-body { max-width: 480px; margin: 0 auto; padding: 16px; }
 
-    /* PÁGINAS Y ANIMACIONES DE TRANSICIÓN */
+    /* SECCIONES Y TRANSICIÓN */
     .page { display: none; }
     .page.active { display: block; animation: slideInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
     @keyframes slideInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
-    /* FEED DE SEGUIDOS */
+    /* PUBLICACIONES Y TARJETAS */
     .create-post-card { background: var(--glass-card); border: 1px solid var(--glass-border); border-radius: 20px; padding: 14px; margin-bottom: 16px; backdrop-filter: blur(15px); }
     .post-card { background: var(--glass-card); border: 1px solid var(--glass-border); border-radius: 22px; padding: 16px; margin-bottom: 16px; backdrop-filter: blur(15px); }
     .post-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
     .post-avatar { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--neon-cyan); object-fit: cover; }
-    .post-media { width: 100%; height: 240px; border-radius: 16px; object-fit: cover; margin: 10px 0; border: 1px solid var(--glass-border); }
 
-    /* BUBBLE SWIPE (TINDER) */
-    .filter-chips { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 12px; margin-bottom: 8px; scrollbar-width: none; }
     .chip { padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); color: var(--text-muted); white-space: nowrap; cursor: pointer; }
     .chip.active { background: var(--grad-main); color: #fff; border-color: transparent; }
 
-    .bubble-card { width: 100%; height: 440px; background: var(--glass-card); backdrop-filter: blur(20px); border: 2px solid var(--glass-border); border-radius: var(--radius-bubble); padding: 18px; display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden; }
-    .avatar-img-container { width: 100%; height: 260px; border-radius: 20px; overflow: hidden; position: relative; }
-    .avatar-img { width: 100%; height: 100%; object-fit: cover; }
-
-    .bubble-actions { display: flex; justify-content: center; align-items: center; gap: 20px; margin-top: 14px; }
-    .btn-bubble { width: 56px; height: 56px; border-radius: 50%; border: none; cursor: pointer; display: grid; place-items: center; font-size: 22px; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); }
-    .btn-dislike { border-color: rgba(255,50,50,0.5); color: #ff3232; }
-    .btn-like { border-color: var(--neon-pink); background: var(--grad-main); color: #fff; box-shadow: 0 0 20px rgba(255,25,181,0.5); }
-
-    /* NAVBAR INFERIOR MOBILE */
+    /* NAVEGACIÓN INFERIOR MOBILE */
     .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100vw; background: rgba(8, 8, 16, 0.92); backdrop-filter: blur(20px); border-top: 1px solid var(--glass-border); display: flex; justify-content: space-around; padding: 10px 0 14px; z-index: 100; }
     .nav-btn { background: none; border: none; color: var(--text-muted); font-size: 10px; font-weight: 700; display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; flex: 1; }
     .nav-btn .icon { font-size: 20px; }
     .nav-btn.active { color: var(--neon-pink); text-shadow: 0 0 8px var(--neon-pink); }
-
-    /* CHAT BURBUJA */
-    .chat-trigger { position: fixed; bottom: 78px; right: 16px; width: 52px; height: 52px; border-radius: 50%; background: var(--grad-main); border: none; cursor: pointer; z-index: 90; display: grid; place-items: center; font-size: 20px; box-shadow: 0 0 20px rgba(0,242,254,0.5); }
-    .chat-window { position: fixed; bottom: 140px; right: 16px; left: 16px; max-width: 440px; margin: 0 auto; height: 55vh; background: rgba(10, 10, 22, 0.95); backdrop-filter: blur(25px); border: 1px solid var(--neon-cyan); border-radius: 24px; z-index: 95; display: none; flex-direction: column; overflow: hidden; }
-    .chat-window.open { display: flex; }
   </style>
 </head>
 <body>
@@ -97,7 +79,7 @@
   <div class="glow-2"></div>
 </div>
 
-<!-- 1. PANTALLA DE INICIO DE SESIÓN / REGISTRO -->
+<!-- 1. PANTALLA AUTH / INICIO DE SESIÓN -->
 <div id="auth-screen">
   <div class="auth-card">
     <img src="https://picsum.photos/200/200?random=88" alt="Logo" class="auth-logo">
@@ -112,7 +94,7 @@
   </div>
 </div>
 
-<!-- 2. HEADER PRINCIPAL -->
+<!-- 2. HEADER -->
 <header class="header">
   <div class="brand">
     <img src="https://picsum.photos/200/200?random=88" alt="Logo" class="brand-logo-img">
@@ -124,9 +106,8 @@
 <!-- 3. CONTENIDO PRINCIPAL (SPA) -->
 <div class="app-body">
 
-  <!-- PAGINA 1: FEED DE SEGUIDOS (INICIO TRAS LOGIN) -->
+  <!-- PÁGINA 1: FEED DE SEGUIDOS / INICIO -->
   <section id="feed" class="page active">
-    <!-- Crear Publicación -->
     <div class="create-post-card">
       <div style="display:flex; gap:10px; align-items:center;">
         <img src="https://picsum.photos/100/100?random=99" style="width:36px; height:36px; border-radius:50%;" alt="User">
@@ -136,57 +117,22 @@
     </div>
 
     <h3 style="font-size:15px; color:var(--text-muted); margin-bottom:12px;">Publicaciones de la comunidad</h3>
-
-    <!-- Feed List -->
-    <div id="postsContainer">
-      <!-- Post 1 -->
-      <div class="post-card">
-        <div class="post-header">
-          <img src="https://picsum.photos/100/100?random=1" class="post-avatar" alt="Avatar">
-          <div>
-            <b style="font-size:14px;">Kira_3D</b>
-            <p style="font-size:10px; color:var(--text-muted);">Hace 15m ● VRChat World</p>
-          </div>
-        </div>
-        <p style="font-size:13px; line-height:1.4;">Estrenando ropa con PhysBones para mi avatar en la rave de anoche 🎧✨</p>
-        <img src="https://picsum.photos/500/300?random=5" class="post-media" alt="Post photo">
-        <div style="display:flex; gap:16px; font-size:12px; color:var(--text-muted);">
-          <span>❤️ 24 Likes</span>
-          <span>💬 6 Comentarios</span>
-        </div>
-      </div>
-    </div>
+    <div id="postsContainer">Cargando publicaciones...</div>
   </section>
 
-  <!-- PAGINA 2: DISCOVER / TINDER BUBBLES -->
+  <!-- PÁGINA 2: DISCOVER / BURBUJAS -->
   <section id="discover" class="page">
-    <div class="filter-chips">
-      <button class="chip active">🔥 Todos</button>
-      <button class="chip">🟢 Quest</button>
-      <button class="chip">💻 PC VR</button>
-    </div>
-
-    <div class="bubble-card">
-      <div class="avatar-img-container">
-        <img src="https://picsum.photos/400/500?random=10" id="cardImg" class="avatar-img" alt="Avatar">
-      </div>
-      <div>
-        <h2 id="cardName" style="font-size:20px; margin-top:8px;">Luna_Cyber <span>22</span></h2>
-        <p id="cardBio" style="font-size:12px; color:var(--text-muted); margin-top:4px;">Buscando gente para explorar mundos de DJ este fin de semana. 🎧</p>
-      </div>
-    </div>
-
-    <div class="bubble-actions">
-      <button class="btn-bubble btn-dislike" onclick="nextBubble()">✕</button>
-      <button class="btn-bubble btn-like" onclick="alert('¡Bubble Liked!')">⚡</button>
+    <div style="text-align:center; padding:40px 0; color:var(--text-muted);">
+      <h2>🫧 Sección Burbujas</h2>
+      <p style="font-size:13px; margin-top:8px;">Buscando avatares y usuarios conectados...</p>
     </div>
   </section>
 
-  <!-- PAGINA 3: PERFIL -->
+  <!-- PÁGINA 3: PERFIL DE USUARIO -->
   <section id="profile" class="page">
     <div class="post-card" style="text-align:center;">
       <img src="https://picsum.photos/150/150?random=99" style="width:80px; height:80px; border-radius:50%; border:2px solid var(--neon-cyan); margin-bottom:8px;" alt="Me">
-      <h2>Joao_VR</h2>
+      <h2 id="profileEmail">Usuario</h2>
       <p style="font-size:12px; color:var(--text-muted);">VRChat User</p>
     </div>
   </section>
@@ -200,49 +146,66 @@
   <button class="nav-btn" onclick="switchTab('profile', this)"><span class="icon">👤</span><span>Perfil</span></button>
 </nav>
 
-<!-- CHAT FLOTANTE -->
-<button class="chat-trigger" onclick="toggleChat()">💬</button>
-<div class="chat-window" id="chatWindow">
-  <div style="padding:12px; background:rgba(255,255,255,0.03); border-bottom:1px solid var(--glass-border); display:flex; justify-content:space-between;">
-    <b>Cyber-Chat VR</b>
-    <button onclick="toggleChat()" style="background:none; border:none; color:#fff;">✕</button>
-  </div>
-  <div style="flex:1; padding:12px; overflow-y:auto; font-size:13px;">
-    <div style="background:rgba(255,255,255,0.08); padding:8px 12px; border-radius:12px; margin-bottom:8px;">¡Bienvenido a OnlyBubbleVR!</div>
-  </div>
-</div>
-
 <script>
-  /* CONFIGURACIÓN SUPABASE */
-  const SUPABASE_URL = "HTTPS://TU-PROYECTO.SUPABASE.CO"; // Reemplaza con tu URL de Supabase
-  const SUPABASE_ANON_KEY = "TU_KEY_ANONIMA"; // Reemplaza con tu Key de Supabase
-  const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  // CONFIGURACIÓN SUPABASE CONECTADA
+  const SUPABASE_URL = "https://wzpmgtkabsncpzpvweja.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_y9Yrqzf1QabeTeQV4DauBQ_tWgrL0li";
+  
+  const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  /* MANEJO DE SESIÓN Y ANIMACIÓN DE LOGIN */
+  // COMPROBAR SESIÓN ACTIVA
+  window.addEventListener('DOMContentLoaded', async () => {
+    const { data: { session } } = await db.auth.getSession();
+    if (session) {
+      hideAuthScreen();
+      loadPosts();
+      document.getElementById('profileEmail').innerText = session.user.email;
+    }
+  });
+
+  // LOGIN
   async function handleLogin() {
     const email = document.getElementById('authEmail').value;
     const password = document.getElementById('authPass').value;
 
-    // Descomentar cuando configures Supabase:
-    // const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    // if (error) return alert(error.message);
+    if (!email || !password) return alert("Escribe tu correo y contraseña");
 
-    // Animación de entrada
+    const { data, error } = await db.auth.signInWithPassword({ email, password });
+    if (error) return alert("Error al iniciar sesión: " + error.message);
+
+    document.getElementById('profileEmail').innerText = data.user.email;
+    hideAuthScreen();
+    loadPosts();
+  }
+
+  // REGISTRO
+  async function handleSignUp() {
+    const email = document.getElementById('authEmail').value;
+    const password = document.getElementById('authPass').value;
+
+    if (!email || !password) return alert("Escribe tu correo y contraseña para registrarte");
+
+    const { data, error } = await db.auth.signUp({ email, password });
+    if (error) return alert("Error al registrarse: " + error.message);
+    
+    alert("¡Cuenta creada correctamente! Revisa tu correo si activaste confirmación en Supabase.");
+  }
+
+  // LOGOUT
+  async function handleLogout() {
+    await db.auth.signOut();
+    const authScreen = document.getElementById('auth-screen');
+    authScreen.style.display = 'flex';
+    authScreen.classList.remove('hide');
+  }
+
+  function hideAuthScreen() {
     const authScreen = document.getElementById('auth-screen');
     authScreen.classList.add('hide');
     setTimeout(() => { authScreen.style.display = 'none'; }, 600);
   }
 
-  async function handleSignUp() {
-    alert("Para registrarte, ingresa tu correo y contraseña y pulsa crear cuenta.");
-  }
-
-  function handleLogout() {
-    document.getElementById('auth-screen').style.display = 'flex';
-    document.getElementById('auth-screen').classList.remove('hide');
-  }
-
-  /* NAVEGACIÓN SPA */
+  // NAVEGACIÓN ENTRE PÁGINAS
   function switchTab(tabId, btn) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     if(btn) {
@@ -252,35 +215,52 @@
     document.getElementById(tabId).classList.add('active');
   }
 
-  function toggleChat() {
-    document.getElementById('chatWindow').classList.toggle('open');
-  }
-
-  function publishPost() {
-    const input = document.getElementById('postInput');
-    if(!input.value.trim()) return;
-
+  // OBTENER PUBLICACIONES DE SUPABASE
+  async function loadPosts() {
     const container = document.getElementById('postsContainer');
-    const newPost = `
+    const { data: posts, error } = await db.from('posts').select('*').order('created_at', { ascending: false });
+
+    if (error) {
+      container.innerHTML = `<p style="color:var(--text-muted); font-size:12px;">Error cargando publicaciones: ${error.message}</p>`;
+      return;
+    }
+
+    if (!posts || posts.length === 0) {
+      container.innerHTML = `<p style="color:var(--text-muted); font-size:13px; text-align:center;">Aún no hay publicaciones creadas.</p>`;
+      return;
+    }
+
+    container.innerHTML = posts.map(post => `
       <div class="post-card">
         <div class="post-header">
-          <img src="https://picsum.photos/100/100?random=99" class="post-avatar" alt="Avatar">
+          <img src="https://picsum.photos/100/100?random=${post.id}" class="post-avatar" alt="Avatar">
           <div>
-            <b style="font-size:14px;">Joao_VR</b>
-            <p style="font-size:10px; color:var(--text-muted);">Ahora mismo</p>
+            <b style="font-size:14px;">Usuario VR</b>
+            <p style="font-size:10px; color:var(--text-muted);">${new Date(post.created_at).toLocaleTimeString()}</p>
           </div>
         </div>
-        <p style="font-size:13px; line-height:1.4;">${input.value}</p>
+        <p style="font-size:13px; line-height:1.4;">${post.content}</p>
       </div>
-    `;
-    container.innerHTML = newPost + container.innerHTML;
-    input.value = '';
+    `).join('');
   }
 
-  function nextBubble() {
-    document.getElementById('cardName').textContent = "Aura_VR 23";
-    document.getElementById('cardBio').textContent = "Creadora 3D de mapas y avatares personalizados.";
-    document.getElementById('cardImg').src = "https://picsum.photos/400/500?random=20";
+  // GUARDAR PUBLICACIÓN EN SUPABASE
+  async function publishPost() {
+    const input = document.getElementById('postInput');
+    const text = input.value.trim();
+    if(!text) return;
+
+    const { data: { session } } = await db.auth.getSession();
+    if (!session) return alert("Debes iniciar sesión para publicar");
+
+    const { error } = await db.from('posts').insert([
+      { content: text, user_id: session.user.id }
+    ]);
+
+    if (error) return alert("Error al publicar: " + error.message);
+
+    input.value = '';
+    loadPosts();
   }
 </script>
 </body>
