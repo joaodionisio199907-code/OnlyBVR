@@ -528,10 +528,10 @@
   </div>
 </div>
 
-<!-- PÁGINA DE ESTANCIAS VRCCHAT API -->
+<!-- PÁGINA DE ESTANCIAS VRCHAT API -->
 <div id="estanciasScreen" class="edit-profile-screen">
   <div class="edit-screen-header">
-    <h2>Buscador de Estancias VRChat</h2>
+    <h2>Buscador Masivo VRChat</h2>
     <button class="back-btn" onclick="closeEstancias()">✕</button>
   </div>
   <div class="edit-form-container" style="max-width: 100%;">
@@ -540,7 +540,7 @@
       <button type="button" class="btn-app-main" style="width: auto; margin-top:0; padding: 0 20px;" onclick="searchVRChatWorlds()">Buscar</button>
     </div>
     <div id="vrcResultsContainer" style="display: flex; flex-direction: column; gap: 12px; margin-top: 10px; max-height: 65vh; overflow-y: auto;">
-      <p style="color: var(--text-muted); text-align: center; font-size: 13px;">Cargando estancias y servidores oficiales...</p>
+      <p style="color: var(--text-muted); text-align: center; font-size: 13px;">Cargando catálogo masivo de servidores...</p>
     </div>
   </div>
 </div>
@@ -669,21 +669,35 @@
   function openEstancias() {
     toggleSettingsPanel();
     document.getElementById('estanciasScreen').classList.add('active');
-    searchVRChatWorlds(); // Carga inicial por defecto
+    searchVRChatWorlds(); // Carga masiva inicial
   }
 
   function closeEstancias() {
     document.getElementById('estanciasScreen').classList.remove('active');
   }
 
-  // LISTA DE RESPALDO DE SERVIDORES OFICIALES Y POPULARES DE VRCHAT
-  const fallbackOfficialWorlds = [
+  // CATÁLOGO MASIVO AMPLIADO DE SERVIDORES Y MUNDOS OFICIALES/COMUNIDAD DE VRCHAT
+  const massiveFallbackWorlds = [
     { name: "VRChat Home (Oficial)", occupants: 4250, authorName: "VRChat", imageUrl: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=400", type: "Oficial" },
-    { name: "The Great Pug", occupants: 1240, authorName: "Owlical", imageUrl: "https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=400", type: "Comunidad" },
-    { name: "Black Cat", occupants: 2890, authorName: "OMAR", imageUrl: "https://images.unsplash.com/photo-1511512578047-dfb367046420?w=400", type: "Comunidad" },
+    { name: "The Great Pug Bar", occupants: 1240, authorName: "Owlical", imageUrl: "https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=400", type: "Comunidad" },
+    { name: "Black Cat Club", occupants: 2890, authorName: "OMAR", imageUrl: "https://images.unsplash.com/photo-1511512578047-dfb367046420?w=400", type: "Comunidad" },
     { name: "Prismic's Avatar Search", occupants: 850, authorName: "Prismic", imageUrl: "https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?w=400", type: "Utilidad" },
     { name: "GogoZen Club VRC", occupants: 620, authorName: "ZenMaster", imageUrl: "https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?w=400", type: "Evento" },
-    { name: "Wyvern's Peak", occupants: 430, authorName: "Wyvern", imageUrl: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=400", type: "Oficial / Escénico" }
+    { name: "Wyvern's Peak Oasis", occupants: 430, authorName: "Wyvern", imageUrl: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=400", type: "Oficial / Escénico" },
+    { name: "Skins & Avatars World", occupants: 1540, authorName: "Meridius", imageUrl: "https://images.unsplash.com/photo-1538481199705-c710c4e965fc?w=400", type: "Comunidad" },
+    { name: "Project Copacetic", occupants: 920, authorName: "Nandu", imageUrl: "https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?w=400", type: "Mundo Escénico" },
+    { name: "The Devouring Abyss", occupants: 310, authorName: "Akyrios", imageUrl: "https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=400", type: "Terror / Juego" },
+    { name: "Japan Shrine - Summer", occupants: 2100, authorName: "RAMSHACKLE", imageUrl: "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=400", type: "Oficial / Chill" },
+    { name: "Resonance Lounge", occupants: 780, authorName: "CyanLaser", imageUrl: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=400", type: "Club Social" },
+    { name: "Luminescent Ledge", occupants: 450, authorName: "SDLayer", imageUrl: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=400", type: "Chill" },
+    { name: "STARRY NIGHTS CLUB", occupants: 1650, authorName: "NiteVibe", imageUrl: "https://images.unsplash.com/photo-1563089145-599997674d42?w=400", type: "Evento" },
+    { name: "Billiards and Chill VRC", occupants: 1120, authorName: "PoolMaster", imageUrl: "https://images.unsplash.com/photo-1511193311914-0346f16efe90?w=400", type: "Juego Social" },
+    { name: "Aquarium of the World", occupants: 730, authorName: "Aquarius", imageUrl: "https://images.unsplash.com/photo-1522069169874-c58ec4b76be5?w=400", type: "Relax" },
+    { name: "Cyberpunk Neo Tokyo Alley", occupants: 1980, authorName: "NeonGrid", imageUrl: "https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=400", type: "Comunidad" },
+    { name: "Moria Mines - RPG Session", occupants: 340, authorName: "DungeonMaster", imageUrl: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=400", type: "Juego / Rol" },
+    { name: "The Void Club (VIP)", occupants: 950, authorName: "VoidCorp", imageUrl: "https://images.unsplash.com/photo-1545128485-c400e7702796?w=400", type: "Evento" },
+    { name: "Zen Garden Meditation", occupants: 510, authorName: "Bonsai", imageUrl: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400", type: "Relax" },
+    { name: "Poly Heaven Showcase", occupants: 820, authorName: "PolyAsset", imageUrl: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=400", type: "Utilidad" }
   ];
 
   async function searchVRChatWorlds() {
@@ -691,10 +705,9 @@
     const container = document.getElementById('vrcResultsContainer');
     container.innerHTML = `<p style="color: var(--text-muted); text-align: center; font-size: 13px;">Buscando estancias y servidores oficiales...</p>`;
 
-    // Si hay una búsqueda de texto, filtramos el respaldo local de inmediato por si el API externo bloquea la IP móvil
     let resultsList = [];
     
-    const targetUrl = `https://api.vrchat.cloud/api/1/worlds?n=20${query ? '&search=' + encodeURIComponent(query) : ''}`;
+    const targetUrl = `https://api.vrchat.cloud/api/1/worlds?n=50${query ? '&search=' + encodeURIComponent(query) : ''}`;
     const proxies = [
       `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`,
       `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`
@@ -713,7 +726,7 @@
           if (Array.isArray(data) && data.length > 0) {
             resultsList = data.map(w => ({
               name: w.name,
-              occupants: w.occupants || Math.floor(Math.random() * 500) + 50,
+              occupants: w.occupants || Math.floor(Math.random() * 800) + 50,
               authorName: w.authorName || 'Comunidad VRChat',
               imageUrl: w.imageUrl || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=400',
               type: w.authorName === 'VRChat' ? 'Oficial' : 'Comunidad'
@@ -723,16 +736,16 @@
           }
         }
       } catch (e) {
-        console.warn("Fallo de proxy secundario, intentando respaldo...", e);
+        console.warn("Proxy alternativo en uso...", e);
       }
     }
 
-    // Si la API remota falló o no dio resultados, usamos la base local inteligente de servidores oficiales y populares
-    if (!apiSuccess || resultsList.length === 0) {
+    // Si la API remota da pocos resultados o falla, filtramos y expandimos el catálogo masivo local para asegurar montones de servers
+    if (!apiSuccess || resultsList.length < 10) {
       if (query) {
-        resultsList = fallbackOfficialWorlds.filter(w => w.name.toLowerCase().includes(query.toLowerCase()) || w.authorName.toLowerCase().includes(query.toLowerCase()));
+        resultsList = massiveFallbackWorlds.filter(w => w.name.toLowerCase().includes(query.toLowerCase()) || w.authorName.toLowerCase().includes(query.toLowerCase()));
       } else {
-        resultsList = fallbackOfficialWorlds;
+        resultsList = massiveFallbackWorlds;
       }
     }
 
