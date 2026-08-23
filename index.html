@@ -340,7 +340,7 @@
     }
     .panel-logout-btn { background: rgba(236, 72, 153, 0.1); border-color: rgba(236, 72, 153, 0.3); color: var(--neon-pink); }
 
-    /* PÁGINA ANIMADA DE EDICIÓN DE PERFIL */
+    /* PÁGINA ANIMADA DE EDICIÓN DE PERFIL Y ESTANCIAS */
     .edit-profile-screen {
       position: fixed; inset: 0; background: var(--bg);
       z-index: 200; display: flex; flex-direction: column;
@@ -483,6 +483,7 @@
     </div>
     <div class="panel-menu-items">
       <button class="panel-menu-btn" onclick="openEditProfile()"><span>👤</span> Mi Perfil</button>
+      <button class="panel-menu-btn" onclick="openEstancias()"><span>🌐</span> Estancias</button>
       <button class="panel-menu-btn" onclick="alert('Abriendo Ajustes...')"><span>⚙️</span> Ajustes de la App</button>
       <button class="panel-menu-btn" onclick="alert('No hay notificaciones nuevas.')"><span>🔔</span> Notificaciones</button>
     </div>
@@ -524,6 +525,23 @@
       <textarea id="editBio" class="input-app" placeholder="Cuéntanos sobre ti en realidad virtual..."></textarea>
     </div>
     <button type="button" class="btn-app-main" onclick="saveProfileChanges()">GUARDAR CAMBIOS</button>
+  </div>
+</div>
+
+<!-- PÁGINA DE ESTANCIAS VRCCHAT API -->
+<div id="estanciasScreen" class="edit-profile-screen">
+  <div class="edit-screen-header">
+    <h2>Buscador de Estancias VRChat</h2>
+    <button class="back-btn" onclick="closeEstancias()">✕</button>
+  </div>
+  <div class="edit-form-container" style="max-width: 100%;">
+    <div class="input-group" style="display: flex; gap: 8px;">
+      <input type="text" id="vrcSearchInput" class="input-app" placeholder="Buscar mundos o estancias..." style="flex:1;">
+      <button type="button" class="btn-app-main" style="width: auto; margin-top:0; padding: 0 20px;" onclick="searchVRChatWorlds()">Buscar</button>
+    </div>
+    <div id="vrcResultsContainer" style="display: flex; flex-direction: column; gap: 12px; margin-top: 10px; max-height: 65vh; overflow-y: auto;">
+      <p style="color: var(--text-muted); text-align: center; font-size: 13px;">Escribe algo o pulsa buscar para ver estancias online.</p>
+    </div>
   </div>
 </div>
 
@@ -646,6 +664,57 @@
 
   function closeEditProfile() {
     document.getElementById('editProfileScreen').classList.remove('active');
+  }
+
+  function openEstancias() {
+    toggleSettingsPanel();
+    document.getElementById('estanciasScreen').classList.add('active');
+    searchVRChatWorlds(); // Carga inicial por defecto
+  }
+
+  function closeEstancias() {
+    document.getElementById('estanciasScreen').classList.remove('active');
+  }
+
+  async function searchVRChatWorlds() {
+    const query = document.getElementById('vrcSearchInput').value.trim();
+    const container = document.getElementById('vrcResultsContainer');
+    container.innerHTML = `<p style="color: var(--text-muted); text-align: center; font-size: 13px;">Buscando estancias...</p>`;
+
+    try {
+      const url = `https://api.vrchat.cloud/api/1/worlds?n=15&search=${encodeURIComponent(query)}`;
+      const response = await fetch(url, {
+        headers: {
+          'User-Agent': 'OnlyBubbleVRApp/1.0 (contact@onlybubble.vr)'
+        }
+      });
+
+      if (!response.ok) throw new Error("No se pudo conectar con la API de VRChat");
+
+      const worlds = await response.json();
+      if (!worlds || worlds.length === 0) {
+        container.innerHTML = `<p style="color: var(--text-muted); text-align: center; font-size: 13px;">No se encontraron estancias.</p>`;
+        return;
+      }
+
+      container.innerHTML = '';
+      worlds.forEach(world => {
+        const card = document.createElement('div');
+        card.style.cssText = `background: var(--glass-card); border: 1px solid var(--glass-border); border-radius: 20px; padding: 12px; display: flex; gap: 12px; align-items: center;`;
+        
+        card.innerHTML = `
+          <img src="${world.imageUrl || 'https://picsum.photos/200'}" style="width: 70px; height: 70px; border-radius: 14px; object-fit: cover;" alt="World">
+          <div style="flex: 1; overflow: hidden;">
+            <h4 style="font-size: 14px; font-weight: 800; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${world.name}</h4>
+            <p style="font-size: 11px; color: var(--neon-cyan); margin-top: 2px;">👤 Jugadores Online: <b>${world.occupants || 0}</b></p>
+            <p style="font-size: 11px; color: var(--text-muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Autor: ${world.authorName || 'Desconocido'}</p>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    } catch (err) {
+      container.innerHTML = `<p style="color: var(--neon-pink); text-align: center; font-size: 13px;">Error al cargar estancias de VRChat.</p>`;
+    }
   }
 
   function loadProfileDataIntoForm(profile) {
