@@ -737,7 +737,8 @@
 </div>
 
 <script>
-  // Script de control principal (Funciones simuladas / integradas)
+  // Script de control principal con Supabase integrado
+
   function switchAuthTab(tab) {
     document.getElementById('tab-login-btn').classList.toggle('active', tab === 'login');
     document.getElementById('tab-signup-btn').classList.toggle('active', tab === 'signup');
@@ -745,9 +746,73 @@
     document.getElementById('form-signup').classList.toggle('active', tab === 'signup');
   }
 
-  function handleLogin(e) { e.preventDefault(); alert("Iniciando sesión..."); }
-  function handleSignup(e) { e.preventDefault(); alert("Registrando cuenta..."); }
+  // --- INICIO DE SESIÓN REAL CON SUPABASE ---
+  async function handleLogin(e) {
+    e.preventDefault();
+    
+    const emailInput = document.getElementById('login-email');
+    const passwordInput = document.getElementById('login-password');
+
+    if (!emailInput || !passwordInput) {
+      alert("No se encontraron los campos de correo o contraseña en el HTML.");
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: emailInput.value,
+        password: passwordInput.value,
+      });
+
+      if (error) {
+        alert("Error al iniciar sesión: " + error.message);
+        return;
+      }
+
+      alert("¡Inicio de sesión exitoso!");
+      // Aquí puedes recargar o cambiar de vista según tu lógica
+      location.reload(); 
+
+    } catch (err) {
+      console.error("Error inesperado:", err);
+      alert("Ocurrió un error inesperado al conectar con Supabase.");
+    }
+  }
+
+  // --- REGISTRO REAL CON SUPABASE ---
+  async function handleSignup(e) {
+    e.preventDefault();
+
+    const emailInput = document.getElementById('signup-email');
+    const passwordInput = document.getElementById('signup-password');
+
+    if (!emailInput || !passwordInput) {
+      alert("No se encontraron los campos de registro en el HTML.");
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email: emailInput.value,
+        password: passwordInput.value,
+      });
+
+      if (error) {
+        alert("Error en el registro: " + error.message);
+        return;
+      }
+
+      alert("¡Cuenta creada con éxito! Revisa tu correo si Supabase requiere confirmación o ya puedes iniciar sesión.");
+      switchAuthTab('login');
+
+    } catch (err) {
+      console.error("Error inesperado:", err);
+      alert("Ocurrió un error inesperado al registrarse.");
+    }
+  }
+
   function redirectToDidit() { alert("Redirigiendo a verificación Didit..."); }
+  
   function switchAppTab(tab, btn) {
     document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
     btn.classList.add('active');
@@ -779,7 +844,6 @@
     title.innerText = type === 'matches' ? 'Tus Matches' : type === 'friends' ? 'Tus Amigos' : 'Tus Seguidores';
     modal.classList.add('active');
     
-    // Contenido simulado interactivo con opción de ver perfil y eliminar relación
     container.innerHTML = `
       <div class="sublist-user-row">
         <div class="sublist-user-info" onclick="alert('Abriendo perfil del usuario...')">
@@ -802,7 +866,15 @@
   function handleLike() { alert("¡Nuevo Match!"); }
   function closeActiveChat() { document.getElementById('chatActiveView').classList.remove('active'); }
   function sendChatMessage() { alert("Mensaje enviado"); }
-  function handleLogout() { location.reload(); }
+  
+  // --- CIERRE DE SESIÓN CON SUPABASE ---
+  async function handleLogout() {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      console.error("Error al cerrar sesión:", error.message);
+    }
+    location.reload();
+  }
 </script>
 </body>
 </html>
