@@ -535,10 +535,10 @@
     </div>
   </div>
 
-  <!-- SECCIÓN 1: INICIO (DESCUBRIR USUARIOS REALES) -->
+  <!-- SECCIÓN 1: INICIO -->
   <div id="sectionInicio" class="app-section-view active">
     <div class="matches-bubbles-bar" id="topMatchesBar">
-      <!-- Se llena dinámicamente con usuarios reales conectados -->
+      <!-- Se llena con usuarios reales -->
     </div>
 
     <div class="profile-card-container" id="discoveryCardContainer">
@@ -572,7 +572,7 @@
         💬 Conversaciones Activas
       </div>
       <div class="chat-conversations-list" id="realConversationsList">
-        <p style="color:var(--text-muted); text-align:center; padding: 20px; font-size:13px;">No hay chats recientes. Haz match con amigos para hablar.</p>
+        <p style="color:var(--text-muted); text-align:center; padding: 20px; font-size:13px;">Haz match con amigos para abrir un chat directo.</p>
       </div>
     </div>
 
@@ -585,9 +585,7 @@
           <div style="font-size: 10px; color: #10b981;">● En línea</div>
         </div>
       </div>
-      <div id="chatMessagesBox" class="chat-messages-container">
-        <!-- Mensajes en tiempo real -->
-      </div>
+      <div id="chatMessagesBox" class="chat-messages-container"></div>
       <div class="chat-input-bar">
         <input type="text" id="chatMessageInput" class="chat-input-field" placeholder="Escribe un mensaje..." onkeypress="if(event.key==='Enter') sendChatMessage()">
         <button type="button" class="chat-send-btn" onclick="sendChatMessage()">➤</button>
@@ -669,12 +667,10 @@
     <div class="ig-username-title" id="sublistTitle">Lista</div>
     <div style="width:20px;"></div>
   </div>
-  <div id="sublistContentContainer" style="padding: 20px; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; flex: 1;">
-    <!-- Contenido dinámico real -->
-  </div>
+  <div id="sublistContentContainer" style="padding: 20px; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; flex: 1;"></div>
 </div>
 
-<!-- PANEL LATERAL DE AJUSTES -->
+<!-- PANEL LATERAL DE AJUSTES (MENÚ DESPLEGABLE COMPLETO) -->
 <div id="settingsBackdrop" class="settings-modal-backdrop" onclick="toggleSettingsPanel()"></div>
 <div id="settingsPanel" class="settings-slide-panel">
   <div>
@@ -683,7 +679,7 @@
       <button class="panel-close-btn" onclick="toggleSettingsPanel()">✕</button>
     </div>
     <div class="panel-menu-items">
-      <button class="panel-menu-btn" onclick="openEditProfile()"><span>👤</span> Editar Perfil</button>
+      <button class="panel-menu-btn" onclick="openEditProfile()"><span>👤</span> Editar Perfil Avanzado</button>
       <button class="panel-menu-btn panel-logout-btn" onclick="handleLogout()"><span>🚪</span> Cerrar Sesión</button>
     </div>
   </div>
@@ -756,7 +752,6 @@
   async function validateAndGrantAccess(user) {
     currentUserSession = user;
     
-    // Asegurar perfil base si no existe
     let { data: profile } = await db.from('profiles').select('*').eq('id', user.id).maybeSingle();
     if (!profile) {
       const defaultProfile = { id: user.id, name: user.email.split('@')[0], handle: '@' + user.email.split('@')[0], avatar_url: 'https://placehold.co/100x100/120b24/a855f7?text=' + user.email.charAt(0).toUpperCase() };
@@ -818,14 +813,12 @@
   async function loadRealData() {
     if (!currentUserSession) return;
 
-    // 1. Cargar todos los perfiles excepto el propio
     const { data: profiles } = await db.from('profiles').select('*').neq('id', currentUserSession.id);
     allProfilesList = profiles || [];
 
     renderDiscoveryCard();
     renderTopMatchesBubbles();
 
-    // 2. Cargar contadores reales de conexiones
     const { count: amigosCount } = await db.from('user_connections').select('*', { count: 'exact', head: true }).eq('user_id', currentUserSession.id).eq('connection_type', 'friend');
     const { count: matchesCount } = await db.from('user_connections').select('*', { count: 'exact', head: true }).eq('user_id', currentUserSession.id).eq('connection_type', 'match');
     const { count: seguidoresCount } = await db.from('user_connections').select('*', { count: 'exact', head: true }).eq('friend_id', currentUserSession.id).eq('connection_type', 'follower');
@@ -882,7 +875,6 @@
     if (allProfilesList.length === 0 || !currentUserSession) return;
     const targetUser = allProfilesList[currentDiscoveryIndex];
 
-    // Registrar match / conexión en base de datos real
     await db.from('user_connections').insert([
       { user_id: currentUserSession.id, friend_id: targetUser.id, connection_type: 'match' }
     ]);
@@ -942,7 +934,6 @@
 
     container.innerHTML = `<p style="color:var(--text-muted); text-align:center;">Cargando...</p>`;
     
-    // Consultar conexiones reales de Supabase
     const typeKey = type === 'Amigos' ? 'friend' : (type === 'Matches' ? 'match' : 'follower');
     const queryField = type === 'Seguidores' ? 'friend_id' : 'user_id';
     
