@@ -779,11 +779,11 @@
       alert("¡Inicio de sesión exitoso!");
       location.reload(); 
 
-    } catch (err) {
-      console.error("Error inesperado:", err);
-      alert("Ocurrió un error inesperado al conectar con Supabase.");
+   } catch (err) {
+      console.error("Error inesperado detallado:", err);
+      // Esto te mostrará el error exacto en una alerta emergente en la pantalla
+      alert("Error técnico de Supabase: " + (err.message || JSON.stringify(err)));
     }
-  }
 
   // --- REGISTRO CON SUPABASE (IDs corregidos: regEmail y regPass) ---
   async function handleSignup(e) {
