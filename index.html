@@ -41,7 +41,13 @@
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
       overflow-x: hidden; 
       min-height: 100vh; 
-      padding-bottom: 90px; 
+      padding-bottom: 90px;
+      /* Bloqueo de selección de texto y arrastre */
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+      -webkit-user-drag: none;
     }
 
     #auth-screen { 
@@ -91,7 +97,7 @@
     .auth-tab-btn.active { background: var(--grad-main); color: #fff; }
 
     .input-group { position: relative; margin-bottom: 14px; }
-    .input-app { width: 100%; padding: 16px; background: rgba(8, 5, 20, 0.7); border: 1px solid var(--glass-border); border-radius: 16px; color: #fff; font-size: 14px; outline: none; }
+    .input-app { width: 100%; padding: 16px; background: rgba(8, 5, 20, 0.7); border: 1px solid var(--glass-border); border-radius: 16px; color: #fff; font-size: 14px; outline: none; -webkit-user-select: text; user-select: text; }
 
     .btn-app-main { 
       padding: 16px; 
@@ -185,6 +191,30 @@
 </nav>
 
 <script>
+  // BLOQUEOS ANTI-INSPECCIÓN
+  document.addEventListener('contextmenu', e => e.preventDefault());
+
+  document.addEventListener('keydown', e => {
+    if (
+      e.key === 'F12' ||
+      (e.ctrlKey && e.shiftKey && ['I','J','C','i','j','c'].includes(e.key)) ||
+      (e.ctrlKey && ['U','u','S','s'].includes(e.key)) ||
+      (e.metaKey && e.altKey && ['I','J','C','i','j','c','U','u'].includes(e.key))
+    ) {
+      e.preventDefault();
+      return false;
+    }
+  });
+
+  setInterval(() => {
+    const start = performance.now();
+    debugger;
+    if (performance.now() - start > 100) {
+      window.location.reload();
+    }
+  }, 1000);
+
+  // SUPABASE & LÓGICA DE LA APP
   const SUPABASE_URL = "https://wzpmgtkabsncpzpvweja.supabase.co";
   const SUPABASE_KEY = "sb_publishable_y9Yrqzf1QabeTeQV4DauBQ_tWgrL0li";
   const DIDIT_FLOW_URL = "https://verify.didit.me/u/SJ4nOmHXTY2CwxwX9iSFqg";
@@ -202,7 +232,6 @@
     window.location.href = DIDIT_FLOW_URL;
   }
 
-  // AL Cargar la página: bloquear por defecto hasta validar
   window.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('auth-screen').classList.remove('hide');
     const { data: { session } } = await db.auth.getSession();
@@ -211,25 +240,21 @@
     }
   });
 
-  // GUARDIAN DE VERIFICACIÓN
   async function validateAndGrantAccess(user) {
-    // 1. Consultar el estado en Supabase
     const { data: profile, error } = await db
       .from('profiles')
       .select('is_age_verified')
       .eq('id', user.id)
       .maybeSingle();
 
-    // 2. Si no existe perfil o is_age_verified no es true explícito -> EXPULSAR Y BLOQUEAR
     if (error || !profile || profile.is_age_verified !== true) {
       alert("⚠️ Acceso denegado: Tu cuenta no está verificada (+18). Redirigiendo...");
-      await db.auth.signOut(); // Cerramos la sesión activa
-      document.getElementById('auth-screen').classList.remove('hide'); // Forzar pantalla de login
+      await db.auth.signOut();
+      document.getElementById('auth-screen').classList.remove('hide');
       redirectToDidit();
       return false;
     }
 
-    // 3. Solo si está verificado (true), ocultamos la pantalla de login
     document.getElementById('auth-screen').classList.add('hide');
     return true;
   }
@@ -254,7 +279,6 @@
     if (error) return alert("Error al registrarse: " + error.message);
     
     if (data.user) {
-      // Forzar inserción de estado no verificado
       await db.from('profiles').upsert({
         id: data.user.id,
         is_age_verified: false
