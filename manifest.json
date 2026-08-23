@@ -1,0 +1,15 @@
+{
+  "name": "OnlyBubbleVR",
+  "short_name": "OnlyBubble",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#030208",
+  "theme_color": "#a855f7",
+  "icons": [
+    {
+      "src": "logo.png",
+      "sizes": "192x192 512x512",
+      "type": "image/png"
+    }
+  ]
+}
