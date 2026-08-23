@@ -683,13 +683,17 @@
 
     try {
       const targetUrl = `https://api.vrchat.cloud/api/1/worlds?n=15&search=${encodeURIComponent(query)}`;
-      const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
+      const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`;
 
-      const response = await fetch(proxyUrl);
-      if (!response.ok) throw new Error("Error en la red del proxy");
+      const response = await fetch(proxyUrl, {
+        headers: {
+          'User-Agent': 'OnlyBubbleVR/1.0 (contacto@onlybubble.vr)'
+        }
+      });
 
-      const data = await response.json();
-      const worlds = JSON.parse(data.contents);
+      if (!response.ok) throw new Error("No se pudo conectar con el servidor de VRChat");
+
+      const worlds = await response.json();
 
       if (!worlds || !Array.isArray(worlds) || worlds.length === 0) {
         container.innerHTML = `<p style="color: var(--text-muted); text-align: center; font-size: 13px;">No se encontraron estancias.</p>`;
@@ -712,7 +716,7 @@
         container.appendChild(card);
       });
     } catch (err) {
-      container.innerHTML = `<p style="color: var(--neon-pink); text-align: center; font-size: 13px;">Error al cargar estancias de VRChat.</p>`;
+      container.innerHTML = `<p style="color: var(--neon-pink); text-align: center; font-size: 13px;">Error al cargar estancias. Inténtalo de nuevo.</p>`;
     }
   }
 
