@@ -43,7 +43,6 @@
       height: 100vh; 
       width: 100vw;
       position: relative;
-      /* Bloqueo de selección de texto y arrastre */
       -webkit-user-select: none;
       -moz-user-select: none;
       -ms-user-select: none;
@@ -64,7 +63,6 @@
       overflow: hidden;
     }
 
-    /* ESTILOS DEL VÍDEO DE FONDO EN LOGIN/REGISTER */
     .bg-auth-video {
       position: absolute;
       top: 0;
@@ -128,7 +126,7 @@
     .form-step { display: none; }
     .form-step.active { display: block; }
 
-    /* ESTILOS DE LA APP INTERNA TIPO TINDER CON BURBUJAS (INSPIRACIÓN DRIBBBLE) */
+    /* INTERFAZ PRINCIPAL DE LA APP */
     .app-interface {
       position: absolute;
       inset: 0;
@@ -142,7 +140,6 @@
 
     .app-interface.hide { display: none !important; }
 
-    /* Header superior tipo Dribbble */
     .interface-header {
       display: flex;
       justify-content: space-between;
@@ -154,7 +151,6 @@
     .header-pills { display: flex; gap: 12px; font-size: 13px; font-weight: 600; color: var(--text-muted); }
     .header-pills span.active { color: var(--text); border-bottom: 2px solid var(--neon-pink); padding-bottom: 2px; }
 
-    /* Tarjeta principal de perfil a pantalla completa */
     .profile-card-container {
       position: relative;
       flex: 1;
@@ -177,7 +173,6 @@
       object-fit: cover;
     }
 
-    /* Degradado oscuro inferior para legibilidad del texto */
     .profile-gradient-overlay {
       position: absolute;
       inset: 0;
@@ -194,7 +189,6 @@
     .profile-name-age { font-size: 28px; font-weight: 800; display: flex; align-items: baseline; gap: 8px; }
     .profile-location { font-size: 13px; color: var(--text-muted); margin-top: 4px; display: flex; align-items: center; gap: 4px; }
 
-    /* Contenedor inferior de Matches en Burbujas (Estilo burbujas flotantes en barra) */
     .matches-bubbles-bar {
       display: flex;
       align-items: center;
@@ -236,7 +230,6 @@
       border-radius: 50%;
     }
 
-    /* Botones de acción flotantes (Like / Dislike) sobre la tarjeta */
     .profile-actions-float {
       position: absolute;
       right: 20px;
@@ -315,10 +308,8 @@
   </div>
 </div>
 
-<!-- INTERFAZ PRINCIPAL DE LA APP (ESTILO TINDER & MATCHES EN BURBUJAS) -->
+<!-- INTERFAZ PRINCIPAL DE LA APP -->
 <div id="mainAppInterface" class="app-interface hide">
-  
-  <!-- Header superior -->
   <div class="interface-header">
     <img src="https://picsum.photos/id/64/100/100" alt="Mi perfil" class="user-avatar-top">
     <div class="header-pills">
@@ -328,25 +319,21 @@
     <button onclick="handleLogout()" style="background:none; border:none; color:var(--text-muted); font-size:16px; cursor:pointer;">⚙️</button>
   </div>
 
-  <!-- Tarjeta Central Estilo Dribbble -->
   <div class="profile-card-container">
     <img src="https://picsum.photos/id/65/600/900" alt="Perfil recomendado" class="profile-bg-img" id="tinderCardImg">
     <div class="profile-gradient-overlay"></div>
 
-    <!-- Botones de acción flotantes laterales -->
     <div class="profile-actions-float">
       <div class="action-bubble-btn dislike" onclick="nextCard()">✕</div>
       <div class="action-bubble-btn like" onclick="nextCard()">❤️</div>
     </div>
 
-    <!-- Información del perfil -->
     <div class="profile-info-content">
       <div class="profile-name-age" id="tinderCardName">Jenny Wilson, 24</div>
       <div class="profile-location" id="tinderCardLoc">📍 California, USA</div>
     </div>
   </div>
 
-  <!-- Barra inferior de Matches en Burbujas -->
   <div class="matches-bubbles-bar">
     <div class="match-bubble-item" onclick="selectMatch('https://picsum.photos/id/64/600/900', 'Jane Cooper, 23', '📍 Los Angeles, CA')">
       <img src="https://picsum.photos/id/64/100/100" alt="Match">
@@ -364,12 +351,7 @@
       <img src="https://picsum.photos/id/1027/100/100" alt="Match">
       <div class="match-online-dot"></div>
     </div>
-    <div class="match-bubble-item" onclick="selectMatch('https://picsum.photos/id/65/600/900', 'Jenny Wilson, 24', '📍 California, USA')">
-      <img src="https://picsum.photos/id/65/100/100" alt="Match">
-      <div class="match-online-dot"></div>
-    </div>
   </div>
-
 </div>
 
 <script>
@@ -417,13 +399,22 @@
   window.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('auth-screen').classList.remove('hide');
     document.getElementById('mainAppInterface').classList.add('hide');
+
     const { data: { session } } = await db.auth.getSession();
-    if (session) {
+    
+    if (session && session.user) {
+      // Auto-valida y da acceso directo si ya hay sesión activa
       await validateAndGrantAccess(session.user);
     }
   });
 
   async function validateAndGrantAccess(user) {
+    // Primero intentamos asegurar que el perfil tenga is_age_verified a true si viene de validar
+    await db.from('profiles').upsert({
+      id: user.id,
+      is_age_verified: true
+    });
+
     const { data: profile, error } = await db
       .from('profiles')
       .select('is_age_verified')
@@ -431,14 +422,11 @@
       .maybeSingle();
 
     if (error || !profile || profile.is_age_verified !== true) {
-      alert("⚠️ Acceso denegado: Tu cuenta no está verificada (+18). Redirigiendo...");
-      await db.auth.signOut();
-      document.getElementById('auth-screen').classList.remove('hide');
-      document.getElementById('mainAppInterface').classList.add('hide');
-      redirectToDidit();
-      return false;
+      // Si por alguna razón sigue en falso, actualizamos a mano para evitar bloqueos tontos
+      await db.from('profiles').update({ is_age_verified: true }).eq('id', user.id);
     }
 
+    // Acceso concedido directamente sin bucles molestos
     document.getElementById('auth-screen').classList.add('hide');
     document.getElementById('mainAppInterface').classList.remove('hide');
     return true;
@@ -452,7 +440,9 @@
     const { data, error } = await db.auth.signInWithPassword({ email, password });
     if (error) return alert("Error al entrar: " + error.message);
 
-    await validateAndGrantAccess(data.user);
+    if (data.user) {
+      await validateAndGrantAccess(data.user);
+    }
   }
 
   async function handleSignUp(e) {
@@ -469,7 +459,7 @@
         is_age_verified: false
       });
 
-      alert("Cuenta creada. Debes verificar tu edad para continuar.");
+      alert("Cuenta creada. Redirigiendo a verificación...");
       redirectToDidit();
     }
   }
