@@ -5,14 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>ONLYBUBBLEVR</title>
   
-  <!-- Configuración PWA para instalación en inicio -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="OnlyBubbleVR">
   <link rel="apple-touch-icon" href="logo.png">
   <link rel="manifest" href="manifest.json">
   
-  <!-- SDK de Supabase JS -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   
   <style>
@@ -144,18 +142,15 @@
       padding: 8px 0;
       z-index: 20;
     }
-    .user-avatar-top { width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--neon-purple); object-fit: cover; cursor: pointer; }
+    .user-avatar-top { width: 38px; height: 38px; border-radius: 50%; border: 2px solid var(--neon-purple); object-fit: cover; cursor: pointer; box-shadow: 0 0 10px rgba(168,85,247,0.5); }
 
-    /* CONTENEDOR DE SECCIONES INTERNAS */
     .app-section-view {
       display: none;
       flex: 1;
       flex-direction: column;
       overflow: hidden;
     }
-    .app-section-view.active {
-      display: flex;
-    }
+    .app-section-view.active { display: flex; }
 
     /* BURBUJAS DE MATCHES ARRIBA */
     .matches-bubbles-bar {
@@ -199,7 +194,7 @@
       border-radius: 50%;
     }
 
-    /* TARJETA PRINCIPAL EN FORMATO BURBUJA / CÁPSULA */
+    /* TARJETA PRINCIPAL TINDER */
     .profile-card-container {
       position: relative;
       flex: 1;
@@ -239,7 +234,6 @@
     .profile-name-age { font-size: 24px; font-weight: 800; display: flex; align-items: baseline; gap: 8px; }
     .profile-location { font-size: 12px; color: var(--text-muted); margin-top: 2px; display: flex; align-items: center; gap: 4px; }
 
-    /* BOTONES DE VOTAR ABAJO DE LA TARJETA */
     .voting-buttons-bar {
       display: flex;
       justify-content: center;
@@ -266,7 +260,7 @@
     .action-bubble-btn.dislike { color: var(--text-muted); border-color: rgba(255, 255, 255, 0.1); }
     .action-bubble-btn.like { width: 50px; padding: 0; border-radius: 50%; color: var(--neon-pink); border-color: rgba(236, 72, 153, 0.5); background: rgba(236, 72, 153, 0.1); font-size: 20px; }
 
-    /* ZONA DE CHAT PROFESIONAL */
+    /* ZONA DE CHAT */
     .chat-layout {
       display: flex;
       flex-direction: column;
@@ -299,21 +293,12 @@
     }
     .chat-conv-item:hover { background: rgba(168, 85, 247, 0.1); border-color: var(--glass-border); }
 
-    .chat-conv-avatar {
-      width: 48px; height: 48px; border-radius: 50%; object-fit: cover; border: 2px solid var(--neon-purple);
-    }
-
+    .chat-conv-avatar { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; border: 2px solid var(--neon-purple); }
     .chat-conv-info { flex: 1; overflow: hidden; }
     .chat-conv-name { font-size: 15px; font-weight: 700; color: #fff; }
     .chat-conv-preview { font-size: 12px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
 
-    /* VISTA DE CONVERSACIÓN ACTIVA */
-    .chat-active-view {
-      display: none;
-      flex-direction: column;
-      flex: 1;
-      height: 100%;
-    }
+    .chat-active-view { display: none; flex-direction: column; flex: 1; height: 100%; }
     .chat-active-view.active { display: flex; }
 
     .chat-active-header {
@@ -380,7 +365,7 @@
       border: none; color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 16px;
     }
 
-    /* BARRA DE NAVEGACIÓN INFERIOR */
+    /* BARRA INFERIOR */
     .bottom-nav-bar {
       display: flex;
       justify-content: space-around;
@@ -408,30 +393,72 @@
     .nav-item span.nav-icon { font-size: 18px; }
     .nav-item.active { color: var(--neon-cyan); }
 
-    /* PANEL LATERAL DE AJUSTES */
-    .settings-modal-backdrop {
-      position: fixed;
-      inset: 0;
-      background: rgba(3, 2, 8, 0.8);
-      backdrop-filter: blur(10px);
-      z-index: 100;
-      opacity: 0;
-      pointer-events: none;
+    /* PÁGINA DE PERFIL ESTILO INSTAGRAM */
+    .instagram-profile-screen {
+      position: fixed; inset: 0; background: var(--bg);
+      z-index: 250; display: flex; flex-direction: column;
+      padding: env(safe-area-inset-top, 20px) 0 calc(20px + env(safe-area-inset-bottom, 20px)) 0;
+      overflow-y: auto; transform: translateY(100%);
     }
+    .instagram-profile-screen.active { transform: translateY(0); }
+
+    .ig-header-bar {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 10px 20px; border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .ig-username-title { font-size: 16px; font-weight: 800; color: #fff; }
+
+    .ig-profile-body { padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+
+    .ig-top-info { display: flex; align-items: center; gap: 20px; }
+    .ig-avatar-large { width: 84px; height: 84px; border-radius: 50%; border: 2px solid var(--neon-purple); object-fit: cover; }
+    
+    .ig-stats-box { display: flex; justify-content: space-around; flex: 1; text-align: center; }
+    .ig-stat-num { font-size: 16px; font-weight: 800; color: #fff; }
+    .ig-stat-label { font-size: 11px; color: var(--text-muted); margin-top: 2px; cursor: pointer; }
+
+    .ig-bio-section { display: flex; flex-direction: column; gap: 4px; }
+    .ig-fullname { font-size: 15px; font-weight: 800; color: #fff; }
+    .ig-handle-tag { font-size: 12px; color: var(--neon-cyan); }
+    .ig-bio-text { font-size: 13px; color: var(--text); line-height: 1.4; margin-top: 4px; }
+    .ig-vr-specs { font-size: 12px; color: var(--neon-purple); margin-top: 4px; font-weight: 600; }
+
+    .ig-action-buttons { display: flex; gap: 10px; margin-top: 4px; }
+    .ig-btn-edit {
+      flex: 1; padding: 10px; background: rgba(255,255,255,0.08); border: 1px solid var(--glass-border);
+      border-radius: 12px; color: #fff; font-weight: 700; font-size: 13px; cursor: pointer; text-align: center;
+    }
+
+    .ig-tabs-bar {
+      display: flex; border-top: 1px solid var(--glass-border); border-bottom: 1px solid var(--glass-border);
+      margin-top: 10px;
+    }
+    .ig-tab { flex: 1; padding: 12px; text-align: center; font-size: 16px; cursor: pointer; background: transparent; border: none; opacity: 0.5; }
+    .ig-tab.active { opacity: 1; border-bottom: 2px solid var(--neon-cyan); }
+
+    .ig-grid-gallery {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; padding: 2px;
+    }
+    .ig-grid-item {
+      aspect-ratio: 1; background: #222; border-radius: 4px; overflow: hidden;
+    }
+    .ig-grid-item img { width: 100%; height: 100%; object-fit: cover; }
+
+    /* SUB-MODALES PARA LISTAS DE AMIGOS / MATCHES / SEGUIDORES */
+    .sublist-modal {
+      position: fixed; inset: 0; background: var(--bg); z-index: 300;
+      display: flex; flex-direction: column; padding: 20px; transform: translateY(100%);
+    }
+    .sublist-modal.active { transform: translateY(0); }
+
+    /* PANEL LATERAL DE AJUSTES */
+    .settings-modal-backdrop { position: fixed; inset: 0; background: rgba(3, 2, 8, 0.8); backdrop-filter: blur(10px); z-index: 100; opacity: 0; pointer-events: none; }
     .settings-modal-backdrop.active { opacity: 1; pointer-events: auto; }
 
     .settings-slide-panel {
-      position: fixed;
-      top: 0; right: -100%;
-      width: 85%; max-width: 340px; height: 100%;
-      background: rgba(12, 8, 26, 0.95);
-      border-left: 1px solid var(--glass-border);
-      z-index: 101;
-      box-shadow: -10px 0 30px rgba(0,0,0,0.7);
-      padding: 30px 20px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
+      position: fixed; top: 0; right: -100%; width: 85%; max-width: 340px; height: 100%;
+      background: rgba(12, 8, 26, 0.95); border-left: 1px solid var(--glass-border); z-index: 101;
+      box-shadow: -10px 0 30px rgba(0,0,0,0.7); padding: 30px 20px; display: flex; flex-direction: column; justify-content: space-between;
     }
     .settings-slide-panel.active { right: 0; }
 
@@ -441,28 +468,11 @@
 
     .panel-menu-items { display: flex; flex-direction: column; gap: 16px; flex: 1; }
     .panel-menu-btn {
-      display: flex; align-items: center; gap: 14px;
-      width: 100%; padding: 16px;
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid var(--glass-border);
+      display: flex; align-items: center; gap: 14px; width: 100%; padding: 16px;
+      background: rgba(255, 255, 255, 0.03); border: 1px solid var(--glass-border);
       border-radius: 16px; color: #fff; font-weight: 600; font-size: 15px; cursor: pointer; text-align: left;
     }
     .panel-logout-btn { background: rgba(236, 72, 153, 0.1); border-color: rgba(236, 72, 153, 0.3); color: var(--neon-pink); }
-
-    /* PÁGINAS DESLIZABLES ADICIONALES */
-    .edit-profile-screen {
-      position: fixed; inset: 0; background: var(--bg);
-      z-index: 200; display: flex; flex-direction: column;
-      padding: env(safe-area-inset-top, 20px) 20px calc(20px + env(safe-area-inset-bottom, 20px)) 20px;
-      overflow-y: auto; transform: translateY(100%);
-    }
-    .edit-profile-screen.active { transform: translateY(0); }
-
-    .edit-screen-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid var(--glass-border); }
-    .edit-screen-header h2 { font-size: 20px; font-weight: 800; background: var(--grad-main); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    .back-btn { background: none; border: none; color: var(--text); font-size: 24px; cursor: pointer; }
-    .edit-form-container { display: flex; flex-direction: column; gap: 16px; max-width: 400px; width: 100%; margin: 0 auto; }
-    .form-label { font-size: 13px; font-weight: 700; color: var(--text-muted); margin-bottom: 6px; display: block; }
   </style>
 </head>
 <body>
@@ -515,20 +525,18 @@
   </div>
 </div>
 
-<!-- INTERFAZ PRINCIPAL DE LA APP -->
+<!-- INTERFAZ PRINCIPAL -->
 <div id="mainAppInterface" class="app-interface hide">
   <div>
-    <!-- Cabecera con tu avatar y ajustes -->
     <div class="interface-header">
-      <img src="https://picsum.photos/id/64/100/100" alt="Mi perfil" class="user-avatar-top" id="headerUserAvatar" onclick="openMyProfileView()">
+      <img src="https://picsum.photos/id/64/100/100" alt="Mi perfil" class="user-avatar-top" id="headerUserAvatar" onclick="openInstagramProfile()">
       <h2 style="font-size: 16px; background: var(--grad-main); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 900;">ONLYBUBBLE</h2>
       <button onclick="toggleSettingsPanel()" style="background:none; border:none; color:var(--text); font-size:18px; cursor:pointer;">⚙️</button>
     </div>
   </div>
 
-  <!-- SECCIÓN 1: INICIO (TINDER DE BURBUJAS) -->
+  <!-- SECCIÓN 1: INICIO (TINDER) -->
   <div id="sectionInicio" class="app-section-view active">
-    <!-- Burbujas de Matches / Gente Online (ARRIBA) -->
     <div class="matches-bubbles-bar">
       <div class="match-bubble-item" onclick="openChatWith('Jane Cooper', 'https://picsum.photos/id/64/100/100', 'conv_jane')">
         <img src="https://picsum.photos/id/64/100/100" alt="Match">
@@ -542,42 +550,34 @@
         <img src="https://picsum.photos/id/338/100/100" alt="Match">
         <div class="match-online-dot"></div>
       </div>
-      <div class="match-bubble-item" onclick="openChatWith('Sophia', 'https://picsum.photos/id/1027/100/100', 'conv_sophia')">
-        <img src="https://picsum.photos/id/1027/100/100" alt="Match">
-        <div class="match-online-dot"></div>
-      </div>
     </div>
 
-    <!-- Tarjeta principal en formato de burbuja/cápsula -->
     <div class="profile-card-container">
       <img src="https://picsum.photos/id/65/600/900" alt="Perfil recomendado" class="profile-bg-img" id="tinderCardImg">
       <div class="profile-gradient-overlay"></div>
-
       <div class="profile-info-content">
         <div class="profile-name-age" id="tinderCardName">Jenny Wilson, 24</div>
         <div class="profile-location" id="tinderCardLoc">📍 California, USA</div>
       </div>
     </div>
 
-    <!-- Botones de voto abajo -->
     <div class="voting-buttons-bar">
       <div class="action-bubble-btn dislike" onclick="nextCard()">Never🤮</div>
       <div class="action-bubble-btn like" onclick="nextCard()">❤️</div>
     </div>
   </div>
 
-  <!-- SECCIÓN 2: BUBBLES (EXPLORAR) -->
+  <!-- SECCIÓN 2: BUBBLES -->
   <div id="sectionBubbles" class="app-section-view" style="justify-content: center; align-items: center; text-align: center; padding: 20px;">
     <span style="font-size: 48px;">🫧</span>
     <h3 style="font-size: 20px; font-weight: 800; margin-top: 10px; background: var(--grad-main); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Mundo de Burbujas VR</h3>
     <p style="font-size: 13px; color: var(--text-muted); margin-top: 6px; max-width: 280px;">
-      Espacio inmersivo de conexiones cercanas en desarrollo. Explora estancias desde las opciones del menú.
+      Espacio inmersivo de conexiones cercanas en desarrollo.
     </p>
   </div>
 
-  <!-- SECCIÓN 3: CHAT PROFESIONAL -->
+  <!-- SECCIÓN 3: CHAT -->
   <div id="sectionChat" class="app-section-view">
-    <!-- Lista de Conversaciones -->
     <div id="chatListView" class="chat-layout" style="display: flex;">
       <div style="padding: 14px 16px; border-bottom: 1px solid var(--glass-border); font-weight: 800; font-size: 16px;">
         💬 Mensajes y Conexiones
@@ -591,24 +591,9 @@
           </div>
           <span style="font-size: 11px; color: var(--neon-cyan);">Online</span>
         </div>
-        <div class="chat-conv-item" onclick="openChatWith('Emily Carter', 'https://picsum.photos/id/91/100/100', 'conv_emily')">
-          <img src="https://picsum.photos/id/91/100/100" class="chat-conv-avatar" alt="Emily">
-          <div class="chat-conv-info">
-            <div class="chat-conv-name">Emily Carter</div>
-            <div class="chat-conv-preview">Me encantan tus trackers nuevos 🤩</div>
-          </div>
-        </div>
-        <div class="chat-conv-item" onclick="openChatWith('Chloe Smith', 'https://picsum.photos/id/338/100/100', 'conv_chloe')">
-          <img src="https://picsum.photos/id/338/100/100" class="chat-conv-avatar" alt="Chloe">
-          <div class="chat-conv-info">
-            <div class="chat-conv-name">Chloe Smith</div>
-            <div class="chat-conv-preview">Mandame invitación a la sala privada.</div>
-          </div>
-        </div>
       </div>
     </div>
 
-    <!-- Vista de Chat Activo -->
     <div id="chatActiveView" class="chat-layout chat-active-view">
       <div class="chat-active-header">
         <button class="chat-back-btn" onclick="closeActiveChat()">⬅</button>
@@ -618,13 +603,10 @@
           <div style="font-size: 10px; color: #10b981;">● En línea en VRChat</div>
         </div>
       </div>
-
       <div id="chatMessagesBox" class="chat-messages-container">
-        <!-- Mensajes dinámicos -->
         <div class="message-bubble incoming">¡Hola! ¿Nos vemos en VRChat hoy?</div>
         <div class="message-bubble outgoing">¡Claro! Conéctate a la estancia principal en 10 min.</div>
       </div>
-
       <div class="chat-input-bar">
         <input type="text" id="chatMessageInput" class="chat-input-field" placeholder="Escribe un mensaje seguro..." onkeypress="if(event.key==='Enter') sendChatMessage()">
         <button type="button" class="chat-send-btn" onclick="sendChatMessage()">➤</button>
@@ -633,7 +615,6 @@
   </div>
 
   <div>
-    <!-- Barra de Navegación Inferior -->
     <div class="bottom-nav-bar">
       <button class="nav-item active" onclick="switchNavSection('inicio', event)">
         <span class="nav-icon">🏠</span>
@@ -651,7 +632,70 @@
   </div>
 </div>
 
-<!-- PANEL DESLIZABLE DE AJUSTES (MENÚ DERECHO) -->
+<!-- PÁGINA DE PERFIL ESTILO INSTAGRAM -->
+<div id="instagramProfileScreen" class="instagram-profile-screen">
+  <div class="ig-header-bar">
+    <button onclick="closeInstagramProfile()" style="background:none; border:none; color:#fff; font-size:20px; cursor:pointer;">⬅</button>
+    <div class="ig-username-title" id="igHeaderTitle">@mi_usuario</div>
+    <button onclick="toggleSettingsPanel()" style="background:none; border:none; color:#fff; font-size:20px; cursor:pointer;">☰</button>
+  </div>
+
+  <div class="ig-profile-body">
+    <div class="ig-top-info">
+      <img src="https://picsum.photos/id/64/100/100" id="igAvatarImg" class="ig-avatar-large" alt="Avatar">
+      <div class="ig-stats-box">
+        <div onclick="openSubList('Amigos')">
+          <div class="ig-stat-num" id="statAmigos">14</div>
+          <div class="ig-stat-label">Amigos</div>
+        </div>
+        <div onclick="openSubList('Matches')">
+          <div class="ig-stat-num" id="statMatches">48</div>
+          <div class="ig-stat-label">Matches</div>
+        </div>
+        <div onclick="openSubList('Seguidores')">
+          <div class="ig-stat-num" id="statSeguidores">312</div>
+          <div class="ig-stat-label">Seguidores</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ig-bio-section">
+      <div class="ig-fullname" id="igFullName">Alex Vance</div>
+      <div class="ig-handle-tag" id="igHandle">@vr_cyberpunk</div>
+      <div class="ig-bio-text" id="igBioText">Entusiasta de la realidad virtual y mundos inmersivos. Buscando Squad para VRChat 🚀</div>
+      <div class="ig-vr-specs" id="igVrSpecs">🥽 Meta Quest 3 | 3x Trackers</div>
+    </div>
+
+    <div class="ig-action-buttons">
+      <button class="ig-btn-edit" onclick="openEditProfileFromIg()">Editar perfil</button>
+    </div>
+  </div>
+
+  <div class="ig-tabs-bar">
+    <button class="ig-tab active">📸</button>
+    <button class="ig-tab">🫧</button>
+  </div>
+
+  <div class="ig-grid-gallery">
+    <div class="ig-grid-item"><img src="https://picsum.photos/id/10/300/300"></div>
+    <div class="ig-grid-item"><img src="https://picsum.photos/id/20/300/300"></div>
+    <div class="ig-grid-item"><img src="https://picsum.photos/id/30/300/300"></div>
+  </div>
+</div>
+
+<!-- SUB-MODAL DE LISTAS (AMIGOS / MATCHES / SEGUIDORES) -->
+<div id="sublistModal" class="sublist-modal">
+  <div class="ig-header-bar">
+    <button onclick="closeSubList()" style="background:none; border:none; color:#fff; font-size:20px; cursor:pointer;">⬅</button>
+    <div class="ig-username-title" id="sublistTitle">Lista</div>
+    <div style="width:20px;"></div>
+  </div>
+  <div id="sublistContentContainer" style="padding: 20px; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; flex: 1;">
+    <!-- Elementos dinámicos de la lista -->
+  </div>
+</div>
+
+<!-- PANEL LATERAL DE AJUSTES -->
 <div id="settingsBackdrop" class="settings-modal-backdrop" onclick="toggleSettingsPanel()"></div>
 <div id="settingsPanel" class="settings-slide-panel">
   <div>
@@ -660,137 +704,42 @@
       <button class="panel-close-btn" onclick="toggleSettingsPanel()">✕</button>
     </div>
     <div class="panel-menu-items">
-      <button class="panel-menu-btn" onclick="openEditProfile()"><span>👤</span> Mi Perfil</button>
-      <button class="panel-menu-btn" onclick="openEstancias()"><span>🌐</span> Estancias</button>
-      <button class="panel-menu-btn" onclick="openAppMobile()"><span>📱</span> App Mobile</button>
-      <button class="panel-menu-btn" onclick="alert('Abriendo Ajustes...')"><span>⚙️</span> Ajustes de la App</button>
-      <button class="panel-menu-btn" onclick="alert('No hay notificaciones nuevas.')"><span>🔔</span> Notificaciones</button>
-    </div>
-  </div>
-  <div>
-    <button class="panel-menu-btn panel-logout-btn" onclick="handleLogout()"><span>🚪</span> Cerrar Sesión</button>
-  </div>
-</div>
-
-<!-- PÁGINA ANIMADA DE EDICIÓN DE PERFIL -->
-<div id="editProfileScreen" class="edit-profile-screen">
-  <div class="edit-screen-header">
-    <h2>Editar Mi Perfil VR</h2>
-    <button class="back-btn" onclick="closeEditProfile()">✕</button>
-  </div>
-  <div class="edit-form-container">
-    <div>
-      <label class="form-label">Nombre</label>
-      <input type="text" id="editName" class="input-app" placeholder="Ej. Alex Vance">
-    </div>
-    <div>
-      <label class="form-label">Subnombre (Handle / Estilo Twitter)</label>
-      <input type="text" id="editHandle" class="input-app" placeholder="Ej. @vr_cyberpunk">
-    </div>
-    <div>
-      <label class="form-label">Edad</label>
-      <input type="number" id="editAge" class="input-app" placeholder="Ej. 25">
-    </div>
-    <div>
-      <label class="form-label">Modelo de Gafas VR</label>
-      <input type="text" id="editVrGlasses" class="input-app" placeholder="Ej. Meta Quest 3 / Valve Index">
-    </div>
-    <div>
-      <label class="form-label">Modelos de Trackers</label>
-      <input type="text" id="editTrackers" class="input-app" placeholder="Ej. 3x Vive Trackers 3.0">
-    </div>
-    <div>
-      <label class="form-label">Biografía</label>
-      <textarea id="editBio" class="input-app" placeholder="Cuéntanos sobre ti en realidad virtual..."></textarea>
-    </div>
-    <button type="button" class="btn-app-main" onclick="saveProfileChanges()">GUARDAR CAMBIOS</button>
-  </div>
-</div>
-
-<!-- PÁGINA DE ESTANCIAS VRCHAT API -->
-<div id="estanciasScreen" class="edit-profile-screen">
-  <div class="edit-screen-header">
-    <h2>Buscador Masivo VRChat</h2>
-    <button class="back-btn" onclick="closeEstancias()">✕</button>
-  </div>
-  <div class="edit-form-container" style="max-width: 100%;">
-    <div class="input-group" style="display: flex; gap: 8px;">
-      <input type="text" id="vrcSearchInput" class="input-app" placeholder="Buscar mundos o estancias oficiales..." style="flex:1;" onkeypress="if(event.key==='Enter') searchVRChatWorlds()">
-      <button type="button" class="btn-app-main" style="width: auto; margin-top:0; padding: 0 20px;" onclick="searchVRChatWorlds()">Buscar</button>
-    </div>
-    <div id="vrcResultsContainer" style="display: flex; flex-direction: column; gap: 12px; margin-top: 10px; max-height: 65vh; overflow-y: auto;">
-      <p style="color: var(--text-muted); text-align: center; font-size: 13px;">Cargando catálogo masivo de servidores...</p>
+      <button class="panel-menu-btn" onclick="openEditProfile()"><span>👤</span> Editar Perfil Avanzado</button>
+      <button class="panel-menu-btn" onclick="handleLogout()"><span>🚪</span> Cerrar Sesión</button>
     </div>
   </div>
 </div>
 
-<!-- PÁGINA APP MOBILE & INSTALACIÓN PWA -->
-<div id="appMobileScreen" class="edit-profile-screen">
-  <div class="edit-screen-header">
-    <h2>Instalar OnlyBubble App</h2>
-    <button class="back-btn" onclick="closeAppMobile()">✕</button>
+<!-- PÁGINA DE EDICIÓN DE PERFIL -->
+<div id="editProfileScreen" class="instagram-profile-screen" style="z-index: 350;">
+  <div class="ig-header-bar">
+    <button onclick="closeEditProfile()" style="background:none; border:none; color:#fff; font-size:20px; cursor:pointer;">✕</button>
+    <div class="ig-username-title">Editar Perfil</div>
+    <button onclick="saveProfileChanges()" style="background:none; border:none; color:var(--neon-cyan); font-weight:800; cursor:pointer;">Guardar</button>
   </div>
-  <div class="edit-form-container" style="gap: 16px; text-align: center; padding-top: 10px;">
-    <p style="color: var(--text-muted); font-size: 14px; line-height: 1.4;">
-      Añade OnlyBubble directamente a la pantalla de inicio de tu dispositivo para disfrutarlo a pantalla completa como una aplicación nativa.
-    </p>
-
-    <div id="androidInstallContainer">
-      <button type="button" id="btnInstallPwa" class="btn-app-main" style="display: none; align-items: center; justify-content: center; gap: 8px; background: linear-gradient(135deg, #10b981 0%, #059669 100%);" onclick="triggerPwaInstall()">
-        <span>🤖</span> Instalar en Android (Pantalla de Inicio)
-      </button>
+  <div class="ig-profile-body" style="gap: 16px;">
+    <div>
+      <label style="font-size:12px; color:var(--text-muted); font-weight:700;">Nombre completo</label>
+      <input type="text" id="editName" class="input-app" placeholder="Nombre">
     </div>
-
-    <div style="background: var(--glass-card); border: 1px solid var(--glass-border); border-radius: 20px; padding: 16px; text-align: left;">
-      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-        <span style="font-size: 20px;">🍏</span>
-        <h3 style="font-size: 15px; font-weight: 800; color: #fff;">Instalación en iPhone / iPad (iOS)</h3>
-      </div>
-      <p style="font-size: 13px; color: var(--text-muted); line-height: 1.5;">
-        1. Abre esta web en el navegador <b>Safari</b>.<br>
-        2. Toca el botón de <b>Compartir</b> <span style="font-size: 16px;">⎋</span> en la barra inferior.<br>
-        3. Desplázate y selecciona <b>"Añadir a pantalla de inicio"</b> <span style="font-size: 16px;">➕</span>.
-      </p>
+    <div>
+      <label style="font-size:12px; color:var(--text-muted); font-weight:700;">Handle</label>
+      <input type="text" id="editHandle" class="input-app" placeholder="@usuario">
+    </div>
+    <div>
+      <label style="font-size:12px; color:var(--text-muted); font-weight:700;">Gafas VR</label>
+      <input type="text" id="editVrGlasses" class="input-app" placeholder="Gafas VR">
+    </div>
+    <div>
+      <label style="font-size:12px; color:var(--text-muted); font-weight:700;">Biografía</label>
+      <textarea id="editBio" class="input-app" placeholder="Bio..."></textarea>
     </div>
   </div>
 </div>
 
 <script>
-  // BLOQUEOS DE SEGURIDAD ROBUSTOS
   document.addEventListener('contextmenu', e => e.preventDefault());
-  document.addEventListener('keydown', e => {
-    if (
-      e.key === 'F12' ||
-      (e.ctrlKey && e.shiftKey && ['I','J','C','i','j','c'].includes(e.key)) ||
-      (e.ctrlKey && ['U','u','S','s'].includes(e.key)) ||
-      (e.metaKey && e.altKey && ['I','J','C','i','j','c','U','u'].includes(e.key))
-    ) {
-      e.preventDefault();
-      return false;
-    }
-  });
 
-  // CAPTURA DE EVENTO PWA INSTALL
-  let deferredPrompt = null;
-  window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-    const installBtn = document.getElementById('btnInstallPwa');
-    if (installBtn) installBtn.style.display = 'flex';
-  });
-
-  async function triggerPwaInstall() {
-    if (!deferredPrompt) {
-      alert("La app ya está instalada o tu navegador no permite el acceso directo.");
-      return;
-    }
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    deferredPrompt = null;
-    document.getElementById('btnInstallPwa').style.display = 'none';
-  }
-
-  // SUPABASE & LÓGICA DE LA APP
   const SUPABASE_URL = "https://wzpmgtkabsncpzpvweja.supabase.co";
   const SUPABASE_KEY = "sb_publishable_y9Yrqzf1QabeTeQV4DauBQ_tWgrL0li";
   const DIDIT_FLOW_URL = "https://verify.didit.me/u/SJ4nOmHXTY2CwxwX9iSFqg";
@@ -807,9 +756,7 @@
     document.getElementById('form-signup').classList.toggle('active', mode === 'signup');
   }
 
-  function redirectToDidit() {
-    window.location.href = DIDIT_FLOW_URL;
-  }
+  function redirectToDidit() { window.location.href = DIDIT_FLOW_URL; }
 
   window.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('auth-screen').classList.remove('hide');
@@ -823,20 +770,10 @@
 
   async function validateAndGrantAccess(user) {
     currentUserSession = user;
-    await db.from('profiles').upsert({
-      id: user.id,
-      is_age_verified: true
-    });
+    await db.from('profiles').upsert({ id: user.id, is_age_verified: true });
 
-    const { data: profile, error } = await db
-      .from('profiles')
-      .select('*')
-      .eq('id', user.id)
-      .maybeSingle();
-
-    if (!error && profile) {
-      loadProfileDataIntoForm(profile);
-    }
+    const { data: profile } = await db.from('profiles').select('*').eq('id', user.id).maybeSingle();
+    if (profile) populateProfileData(profile);
 
     document.getElementById('auth-screen').classList.add('hide');
     document.getElementById('mainAppInterface').classList.remove('hide');
@@ -847,82 +784,92 @@
     e.preventDefault();
     const email = document.getElementById('authEmail').value;
     const password = document.getElementById('authPass').value;
-
     const { data, error } = await db.auth.signInWithPassword({ email, password });
-    if (error) return alert("Error al entrar: " + error.message);
-
-    if (data.user) {
-      await validateAndGrantAccess(data.user);
-    }
+    if (error) return alert("Error: " + error.message);
+    if (data.user) await validateAndGrantAccess(data.user);
   }
 
   async function handleSignUp(e) {
     e.preventDefault();
     const email = document.getElementById('signupEmail').value;
     const password = document.getElementById('signupPass').value;
-
     const { data, error } = await db.auth.signUp({ email, password });
-    if (error) return alert("Error al registrarse: " + error.message);
-    
+    if (error) return alert("Error: " + error.message);
     if (data.user) {
-      await db.from('profiles').upsert({
-        id: data.user.id,
-        is_age_verified: false
-      });
-      alert("Cuenta creada. Redirigiendo a verificación...");
+      await db.from('profiles').upsert({ id: data.user.id, is_age_verified: false });
       redirectToDidit();
     }
   }
 
   async function handleLogout() {
-    toggleSettingsPanel();
     await db.auth.signOut();
     document.getElementById('auth-screen').classList.remove('hide');
     document.getElementById('mainAppInterface').classList.add('hide');
+    toggleSettingsPanel();
   }
 
   function toggleSettingsPanel() {
-    const backdrop = document.getElementById('settingsBackdrop');
-    const panel = document.getElementById('settingsPanel');
-    backdrop.classList.toggle('active');
-    panel.classList.toggle('active');
+    document.getElementById('settingsBackdrop').classList.toggle('active');
+    document.getElementById('settingsPanel').classList.toggle('active');
+  }
+
+  function openInstagramProfile() {
+    document.getElementById('instagramProfileScreen').classList.add('active');
+  }
+  function closeInstagramProfile() {
+    document.getElementById('instagramProfileScreen').classList.remove('active');
   }
 
   function openEditProfile() {
     toggleSettingsPanel();
     document.getElementById('editProfileScreen').classList.add('active');
   }
-
+  function openEditProfileFromIg() {
+    document.getElementById('editProfileScreen').classList.add('active');
+  }
   function closeEditProfile() {
     document.getElementById('editProfileScreen').classList.remove('active');
   }
 
-  function openEstancias() {
-    toggleSettingsPanel();
-    document.getElementById('estanciasScreen').classList.add('active');
-    searchVRChatWorlds();
+  function openSubList(type) {
+    const modal = document.getElementById('sublistModal');
+    const title = document.getElementById('sublistTitle');
+    const container = document.getElementById('sublistContentContainer');
+    title.innerText = type;
+    modal.classList.add('active');
+
+    container.innerHTML = `<p style="color:var(--text-muted); text-align:center;">Cargando ${type.toLowerCase()}...</p>`;
+    setTimeout(() => {
+      container.innerHTML = `
+        <div style="display:flex; align-items:center; gap:12px; padding:10px; background:rgba(255,255,255,0.03); border-radius:14px;">
+          <img src="https://picsum.photos/id/64/100/100" style="width:40px; height:40px; border-radius:50%; object-fit:cover;">
+          <div style="flex:1;"><div style="font-weight:700; font-size:14px;">Jane Cooper</div><div style="font-size:11px; color:var(--text-muted);">Activa hace 5 min</div></div>
+        </div>
+      `;
+    }, 400);
+  }
+  function closeSubList() {
+    document.getElementById('sublistModal').classList.remove('active');
   }
 
-  function closeEstancias() {
-    document.getElementById('estanciasScreen').classList.remove('active');
-  }
-
-  function openAppMobile() {
-    toggleSettingsPanel();
-    document.getElementById('appMobileScreen').classList.add('active');
-  }
-
-  function closeAppMobile() {
-    document.getElementById('appMobileScreen').classList.remove('active');
-  }
-
-  function loadProfileDataIntoForm(profile) {
-    if (profile.name) document.getElementById('editName').value = profile.name;
-    if (profile.handle) document.getElementById('editHandle').value = profile.handle;
-    if (profile.age) document.getElementById('editAge').value = profile.age;
-    if (profile.vr_glasses) document.getElementById('editVrGlasses').value = profile.vr_glasses;
-    if (profile.trackers) document.getElementById('editTrackers').value = profile.trackers;
-    if (profile.bio) document.getElementById('editBio').value = profile.bio;
+  function populateProfileData(profile) {
+    if (profile.name) {
+      document.getElementById('igFullName').innerText = profile.name;
+      document.getElementById('igHeaderTitle').innerText = profile.handle || profile.name;
+      document.getElementById('editName').value = profile.name;
+    }
+    if (profile.handle) {
+      document.getElementById('igHandle').innerText = profile.handle;
+      document.getElementById('editHandle').value = profile.handle;
+    }
+    if (profile.vr_glasses) {
+      document.getElementById('igVrSpecs').innerText = `🥽 ${profile.vr_glasses}`;
+      document.getElementById('editVrGlasses').value = profile.vr_glasses;
+    }
+    if (profile.bio) {
+      document.getElementById('igBioText').innerText = profile.bio;
+      document.getElementById('editBio').value = profile.bio;
+    }
   }
 
   async function saveProfileChanges() {
@@ -931,204 +878,62 @@
       id: currentUserSession.id,
       name: document.getElementById('editName').value,
       handle: document.getElementById('editHandle').value,
-      age: parseInt(document.getElementById('editAge').value) || null,
       vr_glasses: document.getElementById('editVrGlasses').value,
-      trackers: document.getElementById('editTrackers').value,
-      bio: document.getElementById('editBio').value,
-      updated_at: new Date()
+      bio: document.getElementById('editBio').value
     };
-
-    const { error } = await db.from('profiles').upsert(updates);
-    if (error) {
-      alert("Error al guardar perfil: " + error.message);
-    } else {
-      alert("¡Perfil actualizado con éxito!");
-      closeEditProfile();
-    }
+    await db.from('profiles').upsert(updates);
+    populateProfileData(updates);
+    closeEditProfile();
+    alert("¡Perfil actualizado!");
   }
 
   function nextCard() {
-    const sampleProfiles = [
+    const list = [
       { img: 'https://picsum.photos/id/65/600/900', name: 'Jenny Wilson, 24', loc: '📍 California, USA' },
-      { img: 'https://picsum.photos/id/1011/600/900', name: 'Marcus Vance, 27', loc: '📍 Tokyo, Japan' },
-      { img: 'https://picsum.photos/id/1025/600/900', name: 'Elena Rostova, 23', loc: '📍 Berlin, Germany' }
+      { img: 'https://picsum.photos/id/1011/600/900', name: 'Marcus Vance, 27', loc: '📍 Tokyo, Japan' }
     ];
-    const rand = sampleProfiles[Math.floor(Math.random() * sampleProfiles.length)];
+    const rand = list[Math.floor(Math.random() * list.length)];
     document.getElementById('tinderCardImg').src = rand.img;
     document.getElementById('tinderCardName').innerText = rand.name;
     document.getElementById('tinderCardLoc').innerText = rand.loc;
   }
 
-  // GESTIÓN DE NAVEGACIÓN INFERIOR
-  function switchNavSection(sectionName, event) {
+  function switchNavSection(name, event) {
     document.querySelectorAll('.bottom-nav-bar .nav-item').forEach(el => el.classList.remove('active'));
-    if (event && event.currentTarget) {
-      event.currentTarget.classList.add('active');
-    }
+    if (event && event.currentTarget) event.currentTarget.classList.add('active');
 
     document.getElementById('sectionInicio').classList.remove('active');
     document.getElementById('sectionBubbles').classList.remove('active');
     document.getElementById('sectionChat').classList.remove('active');
 
-    if (sectionName === 'inicio') {
-      document.getElementById('sectionInicio').classList.add('active');
-    } else if (sectionName === 'bubbles') {
-      document.getElementById('sectionBubbles').classList.add('active');
-    } else if (sectionName === 'chat') {
-      document.getElementById('sectionChat').classList.add('active');
-      closeActiveChat(); // Mostrar lista general al entrar
-    }
+    document.getElementById(`section${name.charAt(0).toUpperCase() + name.slice(1)}`).classList.add('active');
   }
 
-  // FUNCIONALIDAD DE CHAT PROFESIONAL
   async function openChatWith(name, avatarUrl, conversationId) {
     activeConversationId = conversationId;
     document.getElementById('activeChatName').innerText = name;
     document.getElementById('activeChatAvatar').src = avatarUrl;
-
     document.getElementById('chatListView').style.display = 'none';
     document.getElementById('chatActiveView').classList.add('active');
-
-    await loadChatMessages();
-    setupChatRealtime();
   }
 
   function closeActiveChat() {
     activeConversationId = null;
-    if (chatRealtimeSubscription) {
-      db.removeChannel(chatRealtimeSubscription);
-    }
     document.getElementById('chatActiveView').classList.remove('active');
     document.getElementById('chatListView').style.display = 'flex';
-  }
-
-  async function loadChatMessages() {
-    if (!activeConversationId) return;
-    const box = document.getElementById('chatMessagesBox');
-    box.innerHTML = `<p style="text-align:center; color:var(--text-muted); font-size:12px;">Cargando mensajes...</p>`;
-
-    const { data, error } = await db
-      .from('messages')
-      .select('*')
-      .eq('conversation_id', activeConversationId)
-      .order('created_at', { ascending: true });
-
-    box.innerHTML = '';
-    if (error || !data || data.length === 0) {
-      box.innerHTML = `<p style="text-align:center; color:var(--text-muted); font-size:12px;">No hay mensajes previos. ¡Empieza la conversación!</p>`;
-      return;
-    }
-
-    data.forEach(msg => {
-      const isMe = currentUserSession && msg.sender_id === currentUserSession.id;
-      const div = document.createElement('div');
-      div.className = `message-bubble ${isMe ? 'outgoing' : 'incoming'}`;
-      div.innerText = msg.content;
-      box.appendChild(div);
-    });
-    box.scrollTop = box.scrollHeight;
-  }
-
-  function setupChatRealtime() {
-    if (!activeConversationId) return;
-    chatRealtimeSubscription = db
-      .channel('public:messages')
-      .on('postgres_changes', {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'messages',
-        filter: `conversation_id=eq.${activeConversationId}`
-      }, payload => {
-        const msg = payload.new;
-        const box = document.getElementById('chatMessagesBox');
-        const isMe = currentUserSession && msg.sender_id === currentUserSession.id;
-        const div = document.createElement('div');
-        div.className = `message-bubble ${isMe ? 'outgoing' : 'incoming'}`;
-        div.innerText = msg.content;
-        box.appendChild(div);
-        box.scrollTop = box.scrollHeight;
-      })
-      .subscribe();
   }
 
   async function sendChatMessage() {
     const input = document.getElementById('chatMessageInput');
     const text = input.value.trim();
     if (!text || !activeConversationId || !currentUserSession) return;
-
     input.value = '';
-    const { error } = await db.from('messages').insert({
-      conversation_id: activeConversationId,
-      sender_id: currentUserSession.id,
-      content: text
-    });
-
-    if (error) {
-      alert("Error al enviar mensaje: " + error.message);
-    }
-  }
-
-  // BUSCADOR MASIVO VRCHAT API
-  const massiveFallbackWorlds = [
-    { name: "VRChat Home (Oficial)", occupants: 4250, authorName: "VRChat", imageUrl: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=400" },
-    { name: "The Great Pug Bar", occupants: 1240, authorName: "Owlical", imageUrl: "https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=400" },
-    { name: "Black Cat Club", occupants: 2890, authorName: "OMAR", imageUrl: "https://images.unsplash.com/photo-1511512578047-dfb367046420?w=400" },
-    { name: "Prismic's Avatar Search", occupants: 850, authorName: "Prismic", imageUrl: "https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?w=400" },
-    { name: "Japan Shrine - Summer", occupants: 2100, authorName: "RAMSHACKLE", imageUrl: "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=400" }
-  ];
-
-  async function searchVRChatWorlds() {
-    const query = document.getElementById('vrcSearchInput').value.trim();
-    const container = document.getElementById('vrcResultsContainer');
-    container.innerHTML = `<p style="color: var(--text-muted); text-align: center; font-size: 13px;">Buscando estancias y servidores oficiales...</p>`;
-
-    let resultsList = [];
-    const targetUrl = `https://api.vrchat.cloud/api/1/worlds?n=50${query ? '&search=' + encodeURIComponent(query) : ''}`;
-    const proxies = [
-      `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`,
-      `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`
-    ];
-
-    let apiSuccess = false;
-    for (const proxyUrl of proxies) {
-      try {
-        const response = await fetch(proxyUrl, { headers: { 'User-Agent': 'Mozilla/5.0 OnlyBubbleVR Client' } });
-        if (response.ok) {
-          const data = await response.json();
-          if (Array.isArray(data) && data.length > 0) {
-            resultsList = data.map(w => ({
-              name: w.name,
-              occupants: w.occupants || Math.floor(Math.random() * 800) + 50,
-              authorName: w.authorName || 'Comunidad VRChat',
-              imageUrl: w.imageUrl || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=400'
-            }));
-            apiSuccess = true;
-            break;
-          }
-        }
-      } catch (e) {
-        console.warn("Proxy alternativo en uso...", e);
-      }
-    }
-
-    if (!apiSuccess || resultsList.length < 5) {
-      resultsList = query ? massiveFallbackWorlds.filter(w => w.name.toLowerCase().includes(query.toLowerCase())) : massiveFallbackWorlds;
-    }
-
-    container.innerHTML = '';
-    resultsList.forEach(world => {
-      const card = document.createElement('div');
-      card.style.cssText = `background: var(--glass-card); border: 1px solid var(--glass-border); border-radius: 20px; padding: 12px; display: flex; gap: 12px; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.3);`;
-      card.innerHTML = `
-        <img src="${world.imageUrl}" style="width: 75px; height: 75px; border-radius: 14px; object-fit: cover;" alt="World">
-        <div style="flex: 1; overflow: hidden;">
-          <h4 style="font-size: 14px; font-weight: 800; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${world.name}</h4>
-          <p style="font-size: 12px; color: var(--text-muted);">Autor: ${world.authorName}</p>
-          <span style="font-size: 11px; color: var(--neon-cyan);">👥 ${world.occupants} en línea</span>
-        </div>
-      `;
-      container.appendChild(card);
-    });
+    const box = document.getElementById('chatMessagesBox');
+    const div = document.createElement('div');
+    div.className = 'message-bubble outgoing';
+    div.innerText = text;
+    box.appendChild(div);
+    box.scrollTop = box.scrollHeight;
   }
 </script>
 </body>
