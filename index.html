@@ -451,7 +451,7 @@
     }
     .sublist-modal.active { transform: translateY(0); }
 
-    /* PANEL LATERAL DE AJUSTES */
+    /* PANEL LATERAL DE AJUSTES (MENÚ COMPLETO RESTAURADO) */
     .settings-modal-backdrop { position: fixed; inset: 0; background: rgba(3, 2, 8, 0.8); backdrop-filter: blur(10px); z-index: 100; opacity: 0; pointer-events: none; }
     .settings-modal-backdrop.active { opacity: 1; pointer-events: auto; }
 
@@ -462,15 +462,15 @@
     }
     .settings-slide-panel.active { right: 0; }
 
-    .panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+    .panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
     .panel-header h2 { font-size: 20px; font-weight: 800; background: var(--grad-main); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
     .panel-close-btn { background: none; border: none; color: var(--text-muted); font-size: 22px; cursor: pointer; }
 
-    .panel-menu-items { display: flex; flex-direction: column; gap: 16px; flex: 1; }
+    .panel-menu-items { display: flex; flex-direction: column; gap: 12px; flex: 1; overflow-y: auto; padding-right: 4px; }
     .panel-menu-btn {
-      display: flex; align-items: center; gap: 14px; width: 100%; padding: 16px;
+      display: flex; align-items: center; gap: 14px; width: 100%; padding: 14px;
       background: rgba(255, 255, 255, 0.03); border: 1px solid var(--glass-border);
-      border-radius: 16px; color: #fff; font-weight: 600; font-size: 15px; cursor: pointer; text-align: left;
+      border-radius: 16px; color: #fff; font-weight: 600; font-size: 14px; cursor: pointer; text-align: left;
     }
     .panel-logout-btn { background: rgba(236, 72, 153, 0.1); border-color: rgba(236, 72, 153, 0.3); color: var(--neon-pink); }
   </style>
@@ -537,9 +537,7 @@
 
   <!-- SECCIÓN 1: INICIO -->
   <div id="sectionInicio" class="app-section-view active">
-    <div class="matches-bubbles-bar" id="topMatchesBar">
-      <!-- Se llena con usuarios reales -->
-    </div>
+    <div class="matches-bubbles-bar" id="topMatchesBar"></div>
 
     <div class="profile-card-container" id="discoveryCardContainer">
       <img src="https://placehold.co/600x900/120b24/94a3b8?text=Buscando+usuarios..." alt="Perfil" class="profile-bg-img" id="tinderCardImg">
@@ -670,7 +668,7 @@
   <div id="sublistContentContainer" style="padding: 20px; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; flex: 1;"></div>
 </div>
 
-<!-- PANEL LATERAL DE AJUSTES (MENÚ DESPLEGABLE COMPLETO) -->
+<!-- PANEL LATERAL DE AJUSTES (MENÚ COMPLETO RESTAURADO) -->
 <div id="settingsBackdrop" class="settings-modal-backdrop" onclick="toggleSettingsPanel()"></div>
 <div id="settingsPanel" class="settings-slide-panel">
   <div>
@@ -679,13 +677,17 @@
       <button class="panel-close-btn" onclick="toggleSettingsPanel()">✕</button>
     </div>
     <div class="panel-menu-items">
-      <button class="panel-menu-btn" onclick="openEditProfile()"><span>👤</span> Editar Perfil Avanzado</button>
+      <button class="panel-menu-btn" onclick="openEditProfile()"><span>👤</span> Editar Perfil</button>
+      <button class="panel-menu-btn" onclick="alert('Sección de Estancias VR en desarrollo')"><span>🏰</span> Estancias</button>
+      <button class="panel-menu-btn" onclick="alert('Configuración de AppMobile activa')"><span>📱</span> AppMobile</button>
+      <button class="panel-menu-btn" onclick="alert('Ajustes generales de la aplicación')"><span>⚙️</span> Ajustes de App</button>
+      <button class="panel-menu-btn" onclick="alert('Preferencias de notificaciones actualizadas')"><span>🔔</span> Notificaciones</button>
       <button class="panel-menu-btn panel-logout-btn" onclick="handleLogout()"><span>🚪</span> Cerrar Sesión</button>
     </div>
   </div>
 </div>
 
-<!-- PÁGINA DE EDICIÓN DE PERFIL -->
+<!-- PÁGINA DE EDICIÓN DE PERFIL (CON CARGA DE ARCHIVO LOCAL) -->
 <div id="editProfileScreen" class="instagram-profile-screen" style="z-index: 350;">
   <div class="ig-header-bar">
     <button onclick="closeEditProfile()" style="background:none; border:none; color:#fff; font-size:20px; cursor:pointer;">✕</button>
@@ -693,6 +695,13 @@
     <button onclick="saveProfileChanges()" style="background:none; border:none; color:var(--neon-cyan); font-weight:800; cursor:pointer;">Guardar</button>
   </div>
   <div class="ig-profile-body" style="gap: 16px;">
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 10px;">
+      <img id="editPreviewAvatar" src="" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid var(--neon-purple);" alt="Preview">
+      <label style="background: var(--grad-main); color: #fff; padding: 8px 16px; border-radius: 12px; font-size: 13px; font-weight: 700; cursor: pointer;">
+        📸 Subir foto desde dispositivo
+        <input type="file" id="localAvatarFile" accept="image/*" style="display: none;" onchange="previewLocalImage(event)">
+      </label>
+    </div>
     <div>
       <label style="font-size:12px; color:var(--text-muted); font-weight:700;">Nombre completo</label>
       <input type="text" id="editName" class="input-app" placeholder="Nombre">
@@ -700,10 +709,6 @@
     <div>
       <label style="font-size:12px; color:var(--text-muted); font-weight:700;">Handle</label>
       <input type="text" id="editHandle" class="input-app" placeholder="@usuario">
-    </div>
-    <div>
-      <label style="font-size:12px; color:var(--text-muted); font-weight:700;">URL de tu Avatar / Foto</label>
-      <input type="text" id="editAvatarUrl" class="input-app" placeholder="https://...">
     </div>
     <div>
       <label style="font-size:12px; color:var(--text-muted); font-weight:700;">Gafas VR</label>
@@ -729,6 +734,7 @@
   let currentDiscoveryIndex = 0;
   let activeConversationId = null;
   let chatRealtimeSubscription = null;
+  let selectedFileToUpload = null;
 
   function switchAuthTab(mode) {
     document.getElementById('tab-login-btn').classList.toggle('active', mode === 'login');
@@ -808,7 +814,22 @@
     document.getElementById('editProfileScreen').classList.add('active');
   }
   function openEditProfileFromIg() { document.getElementById('editProfileScreen').classList.add('active'); }
-  function closeEditProfile() { document.getElementById('editProfileScreen').classList.remove('active'); }
+  function closeEditProfile() { 
+    document.getElementById('editProfileScreen').classList.remove('active'); 
+    selectedFileToUpload = null;
+  }
+
+  function previewLocalImage(event) {
+    const file = event.target.files[0];
+    if (file) {
+      selectedFileToUpload = file;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        document.getElementById('editPreviewAvatar').src = e.target.result;
+      }
+      reader.readAsDataURL(file);
+    }
+  }
 
   async function loadRealData() {
     if (!currentUserSession) return;
@@ -897,7 +918,7 @@
     if (profile.avatar_url) {
       document.getElementById('igAvatarImg').src = profile.avatar_url;
       document.getElementById('headerUserAvatar').src = profile.avatar_url;
-      document.getElementById('editAvatarUrl').value = profile.avatar_url;
+      document.getElementById('editPreviewAvatar').src = profile.avatar_url;
     }
     if (profile.vr_glasses) {
       document.getElementById('igVrSpecs').innerText = `🥽 ${profile.vr_glasses}`;
@@ -911,14 +932,29 @@
 
   async function saveProfileChanges() {
     if (!currentUserSession) return;
+
+    let avatarUrl = document.getElementById('igAvatarImg').src;
+
+    if (selectedFileToUpload) {
+      const fileName = `${currentUserSession.id}_${Date.now()}.png`;
+      const { data: uploadData, error: uploadError } = await db.storage.from('avatars').upload(fileName, selectedFileToUpload);
+      if (uploadError) {
+        alert("Error subiendo la imagen: " + uploadError.message);
+        return;
+      }
+      const { data: publicUrlData } = db.storage.from('avatars').getPublicUrl(fileName);
+      avatarUrl = publicUrlData.publicUrl;
+    }
+
     const updates = {
       id: currentUserSession.id,
       name: document.getElementById('editName').value,
       handle: document.getElementById('editHandle').value,
-      avatar_url: document.getElementById('editAvatarUrl').value,
+      avatar_url: avatarUrl,
       vr_glasses: document.getElementById('editVrGlasses').value,
       bio: document.getElementById('editBio').value
     };
+
     await db.from('profiles').upsert(updates);
     populateProfileData(updates);
     closeEditProfile();
