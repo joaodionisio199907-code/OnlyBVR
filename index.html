@@ -679,45 +679,53 @@
   async function searchVRChatWorlds() {
     const query = document.getElementById('vrcSearchInput').value.trim();
     const container = document.getElementById('vrcResultsContainer');
-    container.innerHTML = `<p style="color: var(--text-muted); text-align: center; font-size: 13px;">Buscando estancias...</p>`;
+    container.innerHTML = `<p style="color: var(--text-muted); text-align: center; font-size: 13px;">Buscando estancias y mundos...</p>`;
 
-    try {
-      const targetUrl = `https://api.vrchat.cloud/api/1/worlds?n=15&search=${encodeURIComponent(query)}`;
-      const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`;
+    const targetUrl = `https://api.vrchat.cloud/api/1/worlds?n=15&search=${encodeURIComponent(query)}`;
+    
+    // Lista de proxies de respaldo para evitar bloqueos CORS en navegadores móviles
+    const proxies = [
+      `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`,
+      `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`
+    ];
 
-      const response = await fetch(proxyUrl, {
-        headers: {
-          'User-Agent': 'OnlyBubbleVR/1.0 (contacto@onlybubble.vr)'
+    let data = null;
+    for (const proxyUrl of proxies) {
+      try {
+        const response = await fetch(proxyUrl, {
+          headers: {
+            'User-Agent': 'OnlyBubbleVR/1.0 (contacto@onlybubble.vr)'
+          }
+        });
+        if (response.ok) {
+          data = await response.json();
+          break;
         }
-      });
-
-      if (!response.ok) throw new Error("No se pudo conectar con el servidor de VRChat");
-
-      const worlds = await response.json();
-
-      if (!worlds || !Array.isArray(worlds) || worlds.length === 0) {
-        container.innerHTML = `<p style="color: var(--text-muted); text-align: center; font-size: 13px;">No se encontraron estancias.</p>`;
-        return;
+      } catch (e) {
+        console.warn("Fallo con el proxy actual, probando alternativa...", e);
       }
-
-      container.innerHTML = '';
-      worlds.forEach(world => {
-        const card = document.createElement('div');
-        card.style.cssText = `background: var(--glass-card); border: 1px solid var(--glass-border); border-radius: 20px; padding: 12px; display: flex; gap: 12px; align-items: center;`;
-        
-        card.innerHTML = `
-          <img src="${world.imageUrl || 'https://picsum.photos/200'}" style="width: 70px; height: 70px; border-radius: 14px; object-fit: cover;" alt="World">
-          <div style="flex: 1; overflow: hidden;">
-            <h4 style="font-size: 14px; font-weight: 800; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${world.name}</h4>
-            <p style="font-size: 11px; color: var(--neon-cyan); margin-top: 2px;">👤 Jugadores Online: <b>${world.occupants || 0}</b></p>
-            <p style="font-size: 11px; color: var(--text-muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Autor: ${world.authorName || 'Desconocido'}</p>
-          </div>
-        `;
-        container.appendChild(card);
-      });
-    } catch (err) {
-      container.innerHTML = `<p style="color: var(--neon-pink); text-align: center; font-size: 13px;">Error al cargar estancias. Inténtalo de nuevo.</p>`;
     }
+
+    if (!data || !Array.isArray(data) || data.length === 0) {
+      container.innerHTML = `<p style="color: var(--neon-pink); text-align: center; font-size: 13px;">No se pudieron cargar las estancias. Comprueba tu conexión.</p>`;
+      return;
+    }
+
+    container.innerHTML = '';
+    data.forEach(world => {
+      const card = document.createElement('div');
+      card.style.cssText = `background: var(--glass-card); border: 1px solid var(--glass-border); border-radius: 20px; padding: 12px; display: flex; gap: 12px; align-items: center;`;
+      
+      card.innerHTML = `
+        <img src="${world.imageUrl || 'https://picsum.photos/200'}" style="width: 70px; height: 70px; border-radius: 14px; object-fit: cover;" alt="World">
+        <div style="flex: 1; overflow: hidden;">
+          <h4 style="font-size: 14px; font-weight: 800; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${world.name}</h4>
+          <p style="font-size: 11px; color: var(--neon-cyan); margin-top: 2px;">👤 Usuarios en salas: <b>${world.occupants || 0}</b></p>
+          <p style="font-size: 11px; color: var(--text-muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Autor: ${world.authorName || 'Desconocido'}</p>
+        </div>
+      `;
+      container.appendChild(card);
+    });
   }
 
   function loadProfileDataIntoForm(profile) {
