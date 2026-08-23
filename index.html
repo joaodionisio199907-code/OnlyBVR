@@ -1326,12 +1326,16 @@
 
   function renderDiscoveryCard() {
     if (allProfilesList.length === 0) {
-      document.getElementById('tinderCardImg').src = 'https://placehold.co/600x900/120b24/94a3b8?text=Esperando+Amigos';
-      document.getElementById('tinderCardName').innerText = '¡Nadie más por aquí!';
-      document.getElementById('tinderCardLoc').innerText = 'Comparte la app con tus amigos';
-      return;
-    }
+        const imgElement = document.getElementById('tinderCardImg');
+        const nameElement = document.getElementById('tinderCardName');
+        const locElement = document.getElementById('tinderCardLoc');
 
+        if (imgElement) imgElement.src = 'https://placehold.co/600x900/120b24/94a3b8?text=Esperando+Amigos';
+        if (nameElement) nameElement.innerText = '¡Nadie más por aquí!';
+        if (locElement) locElement.innerText = 'Comparte la app con tus amigos';
+        return;
+    }
+  
     if (currentDiscoveryIndex >= allProfilesList.length) currentDiscoveryIndex = 0;
     const user = allProfilesList[currentDiscoveryIndex];
 
