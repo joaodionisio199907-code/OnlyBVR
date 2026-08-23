@@ -18,7 +18,159 @@
   <link rel="apple-touch-icon" href="logo.png">
   <link rel="manifest" href="manifest.json">
   
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
+  /* ================= ONLYBUBBLEVR V2 ================= */
+  let v2ConfirmResolver = null;
+  let v2NotificationsChannel = null;
+  let v2PresenceTimer = null;
+
+  function showV2Confirm(title, text, okText='Confirmar') {
+    return new Promise(resolve => {
+      v2ConfirmResolver = resolve;
+      document.getElementById('v2ConfirmTitle').innerText = title;
+      document.getElementById('v2ConfirmText').innerText = text;
+      document.getElementById('v2ConfirmOk').innerText = okText;
+      document.getElementById('v2ConfirmModal').classList.add('active');
+    });
+  }
+  function resolveV2Confirm(value) {
+    document.getElementById('v2ConfirmModal').classList.remove('active');
+    if (v2ConfirmResolver) { const r=v2ConfirmResolver; v2ConfirmResolver=null; r(value); }
+  }
+  function toggleNotifications(){
+    const m=document.getElementById('notificationsModal'); const active=m.classList.toggle('active');
+    if(active) loadNotifications();
+  }
+  async function loadNotifications(){
+    if(!currentUserSession) return;
+    const list=document.getElementById('notificationsList'); list.innerHTML='<div class="chat-empty">Cargando...</div>';
+    const {data: rows,error}=await db.from('notifications').select('*').eq('user_id',currentUserSession.id).order('created_at',{ascending:false}).limit(50);
+    if(error){list.innerHTML='<div class="chat-empty">Activa la tabla notifications con el SQL V2.</div>';return;}
+    if(!rows?.length){list.innerHTML='<div class="chat-empty">No tienes notificaciones todavía. ✨</div>';return;}
+    const ids=[...new Set(rows.map(n=>n.actor_id).filter(Boolean))];
+    const {data:profiles}=ids.length?await db.from('profiles').select('*').in('id',ids):{data:[]};
+    const pm=new Map((profiles||[]).map(p=>[p.id,p])); list.innerHTML='';
+    rows.forEach(n=>{const p=pm.get(n.actor_id);const item=document.createElement('div');item.className='v2-notification-item '+(!n.read_at?'unread':'');item.onclick=()=>{markNotificationRead(n.id);if(n.actor_id)openUserProfile(n.actor_id);};item.innerHTML=`<img class="v2-notification-avatar" src="${escapeHtml(p?.avatar_url||'https://placehold.co/100x100/120b24/a855f7?text=U')}"><div class="v2-notification-text"><b>${escapeHtml(p?.name||'OnlyBubbleVR')}</b> ${escapeHtml(n.message||'Tienes una nueva actividad.') }<div class="v2-notification-time">${formatChatTime(n.created_at)}</div></div>`;list.appendChild(item);});
+    const unread=rows.filter(n=>!n.read_at).length; document.getElementById('notificationBadge').classList.toggle('show',unread>0);
+  }
+  async function markNotificationRead(id){await db.from('notifications').update({read_at:new Date().toISOString()}).eq('id',id).eq('user_id',currentUserSession.id);loadNotifications();}
+  async function markAllNotificationsRead(){await db.from('notifications').update({read_at:new Date().toISOString()}).eq('user_id',currentUserSession.id).is('read_at',null);loadNotifications();}
+
+  async function getRelationship(targetId){
+    if(!currentUserSession||!targetId) return {};
+    const [friends,matches,followers,following,blocked,requestIn,requestOut]=await Promise.all([
+      db.from('user_connections').select('id').eq('user_id',currentUserSession.id).eq('friend_id',targetId).eq('connection_type','friend').limit(1),
+      db.from('user_connections').select('id').eq('user_id',currentUserSession.id).eq('friend_id',targetId).eq('connection_type','match').limit(1),
+      db.from('user_connections').select('id').eq('user_id',targetId).eq('friend_id',currentUserSession.id).eq('connection_type','follower').limit(1),
+      db.from('user_connections').select('id').eq('user_id',currentUserSession.id).eq('friend_id',targetId).eq('connection_type','follower').limit(1),
+      db.from('blocked_users').select('id').eq('user_id',currentUserSession.id).eq('blocked_id',targetId).limit(1),
+      db.from('friend_requests').select('id,status').eq('sender_id',targetId).eq('receiver_id',currentUserSession.id).eq('status','pending').limit(1),
+      db.from('friend_requests').select('id,status').eq('sender_id',currentUserSession.id).eq('receiver_id',targetId).eq('status','pending').limit(1)
+    ]);
+    return {friend:!!friends.data?.length,match:!!matches.data?.length,followedByThem:!!followers.data?.length,following:!!following.data?.length,blocked:!!blocked.data?.length,incoming:requestIn.data?.[0]||null,outgoing:requestOut.data?.[0]||null};
+  }
+  async function refreshViewedProfileActions(){
+    if(!viewedProfileUserId||viewedProfileUserId===currentUserSession.id)return;
+    const r=await getRelationship(viewedProfileUserId); const box=document.getElementById('igSocialActions'); box.style.display='grid';
+    const f=document.getElementById('profileFriendBtn'), fol=document.getElementById('profileFollowBtn');
+    f.disabled=false;
+    if(r.friend) {f.innerText='✓ Amigos';f.onclick=async()=>{if(await showV2Confirm('Eliminar amigo', '¿Estás seguro que quieres eliminar a este amigo?','Sí, eliminar')){await db.from('user_connections').delete().eq('user_id',currentUserSession.id).eq('friend_id',viewedProfileUserId).eq('connection_type','friend');refreshViewedProfileActions();loadRealData();}}}
+    else if(r.outgoing){f.innerText='⏳ Solicitud enviada';f.onclick=()=>{};f.disabled=true;}
+    else if(r.incoming){f.innerText='✅ Aceptar solicitud';f.onclick=()=>acceptFriendRequest(r.incoming.id);}
+    else {f.innerText='👥 Añadir amigo';f.onclick=sendFriendRequestFromProfile;}
+    fol.innerText=r.following?'✓ Siguiendo':'＋ Seguir';
+  }
+  async function sendFriendRequestFromProfile(){
+    if(!viewedProfileUserId||viewedProfileUserId===currentUserSession.id)return;
+    const r=await getRelationship(viewedProfileUserId);if(r.friend||r.outgoing)return;
+    if(r.incoming){return acceptFriendRequest(r.incoming.id);}
+    const {error}=await db.from('friend_requests').insert({sender_id:currentUserSession.id,receiver_id:viewedProfileUserId,status:'pending'});
+    if(error)alert('No se pudo enviar la solicitud: '+error.message);else{alert('Solicitud de amistad enviada.');refreshViewedProfileActions();}
+  }
+  async function acceptFriendRequest(id){
+    const {data:req}=await db.from('friend_requests').select('*').eq('id',id).eq('receiver_id',currentUserSession.id).maybeSingle();if(!req)return;
+    await db.from('friend_requests').update({status:'accepted',responded_at:new Date().toISOString()}).eq('id',id);
+    await db.from('user_connections').upsert([{user_id:currentUserSession.id,friend_id:req.sender_id,connection_type:'friend'},{user_id:req.sender_id,friend_id:currentUserSession.id,connection_type:'friend'}],{onConflict:'user_id,friend_id,connection_type'});
+    alert('¡Ahora sois amigos!');refreshViewedProfileActions();loadRealData();
+  }
+  async function toggleFollowFromProfile(){
+    if(!viewedProfileUserId||viewedProfileUserId===currentUserSession.id)return;
+    const r=await getRelationship(viewedProfileUserId);
+    if(r.following) await db.from('user_connections').delete().eq('user_id',currentUserSession.id).eq('friend_id',viewedProfileUserId).eq('connection_type','follower');
+    else await db.from('user_connections').insert({user_id:currentUserSession.id,friend_id:viewedProfileUserId,connection_type:'follower'});
+    refreshViewedProfileActions();loadRealData();
+  }
+  function chatFromViewedProfile(){
+    if(!viewedProfileUserId||viewedProfileUserId===currentUserSession.id)return;
+    db.from('profiles').select('*').eq('id',viewedProfileUserId).maybeSingle().then(({data})=>{if(data){closeInstagramProfile();switchNavSection('chat');openChatWithProfile(data);}});
+  }
+  function openProfileSafetyMenu(){document.getElementById('profileSafetyModal').classList.add('active');}
+  function closeProfileSafetyMenu(){document.getElementById('profileSafetyModal').classList.remove('active');}
+  async function blockViewedProfile(){
+    if(!viewedProfileUserId)return;closeProfileSafetyMenu();
+    if(!await showV2Confirm('Bloquear usuario','¿Estás seguro que quieres bloquear a este usuario? No podrá interactuar contigo.','Sí, bloquear'))return;
+    await db.from('blocked_users').upsert({user_id:currentUserSession.id,blocked_id:viewedProfileUserId});
+    await db.from('user_connections').delete().or(`and(user_id.eq.${currentUserSession.id},friend_id.eq.${viewedProfileUserId}),and(user_id.eq.${viewedProfileUserId},friend_id.eq.${currentUserSession.id})`);
+    closeInstagramProfile();loadRealData();
+  }
+  async function reportViewedProfile(){
+    if(!viewedProfileUserId)return;closeProfileSafetyMenu();
+    const reason=prompt('Motivo del reporte (spam, acoso, contenido, otro):','otro');if(!reason)return;
+    const {error}=await db.from('reports').insert({reporter_id:currentUserSession.id,reported_id:viewedProfileUserId,reason:reason.slice(0,300),status:'open'});if(error)alert('No se pudo enviar el reporte: '+error.message);else alert('Reporte enviado. Gracias por ayudar a mantener OnlyBubbleVR seguro.');
+  }
+  function toggleEmojiPanel(){document.getElementById('emojiPanel').classList.toggle('active');}
+  function insertChatEmoji(e){const i=document.getElementById('chatMessageInput');i.value+=e;i.focus();}
+  async function sendChatImage(event){
+    const file=event.target.files?.[0];event.target.value='';if(!file||!activeConversationId||!activeChatUserId)return;
+    if(file.size>5*1024*1024){alert('La imagen no puede superar 5 MB.');return;}
+    const ext=(file.name.split('.').pop()||'jpg').toLowerCase();const path=`${currentUserSession.id}/${activeConversationId}/${Date.now()}.${ext}`;
+    const {error:upErr}=await db.storage.from('chat-media').upload(path,file,{upsert:false});if(upErr){alert('No se pudo subir la imagen: '+upErr.message);return;}
+    const {data:urlData}=db.storage.from('chat-media').getPublicUrl(path);const mediaUrl=urlData.publicUrl;
+    const {data:inserted,error}=await db.from('messages').insert({conversation_id:activeConversationId,sender_id:currentUserSession.id,recipient_id:activeChatUserId,content:'📷 Imagen',message_type:'image',media_url:mediaUrl}).select().single();
+    if(error){alert('No se pudo enviar la imagen: '+error.message);return;}renderMessage(inserted);document.getElementById('chatMessagesBox').scrollTop=999999;loadChatConversations();
+  }
+  // Sustituye la representación del mensaje para admitir imágenes sin perder los mensajes de texto.
+  const __oldRenderMessage=renderMessage;
+  renderMessage=function(msg){
+    const box=document.getElementById('chatMessagesBox');if(msg.id&&chatLastRenderedMessageIds.has(msg.id))return;if(msg.id)chatLastRenderedMessageIds.add(msg.id);
+    const outgoing=msg.sender_id===currentUserSession.id,row=document.createElement('div');row.className=`chat-message-row ${outgoing?'outgoing':'incoming'}`;
+    const bubble=document.createElement('div');bubble.className=`message-bubble ${outgoing?'outgoing':'incoming'}`;
+    if(msg.message_type==='image'&&msg.media_url){bubble.innerHTML=`<img class="v2-message-image" src="${escapeHtml(msg.media_url)}" alt="Imagen enviada">`;}
+    else bubble.innerText=msg.content||'';row.appendChild(bubble);
+    const time=document.createElement('div');time.className='message-time';time.innerText=formatChatTime(msg.created_at);row.appendChild(time);
+    if(outgoing){const st=document.createElement('div');st.className='message-status';st.innerText=msg.read_at?'✓✓ Leído':'✓ Enviado';row.appendChild(st);}
+    box.appendChild(row);
+  };
+  // Añade online/presencia de forma ligera.
+  async function updateOwnPresence(){if(!currentUserSession)return;await db.from('profiles').update({online_at:new Date().toISOString()}).eq('id',currentUserSession.id);}
+  function startV2Presence(){if(v2PresenceTimer)clearInterval(v2PresenceTimer);updateOwnPresence();v2PresenceTimer=setInterval(updateOwnPresence,30000);}
+  async function loadV2Startup(){
+    if(!currentUserSession)return;startV2Presence();loadNotifications();
+    if(v2NotificationsChannel)db.removeChannel(v2NotificationsChannel);
+    v2NotificationsChannel=db.channel('notifications_'+currentUserSession.id).on('postgres_changes',{event:'INSERT',schema:'public',table:'notifications',filter:`user_id=eq.${currentUserSession.id}`},()=>loadNotifications()).subscribe();
+  }
+  // Enganche adicional: no sustituye ninguna función anterior.
+  const __oldValidateAndGrantAccess=validateAndGrantAccess;
+  validateAndGrantAccess=async function(user){const ok=await __oldValidateAndGrantAccess(user);if(ok)await loadV2Startup();return ok;};
+  const __oldPopulateViewedProfile=populateViewedProfile;
+  populateViewedProfile= function(profile){__oldPopulateViewedProfile(profile);if(profile.id!==currentUserSession.id)refreshViewedProfileActions();};
+  const __oldCloseInstagramProfile=closeInstagramProfile;
+  closeInstagramProfile=function(){__oldCloseInstagramProfile();document.getElementById('igSocialActions').style.display='none';};
+
+  const __oldOpenInstagramProfileV2=window.openInstagramProfile;
+  openInstagramProfile=async function(){
+    await __oldOpenInstagramProfileV2();
+    ['Amigos','Matches','Seguidores'].forEach(t=>{});
+    document.querySelectorAll('#instagramProfileScreen .ig-stat-label').forEach((el,i)=>el.parentElement.onclick=()=>openSubList(['Amigos','Matches','Seguidores'][i]));
+  };
+  const __oldPopulateViewedProfileV2=populateViewedProfile;
+  populateViewedProfile=function(profile){
+    __oldPopulateViewedProfileV2(profile);
+    const labels=document.querySelectorAll('#instagramProfileScreen .ig-stat-label');
+    labels.forEach(el=>el.parentElement.onclick=profile.id===currentUserSession.id?()=>openSubList(el.innerText):null);
+  };
+
+</script>
   
   <style>
     :root {
@@ -635,6 +787,12 @@
       border-radius: 16px; color: #fff; font-weight: 600; font-size: 14px; cursor: pointer; text-align: left;
     }
     .panel-logout-btn { background: rgba(236, 72, 153, 0.1); border-color: rgba(236, 72, 153, 0.3); color: var(--neon-pink); }
+  
+    /* ================= V2 SOCIAL / CHAT ================= */
+    .v2-notify-btn{position:relative;background:none;border:none;color:#fff;font-size:19px;cursor:pointer;padding:5px}.v2-notification-badge{position:absolute;top:1px;right:0;min-width:7px;height:7px;border-radius:50%;background:var(--neon-pink);box-shadow:0 0 8px var(--neon-pink);display:none}.v2-notification-badge.show{display:block}
+    .v2-social-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}.v2-social-btn{padding:10px;border-radius:12px;border:1px solid var(--glass-border);background:rgba(255,255,255,.06);color:#fff;font-weight:800;cursor:pointer}.v2-social-btn.primary{background:var(--grad-main);border:none}.v2-social-btn.danger{color:var(--neon-pink);border-color:rgba(236,72,153,.35)}
+    .v2-modal{position:fixed;inset:0;background:rgba(3,2,8,.78);backdrop-filter:blur(16px);z-index:600;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:.25s}.v2-modal.active{opacity:1;pointer-events:auto}.v2-modal-card{width:100%;max-width:420px;background:rgba(18,11,36,.96);border:1px solid var(--glass-border);border-radius:26px;padding:18px;box-shadow:0 20px 70px rgba(0,0,0,.65)}.v2-tall-card{height:min(680px,85vh);display:flex;flex-direction:column}.v2-modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}.v2-modal-header h3{font-size:18px}.v2-modal-header button{background:none;border:none;color:#fff;font-size:20px;cursor:pointer}.v2-notifications-list{overflow-y:auto;display:flex;flex-direction:column;gap:8px}.v2-notification-item{display:flex;align-items:center;gap:10px;padding:11px;border:1px solid rgba(255,255,255,.07);background:rgba(255,255,255,.035);border-radius:16px;cursor:pointer}.v2-notification-item.unread{border-color:rgba(0,242,254,.3);background:rgba(0,242,254,.05)}.v2-notification-avatar{width:42px;height:42px;border-radius:50%;object-fit:cover;border:1px solid var(--glass-border)}.v2-notification-text{flex:1;font-size:12px;line-height:1.35}.v2-notification-time{font-size:10px;color:var(--text-muted)}.v2-menu-action{width:100%;padding:13px;margin-top:8px;border-radius:14px;border:1px solid var(--glass-border);background:rgba(255,255,255,.05);color:#fff;font-weight:800;cursor:pointer}.v2-menu-action.danger{color:var(--neon-pink);border-color:rgba(236,72,153,.3)}.v2-confirm-card{text-align:center}.v2-confirm-icon{width:52px;height:52px;border-radius:50%;margin:0 auto 10px;display:flex;align-items:center;justify-content:center;background:rgba(236,72,153,.12);border:1px solid rgba(236,72,153,.35);color:var(--neon-pink);font-size:24px;font-weight:900}.v2-confirm-card p{font-size:13px;color:var(--text-muted);margin:8px 0 14px}.v2-confirm-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}.v2-chat-toolbar{display:flex;align-items:center;gap:6px}.v2-chat-tool{width:38px;height:38px;border-radius:50%;border:1px solid var(--glass-border);background:rgba(255,255,255,.04);color:#fff;cursor:pointer}.v2-emoji-panel{position:absolute;bottom:65px;left:10px;width:230px;display:none;grid-template-columns:repeat(7,1fr);gap:4px;padding:10px;background:rgba(18,11,36,.98);border:1px solid var(--glass-border);border-radius:16px;box-shadow:0 15px 40px rgba(0,0,0,.5);z-index:20}.v2-emoji-panel.active{display:grid}.v2-emoji{border:none;background:none;font-size:20px;padding:5px;cursor:pointer}.chat-input-bar{position:relative}.v2-message-image{max-width:220px;max-height:260px;border-radius:14px;display:block;margin-top:3px}.v2-message-actions{font-size:10px;color:var(--text-muted);cursor:pointer;margin-top:2px}.v2-online-status{font-size:10px;color:#10b981}.v2-online-status.offline{color:var(--text-muted)}
+
   </style>
 </head>
 <body>
@@ -693,7 +851,7 @@
     <div class="interface-header">
       <img src="" alt="Mi perfil" class="user-avatar-top" id="headerUserAvatar" onclick="openInstagramProfile()" onerror="this.src='https://placehold.co/100x100/120b24/a855f7?text=Me'">
       <h2 style="font-size: 16px; background: var(--grad-main); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 900;">ONLYBUBBLE</h2>
-      <button onclick="toggleSettingsPanel()" style="background:none; border:none; color:var(--text); font-size:18px; cursor:pointer;">⚙️</button>
+      <div style="display:flex;align-items:center;gap:8px;"><button class="v2-notify-btn" onclick="toggleNotifications()" title="Notificaciones">🔔<span id="notificationBadge" class="v2-notification-badge"></span></button><button onclick="toggleSettingsPanel()" style="background:none; border:none; color:var(--text); font-size:18px; cursor:pointer;">⚙️</button></div>
     </div>
   </div>
 
@@ -851,6 +1009,34 @@
       <button class="connection-confirm-btn" onclick="closeConnectionConfirm()">Cancelar</button>
       <button class="connection-confirm-btn danger" onclick="confirmRemoveConnection()">Sí, eliminar</button>
     </div>
+  </div>
+</div>
+
+<!-- V2: NOTIFICACIONES -->
+<div id="notificationsModal" class="v2-modal">
+  <div class="v2-modal-card v2-tall-card">
+    <div class="v2-modal-header"><h3>🔔 Notificaciones</h3><button onclick="toggleNotifications()">✕</button></div>
+    <div id="notificationsList" class="v2-notifications-list"><div class="chat-empty">Cargando...</div></div>
+  </div>
+</div>
+
+<!-- V2: SEGURIDAD DE PERFIL -->
+<div id="profileSafetyModal" class="v2-modal">
+  <div class="v2-modal-card">
+    <div class="v2-modal-header"><h3>Seguridad</h3><button onclick="closeProfileSafetyMenu()">✕</button></div>
+    <button class="v2-menu-action" onclick="blockViewedProfile()">🚫 Bloquear usuario</button>
+    <button class="v2-menu-action danger" onclick="reportViewedProfile()">⚠️ Reportar usuario</button>
+    <button class="v2-menu-action" onclick="closeProfileSafetyMenu()">Cancelar</button>
+  </div>
+</div>
+
+<!-- V2: CONFIRMACIÓN -->
+<div id="v2ConfirmModal" class="v2-modal">
+  <div class="v2-modal-card v2-confirm-card">
+    <div class="v2-confirm-icon">?</div>
+    <h3 id="v2ConfirmTitle">¿Estás seguro?</h3>
+    <p id="v2ConfirmText">Esta acción no se puede deshacer.</p>
+    <div class="v2-confirm-actions"><button class="v2-menu-action" onclick="resolveV2Confirm(false)">Cancelar</button><button id="v2ConfirmOk" class="v2-menu-action danger" onclick="resolveV2Confirm(true)">Confirmar</button></div>
   </div>
 </div>
 
