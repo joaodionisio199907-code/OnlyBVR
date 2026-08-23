@@ -149,7 +149,6 @@
       </div>
       <button type="submit" class="btn-app-main">ENTRAR A LA APP</button>
       
-      <!-- BOTÓN REDIRECCIÓN DIRECTA A DIDIT -->
       <button type="button" class="btn-app-main" onclick="redirectToDidit()" style="background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);">
         🆔 VERIFICAR / ENTRAR CON DIDIT
       </button>
@@ -189,7 +188,7 @@
   const SUPABASE_URL = "https://wzpmgtkabsncpzpvweja.supabase.co";
   const SUPABASE_KEY = "sb_publishable_y9Yrqzf1QabeTeQV4DauBQ_tWgrL0li";
   
-  // REEMPLAZA ESTA URL POR LA URL REAL DE TU SESIÓN/WORKFLOW EN DIDIT DEVELOPER CONSOLE
+  // URL de tu flujo activo en Didit Console
   const DIDIT_FLOW_URL = "https://verify.didit.me/u/SJ4nOmHXTY2CwxwX9iSFqg";
 
   const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -202,8 +201,32 @@
   }
 
   function redirectToDidit() {
-    // Redirección directa para evitar fallos del SDK en navegadores móviles
     window.location.href = DIDIT_FLOW_URL;
+  }
+
+  // COMPROBACIÓN AUTOMÁTICA AL ABRIR LA APP
+  window.addEventListener('DOMContentLoaded', async () => {
+    const { data: { session } } = await db.auth.getSession();
+    if (session) {
+      await checkUserVerificationAndEnter(session.user);
+    }
+  });
+
+  // VALIDA SI EL USUARIO ESTÁ VERIFICADO EN 'profiles'
+  async function checkUserVerificationAndEnter(user) {
+    const { data: profile, error } = await db
+      .from('profiles')
+      .select('is_age_verified')
+      .eq('id', user.id)
+      .single();
+
+    if (error || !profile || !profile.is_age_verified) {
+      alert("⚠️ Tu cuenta requiere verificación de edad (+18) para poder acceder.");
+      redirectToDidit();
+      return;
+    }
+
+    document.getElementById('auth-screen').classList.add('hide');
   }
 
   async function handleLogin(e) {
@@ -214,7 +237,7 @@
     const { data, error } = await db.auth.signInWithPassword({ email, password });
     if (error) return alert("Error al entrar: " + error.message);
 
-    document.getElementById('auth-screen').classList.add('hide');
+    await checkUserVerificationAndEnter(data.user);
   }
 
   async function handleSignUp(e) {
@@ -225,8 +248,16 @@
     const { data, error } = await db.auth.signUp({ email, password });
     if (error) return alert("Error al registrarse: " + error.message);
     
-    alert("Cuenta creada. Redirigiendo a verificación de identidad...");
-    redirectToDidit();
+    if (data.user) {
+      // Registra al usuario como NO verificado
+      await db.from('profiles').upsert({
+        id: data.user.id,
+        is_age_verified: false
+      });
+
+      alert("Cuenta creada. Redirigiendo a verificación de identidad...");
+      redirectToDidit();
+    }
   }
 
   async function handleLogout() {
