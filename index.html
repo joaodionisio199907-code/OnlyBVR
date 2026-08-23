@@ -16,6 +16,12 @@
   <link rel="manifest" href="manifest.json">
   
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    // Inicializa tu cliente de Supabase (reemplaza con tus credenciales reales)
+    const SUPABASE_URL = 'TU_SUPABASE_URL';
+    const SUPABASE_ANON_KEY = 'TU_SUPABASE_ANON_KEY';
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  </script>
   
   <style>
     :root {
@@ -737,8 +743,7 @@
 </div>
 
 <script>
-  // Script de control principal con Supabase integrado
-
+  // Control de pestañas de autenticación
   function switchAuthTab(tab) {
     document.getElementById('tab-login-btn').classList.toggle('active', tab === 'login');
     document.getElementById('tab-signup-btn').classList.toggle('active', tab === 'signup');
@@ -746,12 +751,12 @@
     document.getElementById('form-signup').classList.toggle('active', tab === 'signup');
   }
 
-  // --- INICIO DE SESIÓN REAL CON SUPABASE ---
+  // --- INICIO DE SESIÓN CON SUPABASE (IDs corregidos: authEmail y authPass) ---
   async function handleLogin(e) {
     e.preventDefault();
     
-    const emailInput = document.getElementById('login-email');
-    const passwordInput = document.getElementById('login-password');
+    const emailInput = document.getElementById('authEmail');
+    const passwordInput = document.getElementById('authPass');
 
     if (!emailInput || !passwordInput) {
       alert("No se encontraron los campos de correo o contraseña en el HTML.");
@@ -770,7 +775,6 @@
       }
 
       alert("¡Inicio de sesión exitoso!");
-      // Aquí puedes recargar o cambiar de vista según tu lógica
       location.reload(); 
 
     } catch (err) {
@@ -779,12 +783,12 @@
     }
   }
 
-  // --- REGISTRO REAL CON SUPABASE ---
+  // --- REGISTRO CON SUPABASE (IDs corregidos: regEmail y regPass) ---
   async function handleSignup(e) {
     e.preventDefault();
 
-    const emailInput = document.getElementById('signup-email');
-    const passwordInput = document.getElementById('signup-password');
+    const emailInput = document.getElementById('regEmail');
+    const passwordInput = document.getElementById('regPass');
 
     if (!emailInput || !passwordInput) {
       alert("No se encontraron los campos de registro en el HTML.");
@@ -802,7 +806,7 @@
         return;
       }
 
-      alert("¡Cuenta creada con éxito! Revisa tu correo si Supabase requiere confirmación o ya puedes iniciar sesión.");
+      alert("¡Cuenta creada con éxito! Revisa tu correo o inicia sesión.");
       switchAuthTab('login');
 
     } catch (err) {
