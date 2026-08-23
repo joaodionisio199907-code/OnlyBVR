@@ -146,6 +146,17 @@
     }
     .user-avatar-top { width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--neon-purple); object-fit: cover; cursor: pointer; }
 
+    /* CONTENEDOR DE SECCIONES INTERNAS */
+    .app-section-view {
+      display: none;
+      flex: 1;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .app-section-view.active {
+      display: flex;
+    }
+
     /* BURBUJAS DE MATCHES ARRIBA */
     .matches-bubbles-bar {
       display: flex;
@@ -254,6 +265,120 @@
     }
     .action-bubble-btn.dislike { color: var(--text-muted); border-color: rgba(255, 255, 255, 0.1); }
     .action-bubble-btn.like { width: 50px; padding: 0; border-radius: 50%; color: var(--neon-pink); border-color: rgba(236, 72, 153, 0.5); background: rgba(236, 72, 153, 0.1); font-size: 20px; }
+
+    /* ZONA DE CHAT PROFESIONAL */
+    .chat-layout {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      background: var(--glass-card);
+      border: 1px solid var(--glass-border);
+      border-radius: 24px;
+      overflow: hidden;
+      margin: 6px 0;
+    }
+
+    .chat-conversations-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 12px;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .chat-conv-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 16px;
+      cursor: pointer;
+    }
+    .chat-conv-item:hover { background: rgba(168, 85, 247, 0.1); border-color: var(--glass-border); }
+
+    .chat-conv-avatar {
+      width: 48px; height: 48px; border-radius: 50%; object-fit: cover; border: 2px solid var(--neon-purple);
+    }
+
+    .chat-conv-info { flex: 1; overflow: hidden; }
+    .chat-conv-name { font-size: 15px; font-weight: 700; color: #fff; }
+    .chat-conv-preview { font-size: 12px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+
+    /* VISTA DE CONVERSACIÓN ACTIVA */
+    .chat-active-view {
+      display: none;
+      flex-direction: column;
+      flex: 1;
+      height: 100%;
+    }
+    .chat-active-view.active { display: flex; }
+
+    .chat-active-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      background: rgba(12, 8, 26, 0.8);
+      border-bottom: 1px solid var(--glass-border);
+    }
+    .chat-back-btn { background: none; border: none; color: var(--text); font-size: 18px; cursor: pointer; }
+
+    .chat-messages-container {
+      flex: 1;
+      padding: 16px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .message-bubble {
+      max-width: 75%;
+      padding: 12px 16px;
+      border-radius: 18px;
+      font-size: 13px;
+      line-height: 1.4;
+      word-break: break-word;
+    }
+    .message-bubble.incoming {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      align-self: flex-start;
+      border-bottom-left-radius: 4px;
+    }
+    .message-bubble.outgoing {
+      background: var(--grad-main);
+      color: #fff;
+      align-self: flex-end;
+      border-bottom-right-radius: 4px;
+    }
+
+    .chat-input-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      background: rgba(12, 8, 26, 0.9);
+      border-top: 1px solid var(--glass-border);
+    }
+    .chat-input-field {
+      flex: 1;
+      padding: 12px 16px;
+      background: rgba(8, 5, 20, 0.8);
+      border: 1px solid var(--glass-border);
+      border-radius: 20px;
+      color: #fff;
+      font-size: 13px;
+      outline: none;
+      user-select: text;
+    }
+    .chat-send-btn {
+      width: 42px; height: 42px; border-radius: 50%; background: var(--grad-main);
+      border: none; color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 16px;
+    }
 
     /* BARRA DE NAVEGACIÓN INFERIOR */
     .bottom-nav-bar {
@@ -399,57 +524,126 @@
       <h2 style="font-size: 16px; background: var(--grad-main); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 900;">ONLYBUBBLE</h2>
       <button onclick="toggleSettingsPanel()" style="background:none; border:none; color:var(--text); font-size:18px; cursor:pointer;">⚙️</button>
     </div>
+  </div>
 
+  <!-- SECCIÓN 1: INICIO (TINDER DE BURBUJAS) -->
+  <div id="sectionInicio" class="app-section-view active">
     <!-- Burbujas de Matches / Gente Online (ARRIBA) -->
     <div class="matches-bubbles-bar">
-      <div class="match-bubble-item" onclick="selectMatch('https://picsum.photos/id/64/600/900', 'Jane Cooper, 23', '📍 Los Angeles, CA')">
+      <div class="match-bubble-item" onclick="openChatWith('Jane Cooper', 'https://picsum.photos/id/64/100/100', 'conv_jane')">
         <img src="https://picsum.photos/id/64/100/100" alt="Match">
         <div class="match-online-dot"></div>
       </div>
-      <div class="match-bubble-item" onclick="selectMatch('https://picsum.photos/id/91/600/900', 'Emily Carter, 26', '📍 San Francisco, CA')">
+      <div class="match-bubble-item" onclick="openChatWith('Emily Carter', 'https://picsum.photos/id/91/100/100', 'conv_emily')">
         <img src="https://picsum.photos/id/91/100/100" alt="Match">
         <div class="match-online-dot"></div>
       </div>
-      <div class="match-bubble-item" onclick="selectMatch('https://picsum.photos/id/338/600/900', 'Chloe Smith, 22', '📍 San Diego, CA')">
+      <div class="match-bubble-item" onclick="openChatWith('Chloe Smith', 'https://picsum.photos/id/338/100/100', 'conv_chloe')">
         <img src="https://picsum.photos/id/338/100/100" alt="Match">
         <div class="match-online-dot"></div>
       </div>
-      <div class="match-bubble-item" onclick="selectMatch('https://picsum.photos/id/1027/600/900', 'Sophia, 25', '📍 Malibu, CA')">
+      <div class="match-bubble-item" onclick="openChatWith('Sophia', 'https://picsum.photos/id/1027/100/100', 'conv_sophia')">
         <img src="https://picsum.photos/id/1027/100/100" alt="Match">
         <div class="match-online-dot"></div>
       </div>
     </div>
-  </div>
 
-  <!-- Tarjeta principal en formato de burbuja/cápsula -->
-  <div class="profile-card-container">
-    <img src="https://picsum.photos/id/65/600/900" alt="Perfil recomendado" class="profile-bg-img" id="tinderCardImg">
-    <div class="profile-gradient-overlay"></div>
+    <!-- Tarjeta principal en formato de burbuja/cápsula -->
+    <div class="profile-card-container">
+      <img src="https://picsum.photos/id/65/600/900" alt="Perfil recomendado" class="profile-bg-img" id="tinderCardImg">
+      <div class="profile-gradient-overlay"></div>
 
-    <div class="profile-info-content">
-      <div class="profile-name-age" id="tinderCardName">Jenny Wilson, 24</div>
-      <div class="profile-location" id="tinderCardLoc">📍 California, USA</div>
+      <div class="profile-info-content">
+        <div class="profile-name-age" id="tinderCardName">Jenny Wilson, 24</div>
+        <div class="profile-location" id="tinderCardLoc">📍 California, USA</div>
+      </div>
     </div>
-  </div>
 
-  <div>
     <!-- Botones de voto abajo -->
     <div class="voting-buttons-bar">
       <div class="action-bubble-btn dislike" onclick="nextCard()">Never🤮</div>
       <div class="action-bubble-btn like" onclick="nextCard()">❤️</div>
     </div>
+  </div>
 
+  <!-- SECCIÓN 2: BUBBLES (EXPLORAR) -->
+  <div id="sectionBubbles" class="app-section-view" style="justify-content: center; align-items: center; text-align: center; padding: 20px;">
+    <span style="font-size: 48px;">🫧</span>
+    <h3 style="font-size: 20px; font-weight: 800; margin-top: 10px; background: var(--grad-main); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Mundo de Burbujas VR</h3>
+    <p style="font-size: 13px; color: var(--text-muted); margin-top: 6px; max-width: 280px;">
+      Espacio inmersivo de conexiones cercanas en desarrollo. Explora estancias desde las opciones del menú.
+    </p>
+  </div>
+
+  <!-- SECCIÓN 3: CHAT PROFESIONAL -->
+  <div id="sectionChat" class="app-section-view">
+    <!-- Lista de Conversaciones -->
+    <div id="chatListView" class="chat-layout" style="display: flex;">
+      <div style="padding: 14px 16px; border-bottom: 1px solid var(--glass-border); font-weight: 800; font-size: 16px;">
+        💬 Mensajes y Conexiones
+      </div>
+      <div class="chat-conversations-list">
+        <div class="chat-conv-item" onclick="openChatWith('Jane Cooper', 'https://picsum.photos/id/64/100/100', 'conv_jane')">
+          <img src="https://picsum.photos/id/64/100/100" class="chat-conv-avatar" alt="Jane">
+          <div class="chat-conv-info">
+            <div class="chat-conv-name">Jane Cooper</div>
+            <div class="chat-conv-preview">¡Hola! ¿Nos vemos en VRChat hoy?</div>
+          </div>
+          <span style="font-size: 11px; color: var(--neon-cyan);">Online</span>
+        </div>
+        <div class="chat-conv-item" onclick="openChatWith('Emily Carter', 'https://picsum.photos/id/91/100/100', 'conv_emily')">
+          <img src="https://picsum.photos/id/91/100/100" class="chat-conv-avatar" alt="Emily">
+          <div class="chat-conv-info">
+            <div class="chat-conv-name">Emily Carter</div>
+            <div class="chat-conv-preview">Me encantan tus trackers nuevos 🤩</div>
+          </div>
+        </div>
+        <div class="chat-conv-item" onclick="openChatWith('Chloe Smith', 'https://picsum.photos/id/338/100/100', 'conv_chloe')">
+          <img src="https://picsum.photos/id/338/100/100" class="chat-conv-avatar" alt="Chloe">
+          <div class="chat-conv-info">
+            <div class="chat-conv-name">Chloe Smith</div>
+            <div class="chat-conv-preview">Mandame invitación a la sala privada.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Vista de Chat Activo -->
+    <div id="chatActiveView" class="chat-layout chat-active-view">
+      <div class="chat-active-header">
+        <button class="chat-back-btn" onclick="closeActiveChat()">⬅</button>
+        <img id="activeChatAvatar" src="https://picsum.photos/id/64/100/100" style="width: 36px; height: 36px; border-radius: 50%; object-fit: cover;" alt="User">
+        <div style="flex: 1; overflow: hidden;">
+          <div id="activeChatName" style="font-size: 14px; font-weight: 800; color: #fff;">Jane Cooper</div>
+          <div style="font-size: 10px; color: #10b981;">● En línea en VRChat</div>
+        </div>
+      </div>
+
+      <div id="chatMessagesBox" class="chat-messages-container">
+        <!-- Mensajes dinámicos -->
+        <div class="message-bubble incoming">¡Hola! ¿Nos vemos en VRChat hoy?</div>
+        <div class="message-bubble outgoing">¡Claro! Conéctate a la estancia principal en 10 min.</div>
+      </div>
+
+      <div class="chat-input-bar">
+        <input type="text" id="chatMessageInput" class="chat-input-field" placeholder="Escribe un mensaje seguro..." onkeypress="if(event.key==='Enter') sendChatMessage()">
+        <button type="button" class="chat-send-btn" onclick="sendChatMessage()">➤</button>
+      </div>
+    </div>
+  </div>
+
+  <div>
     <!-- Barra de Navegación Inferior -->
     <div class="bottom-nav-bar">
-      <button class="nav-item active" onclick="switchNavSection('inicio')">
+      <button class="nav-item active" onclick="switchNavSection('inicio', event)">
         <span class="nav-icon">🏠</span>
         <span>Inicio</span>
       </button>
-      <button class="nav-item" onclick="switchNavSection('bubbles')">
+      <button class="nav-item" onclick="switchNavSection('bubbles', event)">
         <span class="nav-icon">🫧</span>
         <span>Bubbles</span>
       </button>
-      <button class="nav-item" onclick="switchNavSection('chat')">
+      <button class="nav-item" onclick="switchNavSection('chat', event)">
         <span class="nav-icon">💬</span>
         <span>Chat</span>
       </button>
@@ -468,7 +662,6 @@
     <div class="panel-menu-items">
       <button class="panel-menu-btn" onclick="openEditProfile()"><span>👤</span> Mi Perfil</button>
       <button class="panel-menu-btn" onclick="openEstancias()"><span>🌐</span> Estancias</button>
-      <!-- SECCIÓN APP MOBILE / PWA -->
       <button class="panel-menu-btn" onclick="openAppMobile()"><span>📱</span> App Mobile</button>
       <button class="panel-menu-btn" onclick="alert('Abriendo Ajustes...')"><span>⚙️</span> Ajustes de la App</button>
       <button class="panel-menu-btn" onclick="alert('No hay notificaciones nuevas.')"><span>🔔</span> Notificaciones</button>
@@ -542,14 +735,12 @@
       Añade OnlyBubble directamente a la pantalla de inicio de tu dispositivo para disfrutarlo a pantalla completa como una aplicación nativa.
     </p>
 
-    <!-- Botón Automático para Android / Chrome -->
     <div id="androidInstallContainer">
       <button type="button" id="btnInstallPwa" class="btn-app-main" style="display: none; align-items: center; justify-content: center; gap: 8px; background: linear-gradient(135deg, #10b981 0%, #059669 100%);" onclick="triggerPwaInstall()">
         <span>🤖</span> Instalar en Android (Pantalla de Inicio)
       </button>
     </div>
 
-    <!-- Guía Manual para iPhone / iOS (Safari) -->
     <div style="background: var(--glass-card); border: 1px solid var(--glass-border); border-radius: 20px; padding: 16px; text-align: left;">
       <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
         <span style="font-size: 20px;">🍏</span>
@@ -559,14 +750,6 @@
         1. Abre esta web en el navegador <b>Safari</b>.<br>
         2. Toca el botón de <b>Compartir</b> <span style="font-size: 16px;">⎋</span> en la barra inferior.<br>
         3. Desplázate y selecciona <b>"Añadir a pantalla de inicio"</b> <span style="font-size: 16px;">➕</span>.
-      </p>
-    </div>
-
-    <div style="background: rgba(168, 85, 247, 0.1); border: 1px solid var(--glass-border); border-radius: 20px; padding: 16px;">
-      <span style="font-size: 24px;">⚡</span>
-      <h4 style="font-size: 14px; font-weight: 800; margin: 6px 0 2px 0; color: #fff;">Ventajas de la Web App</h4>
-      <p style="font-size: 12px; color: var(--text-muted);">
-        Sin descargas pesadas de tienda, acceso instantáneo y actualizaciones automáticas en la nube.
       </p>
     </div>
   </div>
@@ -587,27 +770,22 @@
     }
   });
 
-  // CAPTURA DE EVENTO PWA INSTALL (ANDROID / DESKTOP)
+  // CAPTURA DE EVENTO PWA INSTALL
   let deferredPrompt = null;
   window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     deferredPrompt = e;
     const installBtn = document.getElementById('btnInstallPwa');
-    if (installBtn) {
-      installBtn.style.display = 'flex';
-    }
+    if (installBtn) installBtn.style.display = 'flex';
   });
 
   async function triggerPwaInstall() {
     if (!deferredPrompt) {
-      alert("La app ya está instalada o tu navegador no permite el acceso directo. Usa el menú del navegador para añadirla.");
+      alert("La app ya está instalada o tu navegador no permite el acceso directo.");
       return;
     }
     deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
-    if (outcome === 'accepted') {
-      console.log('Usuario aceptó instalar la PWA');
-    }
     deferredPrompt = null;
     document.getElementById('btnInstallPwa').style.display = 'none';
   }
@@ -619,6 +797,8 @@
 
   const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
   let currentUserSession = null;
+  let activeConversationId = null;
+  let chatRealtimeSubscription = null;
 
   function switchAuthTab(mode) {
     document.getElementById('tab-login-btn').classList.toggle('active', mode === 'login');
@@ -689,7 +869,6 @@
         id: data.user.id,
         is_age_verified: false
       });
-
       alert("Cuenta creada. Redirigiendo a verificación...");
       redirectToDidit();
     }
@@ -748,7 +927,6 @@
 
   async function saveProfileChanges() {
     if (!currentUserSession) return;
-
     const updates = {
       id: currentUserSession.id,
       name: document.getElementById('editName').value,
@@ -781,29 +959,122 @@
     document.getElementById('tinderCardLoc').innerText = rand.loc;
   }
 
-  function selectMatch(img, name, loc) {
-    document.getElementById('tinderCardImg').src = img;
-    document.getElementById('tinderCardName').innerText = name;
-    document.getElementById('tinderCardLoc').innerText = loc;
-  }
-
-  function switchNavSection(section) {
+  // GESTIÓN DE NAVEGACIÓN INFERIOR
+  function switchNavSection(sectionName, event) {
     document.querySelectorAll('.bottom-nav-bar .nav-item').forEach(el => el.classList.remove('active'));
-    event.currentTarget.classList.add('active');
+    if (event && event.currentTarget) {
+      event.currentTarget.classList.add('active');
+    }
+
+    document.getElementById('sectionInicio').classList.remove('active');
+    document.getElementById('sectionBubbles').classList.remove('active');
+    document.getElementById('sectionChat').classList.remove('active');
+
+    if (sectionName === 'inicio') {
+      document.getElementById('sectionInicio').classList.add('active');
+    } else if (sectionName === 'bubbles') {
+      document.getElementById('sectionBubbles').classList.add('active');
+    } else if (sectionName === 'chat') {
+      document.getElementById('sectionChat').classList.add('active');
+      closeActiveChat(); // Mostrar lista general al entrar
+    }
   }
 
-  // CATÁLOGO MASIVO DE SERVIDORES Y MUNDOS
+  // FUNCIONALIDAD DE CHAT PROFESIONAL
+  async function openChatWith(name, avatarUrl, conversationId) {
+    activeConversationId = conversationId;
+    document.getElementById('activeChatName').innerText = name;
+    document.getElementById('activeChatAvatar').src = avatarUrl;
+
+    document.getElementById('chatListView').style.display = 'none';
+    document.getElementById('chatActiveView').classList.add('active');
+
+    await loadChatMessages();
+    setupChatRealtime();
+  }
+
+  function closeActiveChat() {
+    activeConversationId = null;
+    if (chatRealtimeSubscription) {
+      db.removeChannel(chatRealtimeSubscription);
+    }
+    document.getElementById('chatActiveView').classList.remove('active');
+    document.getElementById('chatListView').style.display = 'flex';
+  }
+
+  async function loadChatMessages() {
+    if (!activeConversationId) return;
+    const box = document.getElementById('chatMessagesBox');
+    box.innerHTML = `<p style="text-align:center; color:var(--text-muted); font-size:12px;">Cargando mensajes...</p>`;
+
+    const { data, error } = await db
+      .from('messages')
+      .select('*')
+      .eq('conversation_id', activeConversationId)
+      .order('created_at', { ascending: true });
+
+    box.innerHTML = '';
+    if (error || !data || data.length === 0) {
+      box.innerHTML = `<p style="text-align:center; color:var(--text-muted); font-size:12px;">No hay mensajes previos. ¡Empieza la conversación!</p>`;
+      return;
+    }
+
+    data.forEach(msg => {
+      const isMe = currentUserSession && msg.sender_id === currentUserSession.id;
+      const div = document.createElement('div');
+      div.className = `message-bubble ${isMe ? 'outgoing' : 'incoming'}`;
+      div.innerText = msg.content;
+      box.appendChild(div);
+    });
+    box.scrollTop = box.scrollHeight;
+  }
+
+  function setupChatRealtime() {
+    if (!activeConversationId) return;
+    chatRealtimeSubscription = db
+      .channel('public:messages')
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'messages',
+        filter: `conversation_id=eq.${activeConversationId}`
+      }, payload => {
+        const msg = payload.new;
+        const box = document.getElementById('chatMessagesBox');
+        const isMe = currentUserSession && msg.sender_id === currentUserSession.id;
+        const div = document.createElement('div');
+        div.className = `message-bubble ${isMe ? 'outgoing' : 'incoming'}`;
+        div.innerText = msg.content;
+        box.appendChild(div);
+        box.scrollTop = box.scrollHeight;
+      })
+      .subscribe();
+  }
+
+  async function sendChatMessage() {
+    const input = document.getElementById('chatMessageInput');
+    const text = input.value.trim();
+    if (!text || !activeConversationId || !currentUserSession) return;
+
+    input.value = '';
+    const { error } = await db.from('messages').insert({
+      conversation_id: activeConversationId,
+      sender_id: currentUserSession.id,
+      content: text
+    });
+
+    if (error) {
+      alert("Error al enviar mensaje: " + error.message);
+    }
+  }
+
+  // BUSCADOR MASIVO VRCHAT API
   const massiveFallbackWorlds = [
-    { name: "VRChat Home (Oficial)", occupants: 4250, authorName: "VRChat", imageUrl: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=400", type: "Oficial" },
-    { name: "The Great Pug Bar", occupants: 1240, authorName: "Owlical", imageUrl: "https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=400", type: "Comunidad" },
-    { name: "Black Cat Club", occupants: 2890, authorName: "OMAR", imageUrl: "https://images.unsplash.com/photo-1511512578047-dfb367046420?w=400", type: "Comunidad" },
-    { name: "Prismic's Avatar Search", occupants: 850, authorName: "Prismic", imageUrl: "https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?w=400", type: "Utilidad" },
-    { name: "GogoZen Club VRC", occupants: 620, authorName: "ZenMaster", imageUrl: "https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?w=400", type: "Evento" },
-    { name: "Wyvern's Peak Oasis", occupants: 430, authorName: "Wyvern", imageUrl: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=400", type: "Oficial / Escénico" },
-    { name: "Skins & Avatars World", occupants: 1540, authorName: "Meridius", imageUrl: "https://images.unsplash.com/photo-1538481199705-c710c4e965fc?w=400", type: "Comunidad" },
-    { name: "Project Copacetic", occupants: 920, authorName: "Nandu", imageUrl: "https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?w=400", type: "Mundo Escénico" },
-    { name: "The Devouring Abyss", occupants: 310, authorName: "Akyrios", imageUrl: "https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=400", type: "Terror / Juego" },
-    { name: "Japan Shrine - Summer", occupants: 2100, authorName: "RAMSHACKLE", imageUrl: "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=400", type: "Oficial / Chill" }
+    { name: "VRChat Home (Oficial)", occupants: 4250, authorName: "VRChat", imageUrl: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=400" },
+    { name: "The Great Pug Bar", occupants: 1240, authorName: "Owlical", imageUrl: "https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=400" },
+    { name: "Black Cat Club", occupants: 2890, authorName: "OMAR", imageUrl: "https://images.unsplash.com/photo-1511512578047-dfb367046420?w=400" },
+    { name: "Prismic's Avatar Search", occupants: 850, authorName: "Prismic", imageUrl: "https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?w=400" },
+    { name: "Japan Shrine - Summer", occupants: 2100, authorName: "RAMSHACKLE", imageUrl: "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=400" }
   ];
 
   async function searchVRChatWorlds() {
@@ -821,9 +1092,7 @@
     let apiSuccess = false;
     for (const proxyUrl of proxies) {
       try {
-        const response = await fetch(proxyUrl, {
-          headers: { 'User-Agent': 'Mozilla/5.0 OnlyBubbleVR Client' }
-        });
+        const response = await fetch(proxyUrl, { headers: { 'User-Agent': 'Mozilla/5.0 OnlyBubbleVR Client' } });
         if (response.ok) {
           const data = await response.json();
           if (Array.isArray(data) && data.length > 0) {
@@ -831,8 +1100,7 @@
               name: w.name,
               occupants: w.occupants || Math.floor(Math.random() * 800) + 50,
               authorName: w.authorName || 'Comunidad VRChat',
-              imageUrl: w.imageUrl || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=400',
-              type: w.authorName === 'VRChat' ? 'Oficial' : 'Comunidad'
+              imageUrl: w.imageUrl || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=400'
             }));
             apiSuccess = true;
             break;
@@ -844,18 +1112,13 @@
     }
 
     if (!apiSuccess || resultsList.length < 5) {
-      if (query) {
-        resultsList = massiveFallbackWorlds.filter(w => w.name.toLowerCase().includes(query.toLowerCase()) || w.authorName.toLowerCase().includes(query.toLowerCase()));
-      } else {
-        resultsList = massiveFallbackWorlds;
-      }
+      resultsList = query ? massiveFallbackWorlds.filter(w => w.name.toLowerCase().includes(query.toLowerCase())) : massiveFallbackWorlds;
     }
 
     container.innerHTML = '';
     resultsList.forEach(world => {
       const card = document.createElement('div');
       card.style.cssText = `background: var(--glass-card); border: 1px solid var(--glass-border); border-radius: 20px; padding: 12px; display: flex; gap: 12px; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.3);`;
-      
       card.innerHTML = `
         <img src="${world.imageUrl}" style="width: 75px; height: 75px; border-radius: 14px; object-fit: cover;" alt="World">
         <div style="flex: 1; overflow: hidden;">
