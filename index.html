@@ -57,7 +57,7 @@
       overflow-y: auto;
     }
 
-    #auth-screen.hide { display: none; }
+    #auth-screen.hide { display: none !important; }
 
     .app-bg-glow { position: fixed; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; }
     .orb { position: absolute; border-radius: 50%; filter: blur(90px); opacity: 0.6; }
@@ -87,7 +87,7 @@
     }
 
     .auth-tabs { display: flex; background: rgba(0, 0, 0, 0.4); padding: 4px; border-radius: 16px; margin-bottom: 20px; }
-    .auth-tab-btn { flex: 1; padding: 10px; border: none; background: transparent; color: var(--text-muted); font-weight: 700; border-radius: 12px; }
+    .auth-tab-btn { flex: 1; padding: 10px; border: none; background: transparent; color: var(--text-muted); font-weight: 700; border-radius: 12px; cursor: pointer; }
     .auth-tab-btn.active { background: var(--grad-main); color: #fff; }
 
     .input-group { position: relative; margin-bottom: 14px; }
@@ -175,7 +175,7 @@
   <section id="feed" class="page active">
     <div class="post-card">
       <h3>¡Bienvenido a OnlyBubbleVR!</h3>
-      <p style="font-size:12px; color:var(--text-muted); margin-top:6px;">Sesión iniciada correctamente.</p>
+      <p style="font-size:12px; color:var(--text-muted); margin-top:6px;">Sesión iniciada y verificada correctamente.</p>
     </div>
   </section>
 </div>
@@ -187,8 +187,6 @@
 <script>
   const SUPABASE_URL = "https://wzpmgtkabsncpzpvweja.supabase.co";
   const SUPABASE_KEY = "sb_publishable_y9Yrqzf1QabeTeQV4DauBQ_tWgrL0li";
-  
-  // URL de tu flujo activo en Didit Console
   const DIDIT_FLOW_URL = "https://verify.didit.me/u/SJ4nOmHXTY2CwxwX9iSFqg";
 
   const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -204,29 +202,36 @@
     window.location.href = DIDIT_FLOW_URL;
   }
 
-  // COMPROBACIÓN AUTOMÁTICA AL ABRIR LA APP
+  // AL Cargar la página: bloquear por defecto hasta validar
   window.addEventListener('DOMContentLoaded', async () => {
+    document.getElementById('auth-screen').classList.remove('hide');
     const { data: { session } } = await db.auth.getSession();
     if (session) {
-      await checkUserVerificationAndEnter(session.user);
+      await validateAndGrantAccess(session.user);
     }
   });
 
-  // VALIDA SI EL USUARIO ESTÁ VERIFICADO EN 'profiles'
-  async function checkUserVerificationAndEnter(user) {
+  // GUARDIAN DE VERIFICACIÓN
+  async function validateAndGrantAccess(user) {
+    // 1. Consultar el estado en Supabase
     const { data: profile, error } = await db
       .from('profiles')
       .select('is_age_verified')
       .eq('id', user.id)
-      .single();
+      .maybeSingle();
 
-    if (error || !profile || !profile.is_age_verified) {
-      alert("⚠️ Tu cuenta requiere verificación de edad (+18) para poder acceder.");
+    // 2. Si no existe perfil o is_age_verified no es true explícito -> EXPULSAR Y BLOQUEAR
+    if (error || !profile || profile.is_age_verified !== true) {
+      alert("⚠️ Acceso denegado: Tu cuenta no está verificada (+18). Redirigiendo...");
+      await db.auth.signOut(); // Cerramos la sesión activa
+      document.getElementById('auth-screen').classList.remove('hide'); // Forzar pantalla de login
       redirectToDidit();
-      return;
+      return false;
     }
 
+    // 3. Solo si está verificado (true), ocultamos la pantalla de login
     document.getElementById('auth-screen').classList.add('hide');
+    return true;
   }
 
   async function handleLogin(e) {
@@ -237,7 +242,7 @@
     const { data, error } = await db.auth.signInWithPassword({ email, password });
     if (error) return alert("Error al entrar: " + error.message);
 
-    await checkUserVerificationAndEnter(data.user);
+    await validateAndGrantAccess(data.user);
   }
 
   async function handleSignUp(e) {
@@ -249,13 +254,13 @@
     if (error) return alert("Error al registrarse: " + error.message);
     
     if (data.user) {
-      // Registra al usuario como NO verificado
+      // Forzar inserción de estado no verificado
       await db.from('profiles').upsert({
         id: data.user.id,
         is_age_verified: false
       });
 
-      alert("Cuenta creada. Redirigiendo a verificación de identidad...");
+      alert("Cuenta creada. Debes verificar tu edad para continuar.");
       redirectToDidit();
     }
   }
