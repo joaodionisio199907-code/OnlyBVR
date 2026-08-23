@@ -935,13 +935,23 @@
 
     let avatarUrl = document.getElementById('igAvatarImg').src;
 
+    // Si el usuario seleccionó un archivo nuevo desde el móvil o PC
     if (selectedFileToUpload) {
-      const fileName = `${currentUserSession.id}_${Date.now()}.png`;
-      const { data: uploadData, error: uploadError } = await db.storage.from('avatars').upload(fileName, selectedFileToUpload);
+      // Limpiamos el nombre del archivo para evitar caracteres extraños
+      const fileExt = selectedFileToUpload.name.split('.').pop();
+      const fileName = `${currentUserSession.id}/${Date.now()}.${fileExt}`;
+
+      // Subimos a Supabase Storage con la opción upsert: true para evitar fallos
+      const { data: uploadData, error: uploadError } = await db.storage
+        .from('avatars')
+        .upload(fileName, selectedFileToUpload, { upsert: true });
+
       if (uploadError) {
         alert("Error subiendo la imagen: " + uploadError.message);
         return;
       }
+
+      // Obtenemos la URL pública de la imagen recién subida
       const { data: publicUrlData } = db.storage.from('avatars').getPublicUrl(fileName);
       avatarUrl = publicUrlData.publicUrl;
     }
@@ -952,15 +962,27 @@
       handle: document.getElementById('editHandle').value,
       avatar_url: avatarUrl,
       vr_glasses: document.getElementById('editVrGlasses').value,
-      bio: document.getElementById('editBio').value
+      bio: document.getElementById('editBio').value,
+      updated_at: new Date()
     };
 
-    await db.from('profiles').upsert(updates);
-    populateProfileData(updates);
-    closeEditProfile();
-    alert("¡Perfil actualizado!");
-  }
+    // Guardamos en la tabla profiles
+    const { error: updateError } = await db.from('profiles').upsert(updates);
+    
+    if (updateError) {
+      alert("Error al actualizar el perfil: " + updateError.message);
+      return;
+    }
 
+    // Refrescamos los datos visualmente al instante en toda la app
+    populateProfileData(updates);
+    
+    // Limpiamos la variable temporal del archivo
+    selectedFileToUpload = null;
+    
+    closeEditProfile();
+    alert("¡Perfil e imagen actualizados correctamente!");
+  }
   async function openSubList(type) {
     const modal = document.getElementById('sublistModal');
     const title = document.getElementById('sublistTitle');
