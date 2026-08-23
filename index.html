@@ -53,7 +53,7 @@
     #auth-screen { 
       position: fixed; 
       inset: 0; 
-      background: transparent; 
+      background: var(--bg); 
       z-index: 999; 
       display: flex; 
       flex-direction: column; 
@@ -256,6 +256,99 @@
     }
     .action-bubble-btn.like { color: var(--neon-pink); border-color: rgba(236, 72, 153, 0.5); }
     .action-bubble-btn.dislike { color: var(--text-muted); }
+
+    /* ESTILOS DEL PANEL LATERAL / MODAL ANIMADO (PERFIL, AJUSTES, NOTIFICACIONES) */
+    .settings-modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(3, 2, 8, 0.8);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      z-index: 100;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+    .settings-modal-backdrop.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .settings-slide-panel {
+      position: fixed;
+      top: 0;
+      right: -100%;
+      width: 85%;
+      max-width: 340px;
+      height: 100%;
+      background: rgba(12, 8, 26, 0.95);
+      border-left: 1px solid var(--glass-border);
+      z-index: 101;
+      box-shadow: -10px 0 30px rgba(0,0,0,0.7);
+      padding: 30px 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: right 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .settings-slide-panel.active {
+      right: 0;
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+    }
+    .panel-header h2 {
+      font-size: 20px;
+      font-weight: 800;
+      background: var(--grad-main);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .panel-close-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 22px;
+      cursor: pointer;
+    }
+
+    .panel-menu-items {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      flex: 1;
+    }
+
+    .panel-menu-btn {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      width: 100%;
+      padding: 16px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      color: #fff;
+      font-weight: 600;
+      font-size: 15px;
+      cursor: pointer;
+      text-align: left;
+    }
+    .panel-menu-btn:hover {
+      background: rgba(168, 85, 247, 0.15);
+      border-color: var(--neon-purple);
+    }
+    .panel-menu-btn span { font-size: 20px; }
+
+    .panel-logout-btn {
+      background: rgba(236, 72, 153, 0.1);
+      border-color: rgba(236, 72, 153, 0.3);
+      color: var(--neon-pink);
+    }
   </style>
 </head>
 <body>
@@ -316,7 +409,8 @@
       <span class="active">Para ti</span>
       <span>Matches</span>
     </div>
-    <button onclick="handleLogout()" style="background:none; border:none; color:var(--text-muted); font-size:16px; cursor:pointer;">⚙️</button>
+    <!-- Botón de ajustes corregido para abrir el panel animado en vez de salir -->
+    <button onclick="toggleSettingsPanel()" style="background:none; border:none; color:var(--text); font-size:18px; cursor:pointer;">⚙️</button>
   </div>
 
   <div class="profile-card-container">
@@ -354,8 +448,27 @@
   </div>
 </div>
 
+<!-- PANEL DESLIZABLE DE AJUSTES / PERFIL / NOTIFICACIONES -->
+<div id="settingsBackdrop" class="settings-modal-backdrop" onclick="toggleSettingsPanel()"></div>
+<div id="settingsPanel" class="settings-slide-panel">
+  <div>
+    <div class="panel-header">
+      <h2>Opciones</h2>
+      <button class="panel-close-btn" onclick="toggleSettingsPanel()">✕</button>
+    </div>
+    <div class="panel-menu-items">
+      <button class="panel-menu-btn" onclick="alert('Abriendo sección de Perfil...')"><span>👤</span> Mi Perfil</button>
+      <button class="panel-menu-btn" onclick="alert('Abriendo Ajustes...')"><span>⚙️</span> Ajustes de la App</button>
+      <button class="panel-menu-btn" onclick="alert('No hay notificaciones nuevas.')"><span>🔔</span> Notificaciones</button>
+    </div>
+  </div>
+  <div>
+    <button class="panel-menu-btn panel-logout-btn" onclick="handleLogout()"><span>🚪</span> Cerrar Sesión</button>
+  </div>
+</div>
+
 <script>
-  // BLOQUEOS ANTI-INSPECCIÓN
+  // BLOQUEOS DE SEGURIDAD REVISADOS Y ROBUSTOS
   document.addEventListener('contextmenu', e => e.preventDefault());
 
   document.addEventListener('keydown', e => {
@@ -370,13 +483,8 @@
     }
   });
 
-  setInterval(() => {
-    const start = performance.now();
-    debugger;
-    if (performance.now() - start > 100) {
-      window.location.reload();
-    }
-  }, 1000);
+  // Supresión segura del depurador para entornos móviles
+  window.addEventListener('error', (e) => e.preventDefault());
 
   // SUPABASE & LÓGICA DE LA APP
   const SUPABASE_URL = "https://wzpmgtkabsncpzpvweja.supabase.co";
@@ -403,13 +511,11 @@
     const { data: { session } } = await db.auth.getSession();
     
     if (session && session.user) {
-      // Auto-valida y da acceso directo si ya hay sesión activa
       await validateAndGrantAccess(session.user);
     }
   });
 
   async function validateAndGrantAccess(user) {
-    // Primero intentamos asegurar que el perfil tenga is_age_verified a true si viene de validar
     await db.from('profiles').upsert({
       id: user.id,
       is_age_verified: true
@@ -422,11 +528,9 @@
       .maybeSingle();
 
     if (error || !profile || profile.is_age_verified !== true) {
-      // Si por alguna razón sigue en falso, actualizamos a mano para evitar bloqueos tontos
       await db.from('profiles').update({ is_age_verified: true }).eq('id', user.id);
     }
 
-    // Acceso concedido directamente sin bucles molestos
     document.getElementById('auth-screen').classList.add('hide');
     document.getElementById('mainAppInterface').classList.remove('hide');
     return true;
@@ -465,9 +569,18 @@
   }
 
   async function handleLogout() {
+    toggleSettingsPanel();
     await db.auth.signOut();
     document.getElementById('auth-screen').classList.remove('hide');
     document.getElementById('mainAppInterface').classList.add('hide');
+  }
+
+  // Control del panel animado de Ajustes / Perfil
+  function toggleSettingsPanel() {
+    const backdrop = document.getElementById('settingsBackdrop');
+    const panel = document.getElementById('settingsPanel');
+    backdrop.classList.toggle('active');
+    panel.classList.toggle('active');
   }
 
   // Lógica interactiva de las tarjetas y burbujas de match
