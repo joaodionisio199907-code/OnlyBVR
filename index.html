@@ -1539,43 +1539,33 @@
     document.getElementById('connectionConfirmModal').classList.remove('active');
   }
 
-  async function confirmRemoveConnection() {
+async function confirmRemoveConnection() {
     if (!pendingConnectionToRemove || !currentUserSession) return;
 
     const connection = pendingConnectionToRemove;
     const typeKey = connection.type === 'Amigos' ? 'friend' :
                     (connection.type === 'Matches' ? 'match' : 'follower');
 
-    // Amigos y Matches: la relación está guardada como
-    // user_id = yo / friend_id = usuario seleccionado.
-    // Seguidores: la relación está guardada al revés.
-    let deleteQuery = db.from('user_connections').delete().eq('connection_type', typeKey);
+    let query = db.from('user_connections').delete();
 
     if (connection.type === 'Seguidores') {
-      deleteQuery = deleteQuery
-        .eq('friend_id', currentUserSession.id)
-        .eq('user_id', connection.id);
+      query = query.eq('user_id', connection.id).eq('friend_id', currentUserSession.id);
     } else {
-      deleteQuery = deleteQuery
-        .eq('user_id', currentUserSession.id)
-        .eq('friend_id', connection.id);
+      query = query.eq('user_id', currentUserSession.id).eq('friend_id', connection.id);
     }
 
-    const { error } = await deleteQuery;
+    const { error } = await query.eq('connection_type', typeKey);
 
     if (error) {
-      alert('No se pudo eliminar la conexión: ' + error.message);
+      alert("No se pudo eliminar la conexión: " + error.message);
       return;
     }
 
     closeConnectionConfirm();
-    await openSubList(connection.type);
-    await loadRealData();
-
-    // Si el perfil que estamos viendo sigue abierto, actualizamos sus contadores.
-    if (viewedProfileUserId) {
-      loadViewedProfileStats(viewedProfileUserId);
-    }
+    // Recargar la sublista actual para reflejar los cambios al instante
+    openSubList(currentSubListType);
+    // Actualizar también las estadísticas generales del perfil
+    loadViewedProfileStats(currentUserSession.id);
   }
 
   function switchNavSection(name, event) {
