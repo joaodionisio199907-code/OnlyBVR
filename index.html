@@ -39,9 +39,10 @@
       background: var(--bg); 
       color: var(--text); 
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
-      overflow-x: hidden; 
-      min-height: 100vh; 
-      padding-bottom: 90px;
+      overflow: hidden; 
+      height: 100vh; 
+      width: 100vw;
+      position: relative;
       /* Bloqueo de selección de texto y arrastre */
       -webkit-user-select: none;
       -moz-user-select: none;
@@ -53,14 +54,26 @@
     #auth-screen { 
       position: fixed; 
       inset: 0; 
-      background: var(--bg); 
+      background: transparent; 
       z-index: 999; 
       display: flex; 
       flex-direction: column; 
       justify-content: center; 
       align-items: center; 
       padding: 24px; 
-      overflow-y: auto;
+      overflow: hidden;
+    }
+
+    /* ESTILOS DEL VÍDEO DE FONDO EN LOGIN/REGISTER */
+    .bg-auth-video {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: -1;
+      pointer-events: none;
     }
 
     #auth-screen.hide { display: none !important; }
@@ -115,16 +128,141 @@
     .form-step { display: none; }
     .form-step.active { display: block; }
 
-    .header { position: sticky; top: 0; z-index: 50; background: rgba(3, 2, 8, 0.85); backdrop-filter: blur(15px); border-bottom: 1px solid var(--glass-border); padding: 12px 18px; display: flex; justify-content: space-between; align-items: center; }
-    .app-body { max-width: 480px; margin: 0 auto; padding: 16px; }
-    .page { display: none; }
-    .page.active { display: block; }
+    /* ESTILOS DE LA APP INTERNA TIPO TINDER CON BURBUJAS (INSPIRACIÓN DRIBBBLE) */
+    .app-interface {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: env(safe-area-inset-top, 16px) 16px calc(20px + env(safe-area-inset-bottom, 16px)) 16px;
+      background: var(--bg);
+      z-index: 10;
+    }
 
-    .post-card { background: var(--glass-card); border: 1px solid var(--glass-border); border-radius: 22px; padding: 16px; margin-bottom: 16px; }
+    .app-interface.hide { display: none !important; }
 
-    .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100vw; background: rgba(8, 8, 16, 0.92); backdrop-filter: blur(20px); border-top: 1px solid var(--glass-border); display: flex; justify-content: space-around; padding: 10px 0 calc(10px + env(safe-area-inset-bottom)); z-index: 100; }
-    .nav-btn { background: none; border: none; color: var(--text-muted); font-size: 10px; font-weight: 700; display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; }
-    .nav-btn.active { color: var(--neon-pink); }
+    /* Header superior tipo Dribbble */
+    .interface-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      z-index: 20;
+    }
+    .user-avatar-top { width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--neon-purple); object-fit: cover; }
+    .header-pills { display: flex; gap: 12px; font-size: 13px; font-weight: 600; color: var(--text-muted); }
+    .header-pills span.active { color: var(--text); border-bottom: 2px solid var(--neon-pink); padding-bottom: 2px; }
+
+    /* Tarjeta principal de perfil a pantalla completa */
+    .profile-card-container {
+      position: relative;
+      flex: 1;
+      margin: 8px 0;
+      border-radius: 32px;
+      overflow: hidden;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+      border: 1px solid var(--glass-border);
+      background: #111;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+    }
+
+    .profile-bg-img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    /* Degradado oscuro inferior para legibilidad del texto */
+    .profile-gradient-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(3,2,8,0) 40%, rgba(3,2,8,0.85) 80%, rgba(3,2,8,0.95) 100%);
+      pointer-events: none;
+    }
+
+    .profile-info-content {
+      position: relative;
+      z-index: 5;
+      padding: 24px;
+    }
+
+    .profile-name-age { font-size: 28px; font-weight: 800; display: flex; align-items: baseline; gap: 8px; }
+    .profile-location { font-size: 13px; color: var(--text-muted); margin-top: 4px; display: flex; align-items: center; gap: 4px; }
+
+    /* Contenedor inferior de Matches en Burbujas (Estilo burbujas flotantes en barra) */
+    .matches-bubbles-bar {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      overflow-x: auto;
+      padding: 6px 4px;
+      scrollbar-width: none;
+    }
+    .matches-bubbles-bar::-webkit-scrollbar { display: none; }
+
+    .match-bubble-item {
+      position: relative;
+      width: 64px;
+      height: 64px;
+      min-width: 64px;
+      border-radius: 50%;
+      padding: 2px;
+      background: var(--grad-main);
+      cursor: pointer;
+      box-shadow: 0 0 15px rgba(168, 85, 247, 0.4);
+    }
+
+    .match-bubble-item img {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid var(--bg);
+    }
+
+    .match-online-dot {
+      position: absolute;
+      bottom: 4px;
+      right: 4px;
+      width: 12px;
+      height: 12px;
+      background: #10b981;
+      border: 2px solid var(--bg);
+      border-radius: 50%;
+    }
+
+    /* Botones de acción flotantes (Like / Dislike) sobre la tarjeta */
+    .profile-actions-float {
+      position: absolute;
+      right: 20px;
+      bottom: 120px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      z-index: 10;
+    }
+
+    .action-bubble-btn {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: rgba(18, 11, 36, 0.75);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--glass-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      cursor: pointer;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+    }
+    .action-bubble-btn.like { color: var(--neon-pink); border-color: rgba(236, 72, 153, 0.5); }
+    .action-bubble-btn.dislike { color: var(--text-muted); }
   </style>
 </head>
 <body>
@@ -134,7 +272,12 @@
   <div class="orb orb-2"></div>
 </div>
 
+<!-- PANTALLA DE AUTENTICACIÓN -->
 <div id="auth-screen">
+  <video class="bg-auth-video" autoplay muted loop playsinline>
+    <source src="tu-video.mp4" type="video/mp4">
+  </video>
+
   <div class="app-title-header">
     <img src="logo.png" alt="OnlyBubble Logo" class="main-logo-img" onerror="this.src='https://picsum.photos/100'">
     <h1>ONLYBUBBLEVR</h1>
@@ -172,23 +315,62 @@
   </div>
 </div>
 
-<header class="header">
-  <div style="font-weight:900;">OnlyBubble<span style="color:var(--neon-pink);">VR</span></div>
-  <button onclick="handleLogout()" style="background:none; border:none; color:#fff; font-size:12px;">🚪 Salir</button>
-</header>
-
-<div class="app-body">
-  <section id="feed" class="page active">
-    <div class="post-card">
-      <h3>¡Bienvenido a OnlyBubbleVR!</h3>
-      <p style="font-size:12px; color:var(--text-muted); margin-top:6px;">Sesión iniciada y verificada correctamente.</p>
+<!-- INTERFAZ PRINCIPAL DE LA APP (ESTILO TINDER & MATCHES EN BURBUJAS) -->
+<div id="mainAppInterface" class="app-interface hide">
+  
+  <!-- Header superior -->
+  <div class="interface-header">
+    <img src="https://picsum.photos/id/64/100/100" alt="Mi perfil" class="user-avatar-top">
+    <div class="header-pills">
+      <span class="active">Para ti</span>
+      <span>Matches</span>
     </div>
-  </section>
-</div>
+    <button onclick="handleLogout()" style="background:none; border:none; color:var(--text-muted); font-size:16px; cursor:pointer;">⚙️</button>
+  </div>
 
-<nav class="bottom-nav">
-  <button class="nav-btn active"><span style="font-size:18px;">📰</span><span>Inicio</span></button>
-</nav>
+  <!-- Tarjeta Central Estilo Dribbble -->
+  <div class="profile-card-container">
+    <img src="https://picsum.photos/id/65/600/900" alt="Perfil recomendado" class="profile-bg-img" id="tinderCardImg">
+    <div class="profile-gradient-overlay"></div>
+
+    <!-- Botones de acción flotantes laterales -->
+    <div class="profile-actions-float">
+      <div class="action-bubble-btn dislike" onclick="nextCard()">✕</div>
+      <div class="action-bubble-btn like" onclick="nextCard()">❤️</div>
+    </div>
+
+    <!-- Información del perfil -->
+    <div class="profile-info-content">
+      <div class="profile-name-age" id="tinderCardName">Jenny Wilson, 24</div>
+      <div class="profile-location" id="tinderCardLoc">📍 California, USA</div>
+    </div>
+  </div>
+
+  <!-- Barra inferior de Matches en Burbujas -->
+  <div class="matches-bubbles-bar">
+    <div class="match-bubble-item" onclick="selectMatch('https://picsum.photos/id/64/600/900', 'Jane Cooper, 23', '📍 Los Angeles, CA')">
+      <img src="https://picsum.photos/id/64/100/100" alt="Match">
+      <div class="match-online-dot"></div>
+    </div>
+    <div class="match-bubble-item" onclick="selectMatch('https://picsum.photos/id/91/600/900', 'Emily Carter, 26', '📍 San Francisco, CA')">
+      <img src="https://picsum.photos/id/91/100/100" alt="Match">
+      <div class="match-online-dot"></div>
+    </div>
+    <div class="match-bubble-item" onclick="selectMatch('https://picsum.photos/id/338/600/900', 'Chloe Smith, 22', '📍 San Diego, CA')">
+      <img src="https://picsum.photos/id/338/100/100" alt="Match">
+      <div class="match-online-dot"></div>
+    </div>
+    <div class="match-bubble-item" onclick="selectMatch('https://picsum.photos/id/1027/600/900', 'Sophia, 25', '📍 Malibu, CA')">
+      <img src="https://picsum.photos/id/1027/100/100" alt="Match">
+      <div class="match-online-dot"></div>
+    </div>
+    <div class="match-bubble-item" onclick="selectMatch('https://picsum.photos/id/65/600/900', 'Jenny Wilson, 24', '📍 California, USA')">
+      <img src="https://picsum.photos/id/65/100/100" alt="Match">
+      <div class="match-online-dot"></div>
+    </div>
+  </div>
+
+</div>
 
 <script>
   // BLOQUEOS ANTI-INSPECCIÓN
@@ -234,6 +416,7 @@
 
   window.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('auth-screen').classList.remove('hide');
+    document.getElementById('mainAppInterface').classList.add('hide');
     const { data: { session } } = await db.auth.getSession();
     if (session) {
       await validateAndGrantAccess(session.user);
@@ -251,11 +434,13 @@
       alert("⚠️ Acceso denegado: Tu cuenta no está verificada (+18). Redirigiendo...");
       await db.auth.signOut();
       document.getElementById('auth-screen').classList.remove('hide');
+      document.getElementById('mainAppInterface').classList.add('hide');
       redirectToDidit();
       return false;
     }
 
     document.getElementById('auth-screen').classList.add('hide');
+    document.getElementById('mainAppInterface').classList.remove('hide');
     return true;
   }
 
@@ -292,6 +477,30 @@
   async function handleLogout() {
     await db.auth.signOut();
     document.getElementById('auth-screen').classList.remove('hide');
+    document.getElementById('mainAppInterface').classList.add('hide');
+  }
+
+  // Lógica interactiva de las tarjetas y burbujas de match
+  const mockProfiles = [
+    { img: 'https://picsum.photos/id/65/600/900', name: 'Jenny Wilson, 24', loc: '📍 California, USA' },
+    { img: 'https://picsum.photos/id/64/600/900', name: 'Jane Cooper, 23', loc: '📍 Los Angeles, CA' },
+    { img: 'https://picsum.photos/id/91/600/900', name: 'Emily Carter, 26', loc: '📍 San Francisco, CA' },
+    { img: 'https://picsum.photos/id/338/600/900', name: 'Chloe Smith, 22', loc: '📍 San Diego, CA' }
+  ];
+  let currentCardIdx = 0;
+
+  function nextCard() {
+    currentCardIdx = (currentCardIdx + 1) % mockProfiles.length;
+    const profile = mockProfiles[currentCardIdx];
+    document.getElementById('tinderCardImg').src = profile.img;
+    document.getElementById('tinderCardName').innerText = profile.name;
+    document.getElementById('tinderCardLoc').innerText = profile.loc;
+  }
+
+  function selectMatch(imgUrl, nameText, locText) {
+    document.getElementById('tinderCardImg').src = imgUrl;
+    document.getElementById('tinderCardName').innerText = nameText;
+    document.getElementById('tinderCardLoc').innerText = locText;
   }
 </script>
 
