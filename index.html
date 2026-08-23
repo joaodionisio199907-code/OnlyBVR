@@ -5,10 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>ONLYBUBBLEVR</title>
   
+  <!-- Configuración PWA para instalación en inicio -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="OnlyBubbleVR">
   <link rel="apple-touch-icon" href="logo.png">
+  <link rel="manifest" href="manifest.json">
   
   <!-- SDK de Supabase JS -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -466,7 +468,7 @@
     <div class="panel-menu-items">
       <button class="panel-menu-btn" onclick="openEditProfile()"><span>👤</span> Mi Perfil</button>
       <button class="panel-menu-btn" onclick="openEstancias()"><span>🌐</span> Estancias</button>
-      <!-- NUEVA SECCIÓN APP MOBILE -->
+      <!-- SECCIÓN APP MOBILE / PWA -->
       <button class="panel-menu-btn" onclick="openAppMobile()"><span>📱</span> App Mobile</button>
       <button class="panel-menu-btn" onclick="alert('Abriendo Ajustes...')"><span>⚙️</span> Ajustes de la App</button>
       <button class="panel-menu-btn" onclick="alert('No hay notificaciones nuevas.')"><span>🔔</span> Notificaciones</button>
@@ -529,39 +531,43 @@
   </div>
 </div>
 
-<!-- NUEVA PÁGINA: APP MOBILE & DESCARGAS -->
+<!-- PÁGINA APP MOBILE & INSTALACIÓN PWA -->
 <div id="appMobileScreen" class="edit-profile-screen">
   <div class="edit-screen-header">
-    <h2>Descarga OnlyBubble App</h2>
+    <h2>Instalar OnlyBubble App</h2>
     <button class="back-btn" onclick="closeAppMobile()">✕</button>
   </div>
-  <div class="edit-form-container" style="gap: 20px; text-align: center; padding-top: 10px;">
+  <div class="edit-form-container" style="gap: 16px; text-align: center; padding-top: 10px;">
     <p style="color: var(--text-muted); font-size: 14px; line-height: 1.4;">
-      Lleva tus conexiones virtuales siempre contigo. Descarga la experiencia adaptada para tu dispositivo móvil:
+      Añade OnlyBubble directamente a la pantalla de inicio de tu dispositivo para disfrutarlo a pantalla completa como una aplicación nativa.
     </p>
 
-    <!-- Opciones de descarga Android / iPhone -->
-    <div style="display: flex; flex-direction: column; gap: 12px;">
-      <a href="#" onclick="alert('Descargando instalador para Android (APK)...'); return false;" class="btn-app-main" style="text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px;">
-        <span>🤖</span> Descargar para Android (APK)
-      </a>
-      <a href="#" onclick="alert('Redirigiendo a TestFlight / App Store para iPhone...'); return false;" class="btn-app-main" style="text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px; background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);">
-        <span>🍏</span> Descargar para iPhone (iOS)
-      </a>
+    <!-- Botón Automático para Android / Chrome -->
+    <div id="androidInstallContainer">
+      <button type="button" id="btnInstallPwa" class="btn-app-main" style="display: none; align-items: center; justify-content: center; gap: 8px; background: linear-gradient(135deg, #10b981 0%, #059669 100%);" onclick="triggerPwaInstall()">
+        <span>🤖</span> Instalar en Android (Pantalla de Inicio)
+      </button>
     </div>
 
-    <hr style="border: 0; border-top: 1px solid var(--glass-border); margin: 10px 0;">
-
-    <!-- Sección Próximamente -->
-    <div style="background: var(--glass-card); border: 1px solid var(--glass-border); border-radius: 20px; padding: 20px;">
-      <span style="font-size: 28px;">🚀</span>
-      <h3 style="font-size: 16px; font-weight: 800; margin: 8px 0 4px 0; color: #fff;">Próximamente APP Oficial</h3>
-      <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px;">
-        Estamos desarrollando características exclusivas nativas con notificaciones push y optimización total VR.
+    <!-- Guía Manual para iPhone / iOS (Safari) -->
+    <div style="background: var(--glass-card); border: 1px solid var(--glass-border); border-radius: 20px; padding: 16px; text-align: left;">
+      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+        <span style="font-size: 20px;">🍏</span>
+        <h3 style="font-size: 15px; font-weight: 800; color: #fff;">Instalación en iPhone / iPad (iOS)</h3>
+      </div>
+      <p style="font-size: 13px; color: var(--text-muted); line-height: 1.5;">
+        1. Abre esta web en el navegador <b>Safari</b>.<br>
+        2. Toca el botón de <b>Compartir</b> <span style="font-size: 16px;">⎋</span> en la barra inferior.<br>
+        3. Desplázate y selecciona <b>"Añadir a pantalla de inicio"</b> <span style="font-size: 16px;">➕</span>.
       </p>
-      <button type="button" class="btn-app-main" style="background: rgba(168, 85, 247, 0.2); border: 1px solid var(--neon-purple); cursor: default;" onclick="alert('La aplicación oficial estará disponible muy pronto.')">
-        En desarrollo
-      </button>
+    </div>
+
+    <div style="background: rgba(168, 85, 247, 0.1); border: 1px solid var(--glass-border); border-radius: 20px; padding: 16px;">
+      <span style="font-size: 24px;">⚡</span>
+      <h4 style="font-size: 14px; font-weight: 800; margin: 6px 0 2px 0; color: #fff;">Ventajas de la Web App</h4>
+      <p style="font-size: 12px; color: var(--text-muted);">
+        Sin descargas pesadas de tienda, acceso instantáneo y actualizaciones automáticas en la nube.
+      </p>
     </div>
   </div>
 </div>
@@ -580,6 +586,31 @@
       return false;
     }
   });
+
+  // CAPTURA DE EVENTO PWA INSTALL (ANDROID / DESKTOP)
+  let deferredPrompt = null;
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    const installBtn = document.getElementById('btnInstallPwa');
+    if (installBtn) {
+      installBtn.style.display = 'flex';
+    }
+  });
+
+  async function triggerPwaInstall() {
+    if (!deferredPrompt) {
+      alert("La app ya está instalada o tu navegador no permite el acceso directo. Usa el menú del navegador para añadirla.");
+      return;
+    }
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      console.log('Usuario aceptó instalar la PWA');
+    }
+    deferredPrompt = null;
+    document.getElementById('btnInstallPwa').style.display = 'none';
+  }
 
   // SUPABASE & LÓGICA DE LA APP
   const SUPABASE_URL = "https://wzpmgtkabsncpzpvweja.supabase.co";
@@ -697,7 +728,6 @@
     document.getElementById('estanciasScreen').classList.remove('active');
   }
 
-  // FUNCIONES PARA CONTROLAR LA NUEVA SECCIÓN APP MOBILE
   function openAppMobile() {
     toggleSettingsPanel();
     document.getElementById('appMobileScreen').classList.add('active');
@@ -762,7 +792,7 @@
     event.currentTarget.classList.add('active');
   }
 
-  // CATÁLOGO MASIVO DE SERVIDORES Y MUNDOS OFICIALES/COMUNIDAD
+  // CATÁLOGO MASIVO DE SERVIDORES Y MUNDOS
   const massiveFallbackWorlds = [
     { name: "VRChat Home (Oficial)", occupants: 4250, authorName: "VRChat", imageUrl: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=400", type: "Oficial" },
     { name: "The Great Pug Bar", occupants: 1240, authorName: "Owlical", imageUrl: "https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=400", type: "Comunidad" },
