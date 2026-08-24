@@ -24,7 +24,7 @@
       --text: #ffffff;
       --text-muted: #94a3b8;
       --grad-main: linear-gradient(135deg, #a855f7 0%, #ec4899 50%, #00f2fe 100%);
-      --radius-bubble: 28px;
+      --radius-bubble: 36px;
     }
 
     * { 
@@ -44,16 +44,13 @@
       width: 100vw;
       position: relative;
       -webkit-user-select: none;
-      -moz-user-select: none;
-      -ms-user-select: none;
       user-select: none;
-      -webkit-user-drag: none;
     }
 
     #auth-screen { 
       position: fixed; 
       inset: 0; 
-      background: transparent; 
+      background: var(--bg); 
       z-index: 999; 
       display: flex; 
       flex-direction: column; 
@@ -65,10 +62,7 @@
 
     .bg-auth-video {
       position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
+      top: 0; left: 0; width: 100%; height: 100%;
       object-fit: cover;
       z-index: -1;
       pointer-events: none;
@@ -108,7 +102,8 @@
     .auth-tab-btn.active { background: var(--grad-main); color: #fff; }
 
     .input-group { position: relative; margin-bottom: 14px; }
-    .input-app { width: 100%; padding: 16px; background: rgba(8, 5, 20, 0.7); border: 1px solid var(--glass-border); border-radius: 16px; color: #fff; font-size: 14px; outline: none; -webkit-user-select: text; user-select: text; }
+    .input-app { width: 100%; padding: 16px; background: rgba(8, 5, 20, 0.7); border: 1px solid var(--glass-border); border-radius: 16px; color: #fff; font-size: 14px; outline: none; user-select: text; }
+    textarea.input-app { resize: none; height: 90px; }
 
     .btn-app-main { 
       padding: 16px; 
@@ -133,7 +128,7 @@
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      padding: env(safe-area-inset-top, 16px) 16px calc(20px + env(safe-area-inset-bottom, 16px)) 16px;
+      padding: env(safe-area-inset-top, 16px) 16px calc(16px + env(safe-area-inset-bottom, 16px)) 16px;
       background: var(--bg);
       z-index: 10;
     }
@@ -147,22 +142,64 @@
       padding: 8px 0;
       z-index: 20;
     }
-    .user-avatar-top { width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--neon-purple); object-fit: cover; }
-    .header-pills { display: flex; gap: 12px; font-size: 13px; font-weight: 600; color: var(--text-muted); }
-    .header-pills span.active { color: var(--text); border-bottom: 2px solid var(--neon-pink); padding-bottom: 2px; }
+    .user-avatar-top { width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--neon-purple); object-fit: cover; cursor: pointer; }
 
+    /* BURBUJAS DE MATCHES ARRIBA */
+    .matches-bubbles-bar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      overflow-x: auto;
+      padding: 4px 0;
+      scrollbar-width: none;
+    }
+    .matches-bubbles-bar::-webkit-scrollbar { display: none; }
+
+    .match-bubble-item {
+      position: relative;
+      width: 54px;
+      height: 54px;
+      min-width: 54px;
+      border-radius: 50%;
+      padding: 2px;
+      background: var(--grad-main);
+      cursor: pointer;
+      box-shadow: 0 0 10px rgba(168, 85, 247, 0.3);
+    }
+
+    .match-bubble-item img {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid var(--bg);
+    }
+
+    .match-online-dot {
+      position: absolute;
+      bottom: 2px;
+      right: 2px;
+      width: 10px;
+      height: 10px;
+      background: #10b981;
+      border: 2px solid var(--bg);
+      border-radius: 50%;
+    }
+
+    /* TARJETA PRINCIPAL EN FORMATO BURBUJA / CÁPSULA */
     .profile-card-container {
       position: relative;
       flex: 1;
-      margin: 8px 0;
-      border-radius: 32px;
+      margin: 10px 0;
+      border-radius: 40px;
       overflow: hidden;
-      box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+      box-shadow: 0 15px 35px rgba(0,0,0,0.6);
       border: 1px solid var(--glass-border);
       background: #111;
       display: flex;
       flex-direction: column;
       justify-content: flex-end;
+      max-height: 55vh;
     }
 
     .profile-bg-img {
@@ -176,86 +213,147 @@
     .profile-gradient-overlay {
       position: absolute;
       inset: 0;
-      background: linear-gradient(180deg, rgba(3,2,8,0) 40%, rgba(3,2,8,0.85) 80%, rgba(3,2,8,0.95) 100%);
+      background: linear-gradient(180deg, rgba(3,2,8,0) 20%, rgba(3,2,8,0.75) 70%, rgba(3,2,8,0.95) 100%);
       pointer-events: none;
     }
 
     .profile-info-content {
       position: relative;
       z-index: 5;
-      padding: 24px;
+      padding: 20px;
     }
 
-    .profile-name-age { font-size: 28px; font-weight: 800; display: flex; align-items: baseline; gap: 8px; }
-    .profile-location { font-size: 13px; color: var(--text-muted); margin-top: 4px; display: flex; align-items: center; gap: 4px; }
-
-    .matches-bubbles-bar {
+    .profile-name-age { font-size: 24px; font-weight: 800; display: flex; align-items: baseline; gap: 8px; }
+    .profile-handle { font-size: 13px; color: var(--neon-cyan); margin-bottom: 2px; font-weight: 600; }
+    .profile-location { font-size: 12px; color: var(--text-muted); margin-top: 2px; display: flex; align-items: center; gap: 4px; }
+    .profile-bio { font-size: 13px; color: #e2e8f0; margin-top: 6px; line-height: 1.3; }
+    
+    .vr-specs-badges {
       display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+    }
+    .vr-badge {
+      font-size: 10px;
+      padding: 3px 8px;
+      background: rgba(168, 85, 247, 0.2);
+      border: 1px solid var(--neon-purple);
+      border-radius: 20px;
+      color: var(--neon-cyan);
+      font-weight: 600;
+    }
+
+    /* BOTONES DE VOTAR ABAJO DE LA TARJETA */
+    .voting-buttons-bar {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
       align-items: center;
-      gap: 14px;
-      overflow-x: auto;
-      padding: 6px 4px;
-      scrollbar-width: none;
-    }
-    .matches-bubbles-bar::-webkit-scrollbar { display: none; }
-
-    .match-bubble-item {
-      position: relative;
-      width: 64px;
-      height: 64px;
-      min-width: 64px;
-      border-radius: 50%;
-      padding: 2px;
-      background: var(--grad-main);
-      cursor: pointer;
-      box-shadow: 0 0 15px rgba(168, 85, 247, 0.4);
-    }
-
-    .match-bubble-item img {
-      width: 100%;
-      height: 100%;
-      border-radius: 50%;
-      object-fit: cover;
-      border: 2px solid var(--bg);
-    }
-
-    .match-online-dot {
-      position: absolute;
-      bottom: 4px;
-      right: 4px;
-      width: 12px;
-      height: 12px;
-      background: #10b981;
-      border: 2px solid var(--bg);
-      border-radius: 50%;
-    }
-
-    .profile-actions-float {
-      position: absolute;
-      right: 20px;
-      bottom: 120px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      z-index: 10;
+      margin: 8px 0;
     }
 
     .action-bubble-btn {
-      width: 50px;
       height: 50px;
-      border-radius: 50%;
-      background: rgba(18, 11, 36, 0.75);
+      border-radius: 25px;
+      background: var(--glass-card);
       backdrop-filter: blur(10px);
       border: 1px solid var(--glass-border);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 20px;
+      font-size: 14px;
+      font-weight: 700;
       cursor: pointer;
       box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+      padding: 0 20px;
     }
-    .action-bubble-btn.like { color: var(--neon-pink); border-color: rgba(236, 72, 153, 0.5); }
-    .action-bubble-btn.dislike { color: var(--text-muted); }
+    .action-bubble-btn.dislike { color: var(--text-muted); border-color: rgba(255, 255, 255, 0.1); }
+    .action-bubble-btn.like { width: 50px; padding: 0; border-radius: 50%; color: var(--neon-pink); border-color: rgba(236, 72, 153, 0.5); background: rgba(236, 72, 153, 0.1); font-size: 20px; }
+
+    /* BARRA DE NAVEGACIÓN INFERIOR (3 SECCIONES) */
+    .bottom-nav-bar {
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      background: rgba(18, 11, 36, 0.85);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border);
+      border-radius: 24px;
+      padding: 8px 12px;
+      margin-top: 6px;
+    }
+
+    .nav-item {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 700;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      cursor: pointer;
+    }
+    .nav-item span.nav-icon { font-size: 18px; }
+    .nav-item.active { color: var(--neon-cyan); }
+
+    /* PANEL LATERAL DE AJUSTES */
+    .settings-modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(3, 2, 8, 0.8);
+      backdrop-filter: blur(10px);
+      z-index: 100;
+      opacity: 0;
+      pointer-events: none;
+    }
+    .settings-modal-backdrop.active { opacity: 1; pointer-events: auto; }
+
+    .settings-slide-panel {
+      position: fixed;
+      top: 0; right: -100%;
+      width: 85%; max-width: 340px; height: 100%;
+      background: rgba(12, 8, 26, 0.95);
+      border-left: 1px solid var(--glass-border);
+      z-index: 101;
+      box-shadow: -10px 0 30px rgba(0,0,0,0.7);
+      padding: 30px 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .settings-slide-panel.active { right: 0; }
+
+    .panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+    .panel-header h2 { font-size: 20px; font-weight: 800; background: var(--grad-main); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .panel-close-btn { background: none; border: none; color: var(--text-muted); font-size: 22px; cursor: pointer; }
+
+    .panel-menu-items { display: flex; flex-direction: column; gap: 16px; flex: 1; }
+    .panel-menu-btn {
+      display: flex; align-items: center; gap: 14px;
+      width: 100%; padding: 16px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px; color: #fff; font-weight: 600; font-size: 15px; cursor: pointer; text-align: left;
+    }
+    .panel-logout-btn { background: rgba(236, 72, 153, 0.1); border-color: rgba(236, 72, 153, 0.3); color: var(--neon-pink); }
+
+    /* PÁGINA ANIMADA DE EDICIÓN DE PERFIL Y ESTANCIAS */
+    .edit-profile-screen {
+      position: fixed; inset: 0; background: var(--bg);
+      z-index: 200; display: flex; flex-direction: column;
+      padding: env(safe-area-inset-top, 20px) 20px calc(20px + env(safe-area-inset-bottom, 20px)) 20px;
+      overflow-y: auto; transform: translateY(100%);
+    }
+    .edit-profile-screen.active { transform: translateY(0); }
+
+    .edit-screen-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid var(--glass-border); }
+    .edit-screen-header h2 { font-size: 20px; font-weight: 800; background: var(--grad-main); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .back-btn { background: none; border: none; color: var(--text); font-size: 24px; cursor: pointer; }
+    .edit-form-container { display: flex; flex-direction: column; gap: 16px; max-width: 400px; width: 100%; margin: 0 auto; }
+    .form-label { font-size: 13px; font-weight: 700; color: var(--text-muted); margin-bottom: 6px; display: block; }
   </style>
 </head>
 <body>
@@ -310,23 +408,39 @@
 
 <!-- INTERFAZ PRINCIPAL DE LA APP -->
 <div id="mainAppInterface" class="app-interface hide">
-  <div class="interface-header">
-    <img src="https://picsum.photos/id/64/100/100" alt="Mi perfil" class="user-avatar-top">
-    <div class="header-pills">
-      <span class="active">Para ti</span>
-      <span>Matches</span>
+  <div>
+    <!-- Cabecera con tu avatar y ajustes -->
+    <div class="interface-header">
+      <img src="https://picsum.photos/id/64/100/100" alt="Mi perfil" class="user-avatar-top" id="headerUserAvatar" onclick="openMyProfileView()">
+      <h2 style="font-size: 16px; background: var(--grad-main); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 900;">ONLYBUBBLE</h2>
+      <button onclick="toggleSettingsPanel()" style="background:none; border:none; color:var(--text); font-size:18px; cursor:pointer;">⚙️</button>
     </div>
-    <button onclick="handleLogout()" style="background:none; border:none; color:var(--text-muted); font-size:16px; cursor:pointer;">⚙️</button>
+
+    <!-- Burbujas de Matches / Gente Online (ARRIBA) -->
+    <div class="matches-bubbles-bar">
+      <div class="match-bubble-item" onclick="selectMatch('https://picsum.photos/id/64/600/900', 'Jane Cooper, 23', '📍 Los Angeles, CA')">
+        <img src="https://picsum.photos/id/64/100/100" alt="Match">
+        <div class="match-online-dot"></div>
+      </div>
+      <div class="match-bubble-item" onclick="selectMatch('https://picsum.photos/id/91/600/900', 'Emily Carter, 26', '📍 San Francisco, CA')">
+        <img src="https://picsum.photos/id/91/100/100" alt="Match">
+        <div class="match-online-dot"></div>
+      </div>
+      <div class="match-bubble-item" onclick="selectMatch('https://picsum.photos/id/338/600/900', 'Chloe Smith, 22', '📍 San Diego, CA')">
+        <img src="https://picsum.photos/id/338/100/100" alt="Match">
+        <div class="match-online-dot"></div>
+      </div>
+      <div class="match-bubble-item" onclick="selectMatch('https://picsum.photos/id/1027/600/900', 'Sophia, 25', '📍 Malibu, CA')">
+        <img src="https://picsum.photos/id/1027/100/100" alt="Match">
+        <div class="match-online-dot"></div>
+      </div>
+    </div>
   </div>
 
+  <!-- Tarjeta principal en formato de burbuja/cápsula -->
   <div class="profile-card-container">
     <img src="https://picsum.photos/id/65/600/900" alt="Perfil recomendado" class="profile-bg-img" id="tinderCardImg">
     <div class="profile-gradient-overlay"></div>
-
-    <div class="profile-actions-float">
-      <div class="action-bubble-btn dislike" onclick="nextCard()">✕</div>
-      <div class="action-bubble-btn like" onclick="nextCard()">❤️</div>
-    </div>
 
     <div class="profile-info-content">
       <div class="profile-name-age" id="tinderCardName">Jenny Wilson, 24</div>
@@ -334,30 +448,106 @@
     </div>
   </div>
 
-  <div class="matches-bubbles-bar">
-    <div class="match-bubble-item" onclick="selectMatch('https://picsum.photos/id/64/600/900', 'Jane Cooper, 23', '📍 Los Angeles, CA')">
-      <img src="https://picsum.photos/id/64/100/100" alt="Match">
-      <div class="match-online-dot"></div>
+  <div>
+    <!-- Botones de voto abajo (Never🤮 y Corazón) -->
+    <div class="voting-buttons-bar">
+      <div class="action-bubble-btn dislike" onclick="nextCard()">Never🤮</div>
+      <div class="action-bubble-btn like" onclick="nextCard()">❤️</div>
     </div>
-    <div class="match-bubble-item" onclick="selectMatch('https://picsum.photos/id/91/600/900', 'Emily Carter, 26', '📍 San Francisco, CA')">
-      <img src="https://picsum.photos/id/91/100/100" alt="Match">
-      <div class="match-online-dot"></div>
+
+    <!-- Barra de Navegación Inferior (3 Secciones: Inicio a la izquierda) -->
+    <div class="bottom-nav-bar">
+      <button class="nav-item active" onclick="switchNavSection('inicio')">
+        <span class="nav-icon">🏠</span>
+        <span>Inicio</span>
+      </button>
+      <button class="nav-item" onclick="switchNavSection('bubbles')">
+        <span class="nav-icon">🫧</span>
+        <span>Bubbles</span>
+      </button>
+      <button class="nav-item" onclick="switchNavSection('chat')">
+        <span class="nav-icon">💬</span>
+        <span>Chat</span>
+      </button>
     </div>
-    <div class="match-bubble-item" onclick="selectMatch('https://picsum.photos/id/338/600/900', 'Chloe Smith, 22', '📍 San Diego, CA')">
-      <img src="https://picsum.photos/id/338/100/100" alt="Match">
-      <div class="match-online-dot"></div>
+  </div>
+</div>
+
+<!-- PANEL DESLIZABLE DE AJUSTES -->
+<div id="settingsBackdrop" class="settings-modal-backdrop" onclick="toggleSettingsPanel()"></div>
+<div id="settingsPanel" class="settings-slide-panel">
+  <div>
+    <div class="panel-header">
+      <h2>Opciones</h2>
+      <button class="panel-close-btn" onclick="toggleSettingsPanel()">✕</button>
     </div>
-    <div class="match-bubble-item" onclick="selectMatch('https://picsum.photos/id/1027/600/900', 'Sophia, 25', '📍 Malibu, CA')">
-      <img src="https://picsum.photos/id/1027/100/100" alt="Match">
-      <div class="match-online-dot"></div>
+    <div class="panel-menu-items">
+      <button class="panel-menu-btn" onclick="openEditProfile()"><span>👤</span> Mi Perfil</button>
+      <button class="panel-menu-btn" onclick="openEstancias()"><span>🌐</span> Estancias</button>
+      <button class="panel-menu-btn" onclick="alert('Abriendo Ajustes...')"><span>⚙️</span> Ajustes de la App</button>
+      <button class="panel-menu-btn" onclick="alert('No hay notificaciones nuevas.')"><span>🔔</span> Notificaciones</button>
+    </div>
+  </div>
+  <div>
+    <button class="panel-menu-btn panel-logout-btn" onclick="handleLogout()"><span>🚪</span> Cerrar Sesión</button>
+  </div>
+</div>
+
+<!-- PÁGINA ANIMADA DE EDICIÓN DE PERFIL -->
+<div id="editProfileScreen" class="edit-profile-screen">
+  <div class="edit-screen-header">
+    <h2>Editar Mi Perfil VR</h2>
+    <button class="back-btn" onclick="closeEditProfile()">✕</button>
+  </div>
+  <div class="edit-form-container">
+    <div>
+      <label class="form-label">Nombre</label>
+      <input type="text" id="editName" class="input-app" placeholder="Ej. Alex Vance">
+    </div>
+    <div>
+      <label class="form-label">Subnombre (Handle / Estilo Twitter)</label>
+      <input type="text" id="editHandle" class="input-app" placeholder="Ej. @vr_cyberpunk">
+    </div>
+    <div>
+      <label class="form-label">Edad</label>
+      <input type="number" id="editAge" class="input-app" placeholder="Ej. 25">
+    </div>
+    <div>
+      <label class="form-label">Modelo de Gafas VR</label>
+      <input type="text" id="editVrGlasses" class="input-app" placeholder="Ej. Meta Quest 3 / Valve Index">
+    </div>
+    <div>
+      <label class="form-label">Modelos de Trackers</label>
+      <input type="text" id="editTrackers" class="input-app" placeholder="Ej. 3x Vive Trackers 3.0">
+    </div>
+    <div>
+      <label class="form-label">Biografía</label>
+      <textarea id="editBio" class="input-app" placeholder="Cuéntanos sobre ti en realidad virtual..."></textarea>
+    </div>
+    <button type="button" class="btn-app-main" onclick="saveProfileChanges()">GUARDAR CAMBIOS</button>
+  </div>
+</div>
+
+<!-- PÁGINA DE ESTANCIAS VRCCHAT API -->
+<div id="estanciasScreen" class="edit-profile-screen">
+  <div class="edit-screen-header">
+    <h2>Buscador de Estancias VRChat</h2>
+    <button class="back-btn" onclick="closeEstancias()">✕</button>
+  </div>
+  <div class="edit-form-container" style="max-width: 100%;">
+    <div class="input-group" style="display: flex; gap: 8px;">
+      <input type="text" id="vrcSearchInput" class="input-app" placeholder="Buscar mundos o estancias..." style="flex:1;">
+      <button type="button" class="btn-app-main" style="width: auto; margin-top:0; padding: 0 20px;" onclick="searchVRChatWorlds()">Buscar</button>
+    </div>
+    <div id="vrcResultsContainer" style="display: flex; flex-direction: column; gap: 12px; margin-top: 10px; max-height: 65vh; overflow-y: auto;">
+      <p style="color: var(--text-muted); text-align: center; font-size: 13px;">Escribe algo o pulsa buscar para ver estancias online.</p>
     </div>
   </div>
 </div>
 
 <script>
-  // BLOQUEOS ANTI-INSPECCIÓN
+  // BLOQUEOS DE SEGURIDAD ROBUSTOS
   document.addEventListener('contextmenu', e => e.preventDefault());
-
   document.addEventListener('keydown', e => {
     if (
       e.key === 'F12' ||
@@ -370,20 +560,13 @@
     }
   });
 
-  setInterval(() => {
-    const start = performance.now();
-    debugger;
-    if (performance.now() - start > 100) {
-      window.location.reload();
-    }
-  }, 1000);
-
   // SUPABASE & LÓGICA DE LA APP
   const SUPABASE_URL = "https://wzpmgtkabsncpzpvweja.supabase.co";
   const SUPABASE_KEY = "sb_publishable_y9Yrqzf1QabeTeQV4DauBQ_tWgrL0li";
   const DIDIT_FLOW_URL = "https://verify.didit.me/u/SJ4nOmHXTY2CwxwX9iSFqg";
 
   const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  let currentUserSession = null;
 
   function switchAuthTab(mode) {
     document.getElementById('tab-login-btn').classList.toggle('active', mode === 'login');
@@ -401,15 +584,13 @@
     document.getElementById('mainAppInterface').classList.add('hide');
 
     const { data: { session } } = await db.auth.getSession();
-    
     if (session && session.user) {
-      // Auto-valida y da acceso directo si ya hay sesión activa
       await validateAndGrantAccess(session.user);
     }
   });
 
   async function validateAndGrantAccess(user) {
-    // Primero intentamos asegurar que el perfil tenga is_age_verified a true si viene de validar
+    currentUserSession = user;
     await db.from('profiles').upsert({
       id: user.id,
       is_age_verified: true
@@ -417,16 +598,14 @@
 
     const { data: profile, error } = await db
       .from('profiles')
-      .select('is_age_verified')
+      .select('*')
       .eq('id', user.id)
       .maybeSingle();
 
-    if (error || !profile || profile.is_age_verified !== true) {
-      // Si por alguna razón sigue en falso, actualizamos a mano para evitar bloqueos tontos
-      await db.from('profiles').update({ is_age_verified: true }).eq('id', user.id);
+    if (!error && profile) {
+      loadProfileDataIntoForm(profile);
     }
 
-    // Acceso concedido directamente sin bucles molestos
     document.getElementById('auth-screen').classList.add('hide');
     document.getElementById('mainAppInterface').classList.remove('hide');
     return true;
@@ -465,12 +644,148 @@
   }
 
   async function handleLogout() {
+    toggleSettingsPanel();
     await db.auth.signOut();
     document.getElementById('auth-screen').classList.remove('hide');
     document.getElementById('mainAppInterface').classList.add('hide');
   }
 
-  // Lógica interactiva de las tarjetas y burbujas de match
+  function toggleSettingsPanel() {
+    const backdrop = document.getElementById('settingsBackdrop');
+    const panel = document.getElementById('settingsPanel');
+    backdrop.classList.toggle('active');
+    panel.classList.toggle('active');
+  }
+
+  function openEditProfile() {
+    toggleSettingsPanel();
+    document.getElementById('editProfileScreen').classList.add('active');
+  }
+
+  function closeEditProfile() {
+    document.getElementById('editProfileScreen').classList.remove('active');
+  }
+
+  function openEstancias() {
+    toggleSettingsPanel();
+    document.getElementById('estanciasScreen').classList.add('active');
+    searchVRChatWorlds(); // Carga inicial por defecto
+  }
+
+  function closeEstancias() {
+    document.getElementById('estanciasScreen').classList.remove('active');
+  }
+
+  async function searchVRChatWorlds() {
+    const query = document.getElementById('vrcSearchInput').value.trim();
+    const container = document.getElementById('vrcResultsContainer');
+    container.innerHTML = `<p style="color: var(--text-muted); text-align: center; font-size: 13px;">Buscando estancias...</p>`;
+
+    try {
+      const url = `https://api.vrchat.cloud/api/1/worlds?n=15&search=${encodeURIComponent(query)}`;
+      const response = await fetch(url, {
+        headers: {
+          'User-Agent': 'OnlyBubbleVRApp/1.0 (contact@onlybubble.vr)'
+        }
+      });
+
+      if (!response.ok) throw new Error("No se pudo conectar con la API de VRChat");
+
+      const worlds = await response.json();
+      if (!worlds || worlds.length === 0) {
+        container.innerHTML = `<p style="color: var(--text-muted); text-align: center; font-size: 13px;">No se encontraron estancias.</p>`;
+        return;
+      }
+
+      container.innerHTML = '';
+      worlds.forEach(world => {
+        const card = document.createElement('div');
+        card.style.cssText = `background: var(--glass-card); border: 1px solid var(--glass-border); border-radius: 20px; padding: 12px; display: flex; gap: 12px; align-items: center;`;
+        
+        card.innerHTML = `
+          <img src="${world.imageUrl || 'https://picsum.photos/200'}" style="width: 70px; height: 70px; border-radius: 14px; object-fit: cover;" alt="World">
+          <div style="flex: 1; overflow: hidden;">
+            <h4 style="font-size: 14px; font-weight: 800; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${world.name}</h4>
+            <p style="font-size: 11px; color: var(--neon-cyan); margin-top: 2px;">👤 Jugadores Online: <b>${world.occupants || 0}</b></p>
+            <p style="font-size: 11px; color: var(--text-muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Autor: ${world.authorName || 'Desconocido'}</p>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    } catch (err) {
+      container.innerHTML = `<p style="color: var(--neon-pink); text-align: center; font-size: 13px;">Error al cargar estancias de VRChat.</p>`;
+    }
+  }
+
+  function loadProfileDataIntoForm(profile) {
+    if (!profile) return;
+    document.getElementById('editName').value = profile.full_name || '';
+    document.getElementById('editHandle').value = profile.handle || '';
+    document.getElementById('editAge').value = profile.age || '';
+    document.getElementById('editVrGlasses').value = profile.vr_glasses || '';
+    document.getElementById('editTrackers').value = profile.trackers || '';
+    document.getElementById('editBio').value = profile.bio || '';
+  }
+
+  async function saveProfileChanges() {
+    if (!currentUserSession) return;
+
+    const updates = {
+      id: currentUserSession.id,
+      full_name: document.getElementById('editName').value,
+      handle: document.getElementById('editHandle').value,
+      age: parseInt(document.getElementById('editAge').value) || null,
+      vr_glasses: document.getElementById('editVrGlasses').value,
+      trackers: document.getElementById('editTrackers').value,
+      bio: document.getElementById('editBio').value,
+      updated_at: new Date()
+    };
+
+    const { error } = await db.from('profiles').upsert(updates);
+    if (error) {
+      alert("Error al actualizar perfil: " + error.message);
+    } else {
+      alert("¡Perfil actualizado con éxito!");
+      closeEditProfile();
+    }
+  }
+
+  async function openMyProfileView() {
+    if (!currentUserSession) return;
+    const { data: profile } = await db.from('profiles').select('*').eq('id', currentUserSession.id).single();
+    
+    if (!profile) return alert("Completa tu perfil primero.");
+
+    const nameAge = (profile.full_name || 'Usuario') + (profile.age ? `, ${profile.age}` : '');
+    const handle = profile.handle ? `${profile.handle}` : '@usuario';
+    const bioText = profile.bio || 'Sin biografía VR aún.';
+    const vrBadge = profile.vr_glasses ? `<span class="vr-badge">🥽 ${profile.vr_glasses}</span>` : '';
+    const trackerBadge = profile.trackers ? `<span class="vr-badge">📡 ${profile.trackers}</span>` : '';
+
+    document.getElementById('tinderCardImg').src = 'https://picsum.photos/id/64/600/900';
+    
+    const cardContent = document.querySelector('.profile-info-content');
+    cardContent.innerHTML = `
+      <div class="profile-handle">${handle}</div>
+      <div class="profile-name-age">${nameAge}</div>
+      <div class="profile-bio">${bioText}</div>
+      <div class="vr-specs-badges">
+        ${vrBadge}
+        ${trackerBadge}
+      </div>
+      <div style="margin-top: 8px;"><button onclick="resetMainCardView()" style="background:var(--grad-main); border:none; color:#fff; padding:5px 12px; border-radius:12px; font-size:11px; cursor:pointer; font-weight:700;">Volver a Explorar</button></div>
+    `;
+  }
+
+  function resetMainCardView() {
+    const cardContent = document.querySelector('.profile-info-content');
+    cardContent.innerHTML = `
+      <div class="profile-name-age" id="tinderCardName">Jenny Wilson, 24</div>
+      <div class="profile-location" id="tinderCardLoc">📍 California, USA</div>
+    `;
+    document.getElementById('tinderCardImg').src = 'https://picsum.photos/id/65/600/900';
+  }
+
   const mockProfiles = [
     { img: 'https://picsum.photos/id/65/600/900', name: 'Jenny Wilson, 24', loc: '📍 California, USA' },
     { img: 'https://picsum.photos/id/64/600/900', name: 'Jane Cooper, 23', loc: '📍 Los Angeles, CA' },
@@ -483,14 +798,31 @@
     currentCardIdx = (currentCardIdx + 1) % mockProfiles.length;
     const profile = mockProfiles[currentCardIdx];
     document.getElementById('tinderCardImg').src = profile.img;
-    document.getElementById('tinderCardName').innerText = profile.name;
-    document.getElementById('tinderCardLoc').innerText = profile.loc;
+    
+    const cardContent = document.querySelector('.profile-info-content');
+    cardContent.innerHTML = `
+      <div class="profile-name-age" id="tinderCardName">${profile.name}</div>
+      <div class="profile-location" id="tinderCardLoc">${profile.loc}</div>
+    `;
   }
 
   function selectMatch(imgUrl, nameText, locText) {
     document.getElementById('tinderCardImg').src = imgUrl;
-    document.getElementById('tinderCardName').innerText = nameText;
-    document.getElementById('tinderCardLoc').innerText = locText;
+    const cardContent = document.querySelector('.profile-info-content');
+    cardContent.innerHTML = `
+      <div class="profile-name-age" id="tinderCardName">${nameText}</div>
+      <div class="profile-location" id="tinderCardLoc">${locText}</div>
+    `;
+  }
+
+  function switchNavSection(section) {
+    document.querySelectorAll('.bottom-nav-bar .nav-item').forEach(item => item.classList.remove('active'));
+    event.currentTarget.classList.add('active');
+    if(section === 'chat') {
+      alert('Abriendo sección de Chat...');
+    } else if(section === 'bubbles') {
+      alert('Abriendo sección de Bubbles...');
+    }
   }
 </script>
 
