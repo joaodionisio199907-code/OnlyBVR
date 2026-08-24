@@ -807,13 +807,6 @@
 @media(max-width:480px){.v3-match-list{grid-template-columns:1fr}.v3-story-viewer{height:78vh}.v3-post-media{max-height:460px}}
 </style>
 
-
-<style id="v2plus-feed-style">
-/* ===== ONLYBUBBLEVR V2+ FEED IMPROVEMENTS ===== */
-.v2plus-refresh{position:sticky;top:0;height:0;z-index:30;display:flex;justify-content:center;pointer-events:none}.v2plus-refresh-pill{transform:translateY(-58px);opacity:0;transition:transform .22s ease,opacity .22s ease;background:rgba(18,11,36,.96);border:1px solid var(--glass-border);box-shadow:0 10px 30px rgba(0,0,0,.35);border-radius:999px;padding:8px 14px;font-size:12px;font-weight:800;color:#fff}.v2plus-refresh.ready .v2plus-refresh-pill,.v2plus-refresh.loading .v2plus-refresh-pill{opacity:1;transform:translateY(8px)}.v2plus-refresh.loading .v2plus-refresh-pill:before{content:'⟳ ';display:inline-block;animation:v2plusspin .8s linear infinite}@keyframes v2plusspin{to{transform:rotate(360deg)}}
-.v2plus-compose{position:fixed;right:18px;bottom:82px;z-index:90;width:58px;height:58px;border:0;border-radius:50%;background:var(--grad-main);color:#fff;font-size:30px;font-weight:500;box-shadow:0 12px 35px rgba(168,85,247,.45);cursor:pointer;transition:transform .2s}.v2plus-compose:active{transform:scale(.9)}
-.v2plus-feed-head-actions{display:flex;gap:8px;align-items:center}.v2plus-refresh-btn{width:38px;height:38px;border-radius:50%;border:1px solid var(--glass-border);background:rgba(255,255,255,.05);color:#fff;font-size:18px;cursor:pointer}.v2plus-post-status{font-size:11px;color:var(--text-muted);padding:0 4px 9px}.v2plus-publish-btn{position:sticky;bottom:10px;z-index:3;width:100%;margin-top:12px}.v2plus-preview-wrap{position:relative;margin:10px 0}.v2plus-remove-media{position:absolute;top:6px;right:6px;border:0;width:34px;height:34px;border-radius:50%;background:rgba(0,0,0,.75);color:#fff;cursor:pointer}.v2plus-empty{padding:35px 16px;text-align:center;color:var(--text-muted)}
-</style>
 </head>
 <body>
 
@@ -1898,28 +1891,128 @@ window.addEventListener('load',()=>{setTimeout(()=>{if(currentUserSession){loadV
 </script>
 <style>@keyframes v3storyprogress{from{width:0}to{width:100%}}</style>
 
-<script id="v2plus-feed-script">
-/* ONLYBUBBLEVR V2+ - mejoras sin eliminar V2 */
+<style id="v3plus-enhancements">
+#v3PullRefresh{
+  position:fixed;left:50%;top:56px;transform:translate(-50%,-90px);
+  z-index:5000;opacity:0;pointer-events:none;transition:transform .22s ease,opacity .22s ease;
+  background:rgba(15,10,35,.92);border:1px solid rgba(168,85,247,.45);
+  color:#fff;border-radius:999px;padding:10px 16px;display:flex;gap:8px;align-items:center;
+  box-shadow:0 8px 30px rgba(0,0,0,.35);font-size:12px;font-weight:800;
+  backdrop-filter:blur(12px)
+}
+#v3PullRefresh.show{opacity:1;transform:translate(-50%,0)}
+#v3PullRefresh.ready{border-color:#67e8f9;color:#67e8f9}
+#v3PullRefresh .spin{display:inline-block}
+#v3PullRefresh.loading .spin{animation:v3spin .8s linear infinite}
+@keyframes v3spin{to{transform:rotate(360deg)}}
+
+.v3-fab-publish{
+ position:fixed;right:22px;bottom:88px;z-index:4000;width:58px;height:58px;border-radius:50%;
+ border:0;cursor:pointer;color:#fff;font-size:28px;font-weight:400;
+ background:linear-gradient(135deg,#a855f7,#06b6d4);box-shadow:0 10px 32px rgba(168,85,247,.42);
+ transition:transform .18s ease,box-shadow .18s ease;display:flex;align-items:center;justify-content:center
+}
+.v3-fab-publish:hover{transform:scale(1.07) rotate(3deg)}
+.v3-fab-publish:active{transform:scale(.93)}
+.v3-fab-publish span{font-size:11px;font-weight:900;position:absolute;bottom:-18px;white-space:nowrap;color:#d8d8e8;text-shadow:0 2px 6px #000}
+
+.v3-feed-status{
+ margin:8px 14px 14px;padding:9px 12px;border-radius:12px;font-size:12px;
+ background:rgba(168,85,247,.08);border:1px solid rgba(168,85,247,.15);color:#b9b7d3;
+ display:none
+}
+.v3-feed-status.show{display:block}
+@media(min-width:800px){.v3-fab-publish{right:calc(50% - 360px)}}
+</style>
+<div id="v3PullRefresh"><span class="spin">↻</span><span id="v3PullRefreshText">Desliza para refrescar</span></div>
+<button id="v3FabPublish" class="v3-fab-publish" onclick="openCreatePost()" aria-label="Crear publicación">＋<span>Publicar</span></button>
+
+<script id="v3plus-script">
+/* ONLYBUBBLEVR - mejoras de feed y pull-to-refresh */
 (function(){
   let startY=0,pulling=false,refreshing=false;
-  function feed(){return document.getElementById('v3Feed')}
-  function ensureUI(){
-    const f=feed(); if(!f||document.getElementById('v2plusRefresh')) return;
-    const head=f.querySelector('.v3-feed-head');
-    if(head){head.classList.add('v2plus-feed-head'); const pub=head.querySelector('.v3-new-post'); if(pub) pub.outerHTML='<div class="v2plus-feed-head-actions"><button class="v2plus-refresh-btn" onclick="v2PlusRefreshFeed()" title="Actualizar">⟳</button><button class="v3-new-post" onclick="openCreatePost()">＋ Publicar</button></div>';}
-    const r=document.createElement('div');r.id='v2plusRefresh';r.className='v2plus-refresh';r.innerHTML='<div class="v2plus-refresh-pill">↓ Desliza para actualizar</div>';f.insertBefore(r,f.firstChild);
-    const b=document.createElement('button');b.className='v2plus-compose';b.title='Crear publicación';b.innerHTML='＋';b.onclick=()=>openCreatePost();document.body.appendChild(b);
-    f.addEventListener('touchstart',e=>{if(f.scrollTop<=0&&!refreshing){startY=e.touches[0].clientY;pulling=true}},{passive:true});
-    f.addEventListener('touchmove',e=>{if(!pulling||refreshing)return;const d=e.touches[0].clientY-startY;const box=r.querySelector('.v2plus-refresh-pill');if(d>0){box.textContent=d>80?'↻ Suelta para actualizar':'↓ Desliza para actualizar';r.classList.toggle('ready',d>80)}} ,{passive:true});
-    f.addEventListener('touchend',async e=>{if(!pulling)return;pulling=false;const d=e.changedTouches[0].clientY-startY;if(d>80)await window.v2PlusRefreshFeed();else r.classList.remove('ready')},{passive:true});
+  const threshold=90;
+  const indicator=document.getElementById('v3PullRefresh');
+  const label=document.getElementById('v3PullRefreshText');
+
+  function inicioActivo(){
+    const s=document.getElementById('sectionInicio');
+    return s && s.classList.contains('active');
   }
-  window.v2PlusRefreshFeed=async function(){if(refreshing)return;refreshing=true;const r=document.getElementById('v2plusRefresh');r.classList.remove('ready');r.classList.add('loading');try{await loadV3Home();}catch(e){console.warn(e)}finally{setTimeout(()=>{r.classList.remove('loading');refreshing=false},350)}};
-  const oldOpen=window.openCreatePost;
-  window.openCreatePost=function(){oldOpen();setTimeout(()=>{const modal=document.getElementById('v3CreatePostModal');const card=modal?.querySelector('.v3-card-body');if(card&&!document.getElementById('v2plusPostStatus')){const status=document.createElement('div');status.id='v2plusPostStatus';status.className='v2plus-post-status';status.textContent='Comparte texto, una imagen o un vídeo con la comunidad.';const input=document.getElementById('v3PostText');input.after(status);input.addEventListener('input',()=>status.textContent=`${input.value.length}/2000 caracteres`);const btn=card.querySelector('.btn-app-main');if(btn)btn.classList.add('v2plus-publish-btn')}},0)};
-  const oldPreview=window.previewV3PostMedia;
-  window.previewV3PostMedia=function(e){oldPreview(e);setTimeout(()=>{const img=document.getElementById('v3PostPreview');if(img&&img.style.display!=='none'&&!document.getElementById('v2plusRemoveMedia')){const wrap=document.createElement('div');wrap.className='v2plus-preview-wrap';img.parentNode.insertBefore(wrap,img);wrap.appendChild(img);const x=document.createElement('button');x.id='v2plusRemoveMedia';x.className='v2plus-remove-media';x.textContent='✕';x.onclick=()=>{document.getElementById('v3PostFile').value='';document.getElementById('v3PostFileName').textContent='';img.src='';img.style.display='none';window.v3PostFile=null;x.remove()};wrap.appendChild(x)}},0)};
-  const init=()=>ensureUI(); if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init(); setTimeout(init,1200);
+  function atTop(){
+    const s=document.getElementById('sectionInicio');
+    return (s ? s.scrollTop : window.scrollY) <= 3 && window.scrollY <= 3;
+  }
+  function setPull(distance){
+    if(!indicator)return;
+    if(distance<=0){indicator.classList.remove('show','ready');return}
+    indicator.classList.add('show');
+    indicator.classList.toggle('ready',distance>=threshold);
+    indicator.style.transform=`translate(-50%, ${Math.min(distance*.55,58)-58}px)`;
+    label.textContent=distance>=threshold?'Suelta para refrescar':'Desliza para refrescar';
+  }
+  async function refresh(){
+    if(refreshing)return;
+    refreshing=true;
+    indicator.classList.add('show','loading');
+    indicator.classList.remove('ready');
+    indicator.style.transform='translate(-50%,0)';
+    label.textContent='Actualizando...';
+    try{
+      if(typeof loadV3Home==='function') await loadV3Home();
+      else if(typeof loadRealData==='function') await loadRealData();
+      if(navigator.vibrate) navigator.vibrate(20);
+      label.textContent='✓ Actualizado';
+      await new Promise(r=>setTimeout(r,550));
+    }catch(e){
+      console.warn('Refresh:',e);
+      label.textContent='No se pudo actualizar';
+      await new Promise(r=>setTimeout(r,900));
+    }finally{
+      indicator.classList.remove('show','loading','ready');
+      indicator.style.transform='';
+      refreshing=false;
+    }
+  }
+
+  document.addEventListener('touchstart',e=>{
+    if(refreshing||!inicioActivo()||!atTop())return;
+    startY=e.touches[0].clientY; pulling=true;
+  },{passive:true});
+
+  document.addEventListener('touchmove',e=>{
+    if(!pulling)return;
+    const d=e.touches[0].clientY-startY;
+    if(d>0) setPull(d);
+  },{passive:true});
+
+  document.addEventListener('touchend',async e=>{
+    if(!pulling)return;
+    const d=e.changedTouches[0].clientY-startY;
+    pulling=false;
+    if(d>=threshold && inicioActivo()) await refresh();
+    else setPull(0);
+  },{passive:true});
+
+  // Soporte escritorio: doble clic en la cabecera del feed.
+  document.addEventListener('dblclick',e=>{
+    if(e.target.closest('.v3-feed-head')) refresh();
+  });
+
+  // Recarga automática al volver a Inicio.
+  const originalSwitch=window.switchNavSection;
+  if(originalSwitch && !window.__v3PlusSwitchPatched){
+    window.__v3PlusSwitchPatched=true;
+    window.switchNavSection=async function(name,event){
+      const r=await originalSwitch(name,event);
+      if(name==='inicio' && typeof loadV3Home==='function') await loadV3Home();
+      return r;
+    };
+  }
+
+  window.v3ManualRefresh=refresh;
 })();
 </script>
+
 </body>
 </html>
