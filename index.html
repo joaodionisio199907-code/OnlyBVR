@@ -1288,22 +1288,19 @@ async function submitNewPost() {
   }
 }
   async function loadFeedPosts() {
-  const feedContainer = document.getElementById('feedPostsContainer'); // O el ID que uses en tu HTML para el contenedor del feed
+  const feedContainer = document.getElementById('feedPostsContainer');
   if (!feedContainer) return;
 
   feedContainer.innerHTML = '<div style="text-align:center; color:var(--text-muted); padding:20px;">Cargando publicaciones...</div>';
 
-  // Obtenemos los posts ordenados por fecha y unimos los datos del perfil del autor
-  const { data: posts, error } = await db
+  // 1. Obtenemos los posts ordenados por fecha
+  const { data: posts, error: postsError } = await db
     .from('posts')
-    .select(`
-      *,
-      profiles:user_id (name, handle, avatar_url)
-    `)
+    .select('*')
     .order('created_at', { ascending: false });
 
-  if (error) {
-    feedContainer.innerHTML = `<div style="text-align:center; color:var(--neon-pink); padding:20px;">Error al cargar el feed.</div>`;
+  if (postsError) {
+    feedContainer.innerHTML = `<div style="text-align:center; color:var(--neon-pink); padding:20px;">Error al cargar posts: ${postsError.message}</div>`;
     return;
   }
 
@@ -1314,13 +1311,26 @@ async function submitNewPost() {
     return;
   }
 
-  posts.forEach(post => {
-    const author = post.profiles || {};
-    const authorName = author.name || 'Usuario';
-    const authorAvatar = author.avatar_url || 'https://placehold.co/100x100/120b24/a855f7?text=U';
-    
+  // 2. Recorremos los posts y buscamos el perfil de su autor de forma individual
+  for (const post of posts) {
+    let authorName = 'Usuario';
+    let authorAvatar = 'https://placehold.co/100x100/120b24/a855f7?text=U';
+
+    if (post.user_id) {
+      const { data: profileData } = await db
+        .from('profiles')
+        .select('name, handle, avatar_url')
+        .eq('id', post.user_id)
+        .maybeSingle();
+
+      if (profileData) {
+        authorName = profileData.name || profileData.handle || 'Usuario';
+        if (profileData.avatar_url) authorAvatar = profileData.avatar_url;
+      }
+    }
+
     const postCard = document.createElement('div');
-    postCard.className = 'v3-card'; // O la clase de tarjeta que use tu diseño
+    postCard.className = 'v3-card';
     postCard.style.marginBottom = '15px';
     
     let mediaHtml = '';
@@ -1341,18 +1351,8 @@ async function submitNewPost() {
     `;
     
     feedContainer.appendChild(postCard);
-  });
+  }
 }
-
-// Llamamos a la función al iniciar sesión para que cargue los posts automáticamente
-window.addEventListener('DOMContentLoaded', () => {
-  // Si ya estás logueado se llamará desde validateAndGrantAccess, pero por si acaso:
-  setTimeout(() => {
-    if (typeof currentUserSession !== 'undefined' && currentUserSession) {
-      loadFeedPosts();
-    }
-  }, 1000);
-});
 
 </script>
 <!-- MODAL PARA CREAR PUBLICACIÓN -->
