@@ -1215,7 +1215,62 @@
     if (!text) return '';
     return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
   }
-</script>
+  function openCreatePost() {
+  document.getElementById('createPostModal').classList.add('active');
+}
 
+function closeCreatePostModal() {
+  document.getElementById('createPostModal').classList.remove('active');
+  document.getElementById('newPostContent').value = '';
+  document.getElementById('newPostMediaUrl').value = '';
+}
+
+async function submitNewPost() {
+  if (!currentUserSession) return;
+  const content = document.getElementById('newPostContent').value.trim();
+  const mediaUrl = document.getElementById('newPostMediaUrl').value.trim();
+
+  if (!content) {
+    alert("Escribe algo para poder publicar.");
+    return;
+  }
+
+  const { error } = await db.from('posts').insert({
+    user_id: currentUserSession.id,
+    content: content,
+    media_url: mediaUrl || null
+  });
+
+  if (error) {
+    alert("Error al publicar: " + error.message);
+    return;
+  }
+
+  closeCreatePostModal();
+  alert("¡Publicación creada con éxito!");
+  
+  if (typeof loadFeedPosts === 'function') {
+    loadFeedPosts();
+  }
+}
+</script>
+<!-- MODAL PARA CREAR PUBLICACIÓN -->
+<div id="createPostModal" class="v3-modal">
+  <div class="v3-card">
+    <div class="v3-card-head">
+      <h3>Crear Publicación</h3>
+      <button class="v3-close" onclick="closeCreatePostModal()">✕</button>
+    </div>
+    <div class="v3-card-body">
+      <div class="input-group">
+        <textarea id="newPostContent" class="input-app" placeholder="¿Qué quieres compartir en VRChat hoy?"></textarea>
+      </div>
+      <div class="input-group">
+        <input type="text" id="newPostMediaUrl" class="input-app" placeholder="URL de imagen o video (opcional)">
+      </div>
+      <button type="button" class="btn-app-main" onclick="submitNewPost()">PUBLICAR AHORA</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
