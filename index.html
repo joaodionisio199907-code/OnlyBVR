@@ -13,12 +13,14 @@
     <meta property="og:type" content="website">
   
   <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="OnlyBubbleVR">
   <link rel="apple-touch-icon" href="logo.png">
   <link rel="manifest" href="manifest.json">
   
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
   /* ================= ONLYBUBBLEVR V2 ================= */
   let v2ConfirmResolver = null;
   let v2NotificationsChannel = null;
@@ -71,14 +73,16 @@
   }
   async function refreshViewedProfileActions(){
     if(!viewedProfileUserId||viewedProfileUserId===currentUserSession.id)return;
-    const r=await getRelationship(viewedProfileUserId); const box=document.getElementById('igSocialActions'); box.style.display='grid';
+    const r=await getRelationship(viewedProfileUserId); const box=document.getElementById('igSocialActions'); if(box) box.style.display='grid';
     const f=document.getElementById('profileFriendBtn'), fol=document.getElementById('profileFollowBtn');
-    f.disabled=false;
-    if(r.friend) {f.innerText='✓ Amigos';f.onclick=async()=>{if(await showV2Confirm('Eliminar amigo', '¿Estás seguro que quieres eliminar a este amigo?','Sí, eliminar')){await db.from('user_connections').delete().eq('user_id',currentUserSession.id).eq('friend_id',viewedProfileUserId).eq('connection_type','friend');refreshViewedProfileActions();loadRealData();}}}
-    else if(r.outgoing){f.innerText='⏳ Solicitud enviada';f.onclick=()=>{};f.disabled=true;}
-    else if(r.incoming){f.innerText='✅ Aceptar solicitud';f.onclick=()=>acceptFriendRequest(r.incoming.id);}
-    else {f.innerText='👥 Añadir amigo';f.onclick=sendFriendRequestFromProfile;}
-    fol.innerText=r.following?'✓ Siguiendo':'＋ Seguir';
+    if(f) {
+      f.disabled=false;
+      if(r.friend) {f.innerText='✓ Amigos';f.onclick=async()=>{if(await showV2Confirm('Eliminar amigo', '¿Estás seguro que quieres eliminar a este amigo?','Sí, eliminar')){await db.from('user_connections').delete().eq('user_id',currentUserSession.id).eq('friend_id',viewedProfileUserId).eq('connection_type','friend');refreshViewedProfileActions();loadRealData();}}}
+      else if(r.outgoing){f.innerText='⏳ Solicitud enviada';f.onclick=()=>{};f.disabled=true;}
+      else if(r.incoming){f.innerText='✅ Aceptar solicitud';f.onclick=()=>acceptFriendRequest(r.incoming.id);}
+      else {f.innerText='👥 Añadir amigo';f.onclick=sendFriendRequestFromProfile;}
+    }
+    if(fol) fol.innerText=r.following?'✓ Siguiendo':'＋ Seguir';
   }
   async function sendFriendRequestFromProfile(){
     if(!viewedProfileUserId||viewedProfileUserId===currentUserSession.id)return;
@@ -129,11 +133,13 @@
     const {data:inserted,error}=await db.from('messages').insert({conversation_id:activeConversationId,sender_id:currentUserSession.id,recipient_id:activeChatUserId,content:'📷 Imagen',message_type:'image',media_url:mediaUrl}).select().single();
     if(error){alert('No se pudo enviar la imagen: '+error.message);return;}renderMessage(inserted);document.getElementById('chatMessagesBox').scrollTop=999999;loadChatConversations();
   }
+  
   // Sustituye la representación del mensaje para admitir imágenes sin perder los mensajes de texto.
-  const __oldRenderMessage=renderMessage;
+  let __oldRenderMessage = window.renderMessage || function(){};
   renderMessage=function(msg){
-    const box=document.getElementById('chatMessagesBox');if(msg.id&&chatLastRenderedMessageIds.has(msg.id))return;if(msg.id)chatLastRenderedMessageIds.add(msg.id);
-    const outgoing=msg.sender_id===currentUserSession.id,row=document.createElement('div');row.className=`chat-message-row ${outgoing?'outgoing':'incoming'}`;
+    const box=document.getElementById('chatMessagesBox');if(!box) return;
+    if(msg.id&&chatLastRenderedMessageIds?.has(msg.id))return;if(msg.id&&chatLastRenderedMessageIds)chatLastRenderedMessageIds.add(msg.id);
+    const outgoing=msg.sender_id===currentUserSession?.id,row=document.createElement('div');row.className=`chat-message-row ${outgoing?'outgoing':'incoming'}`;
     const bubble=document.createElement('div');bubble.className=`message-bubble ${outgoing?'outgoing':'incoming'}`;
     if(msg.message_type==='image'&&msg.media_url){bubble.innerHTML=`<img class="v2-message-image" src="${escapeHtml(msg.media_url)}" alt="Imagen enviada">`;}
     else bubble.innerText=msg.content||'';row.appendChild(bubble);
@@ -141,7 +147,7 @@
     if(outgoing){const st=document.createElement('div');st.className='message-status';st.innerText=msg.read_at?'✓✓ Leído':'✓ Enviado';row.appendChild(st);}
     box.appendChild(row);
   };
-  // Añade online/presencia de forma ligera.
+  
   async function updateOwnPresence(){if(!currentUserSession)return;await db.from('profiles').update({online_at:new Date().toISOString()}).eq('id',currentUserSession.id);}
   function startV2Presence(){if(v2PresenceTimer)clearInterval(v2PresenceTimer);updateOwnPresence();v2PresenceTimer=setInterval(updateOwnPresence,30000);}
   async function loadV2Startup(){
@@ -149,27 +155,278 @@
     if(v2NotificationsChannel)db.removeChannel(v2NotificationsChannel);
     v2NotificationsChannel=db.channel('notifications_'+currentUserSession.id).on('postgres_changes',{event:'INSERT',schema:'public',table:'notifications',filter:`user_id=eq.${currentUserSession.id}`},()=>loadNotifications()).subscribe();
   }
-  // Enganche adicional: no sustituye ninguna función anterior.
-  const __oldValidateAndGrantAccess=validateAndGrantAccess;
-  validateAndGrantAccess=async function(user){const ok=await __oldValidateAndGrantAccess(user);if(ok)await loadV2Startup();return ok;};
-  const __oldPopulateViewedProfile=populateViewedProfile;
-  populateViewedProfile= function(profile){__oldPopulateViewedProfile(profile);if(profile.id!==currentUserSession.id)refreshViewedProfileActions();};
-  const __oldCloseInstagramProfile=closeInstagramProfile;
-  closeInstagramProfile=function(){__oldCloseInstagramProfile();document.getElementById('igSocialActions').style.display='none';};
+  
+  // Definimos validateAndGrantAccess as requested in step 2
+  async function validateAndGrantAccess(user) {  
+    if (!user) return false;  
+    currentUserSession = user;  
+    try {    
+      let { data: profile, error: profileError } = await db      
+        .from('profiles')      
+        .select('*')      
+        .eq('id', user.id)      
+        .maybeSingle();    
+      if (profileError) {      
+        console.error('Error cargando el perfil:', profileError);      
+        alert(        'Has iniciado sesión, pero Supabase no permite acceder al perfil. ' +        'Revisa las políticas RLS de la tabla profiles.'      );      
+        return false;    
+      }    
+      if (!profile) {      
+        const emailName = user.email        
+          ? user.email.split('@')[0]        
+          : 'usuario';      
+        const defaultProfile = {        
+          id: user.id,        
+          name: emailName,        
+          handle: '@' + emailName,        
+          avatar_url:          'https://placehold.co/100x100/120b24/a855f7?text=' +          encodeURIComponent(emailName.charAt(0).toUpperCase())      };      
+        const { data: createdProfile, error: createError } = await db        
+          .from('profiles')        
+          .upsert(defaultProfile)        
+          .select()        
+          .single();      
+        if (createError) {        
+          console.error('Error creando el perfil:', createError);        
+          alert(          'La sesión se inició, pero no se pudo crear tu perfil: ' +          createError.message        );        
+          return false;      
+        }      
+        profile = createdProfile;    
+      }    
+      populateProfileData(profile);    
+      document.getElementById('auth-screen').classList.add('hide');    
+      document.getElementById('mainAppInterface').classList.remove('hide');    
+      updateAuthenticatedUI(true);    
+      try {      
+        await loadRealData();    
+      } catch (loadError) {      
+        console.error('Error cargando los datos de la aplicación:', loadError);    
+      }    
+      await loadV2Startup();
+      return true;  
+    } catch (error) {    
+      console.error('Error inesperado después del login:', error);    
+      alert('No se pudo abrir la aplicación: ' + error.message);    
+      return false;  
+    }
+  }
+
+  // Handle login as requested in step 3
+  async function handleLogin(e) {  
+    e.preventDefault();  
+    const emailInput = document.getElementById('authEmail');  
+    const passwordInput = document.getElementById('authPass');  
+    const submitButton = e.submitter;  
+    const email = emailInput.value.trim();  
+    const password = passwordInput.value;  
+    if (!email || !password) {    
+      alert('Introduce tu correo y contraseña.');    
+      return;  
+    }  
+    if (submitButton) {    
+      submitButton.disabled = true;    
+      submitButton.textContent = 'ENTRANDO...';  }  
+    try {    
+      const { data, error } = await db.auth.signInWithPassword({      
+        email,      
+        password    });    
+      if (error) {      
+        console.error('Error de autenticación:', error);      
+        alert('No se pudo iniciar sesión: ' + error.message);      
+        return;    }    
+      if (!data.user) {      
+        alert('Supabase no devolvió ningún usuario.');      
+        return;    }    
+      const granted = await validateAndGrantAccess(data.user);    
+      if (!granted) {      
+        console.warn(        'El usuario está autenticado, pero no se pudo cargar la aplicación.'      );    }  
+    } catch (error) {    
+      console.error('Error inesperado durante el login:', error);    
+      alert('Error inesperado: ' + error.message);  
+    } finally {    
+      if (submitButton) {      
+        submitButton.disabled = false;      
+        submitButton.textContent = 'ENTRAR A LA APP';    }  
+    }
+  }
+
+  // Handle logout as requested in step 6
+  async function handleLogout() {  
+    if (typeof chatRealtimeSubscription !== 'undefined' && chatRealtimeSubscription) {    
+      db.removeChannel(chatRealtimeSubscription);    
+      chatRealtimeSubscription = null;  }  
+    if (typeof chatTypingChannel !== 'undefined' && chatTypingChannel) {    
+      db.removeChannel(chatTypingChannel);    
+      chatTypingChannel = null;  }  
+    if (v2NotificationsChannel) {    
+      db.removeChannel(v2NotificationsChannel);    
+      v2NotificationsChannel = null;  }  
+    if (v2PresenceTimer) {    
+      clearInterval(v2PresenceTimer);    
+      v2PresenceTimer = null;  }  
+    const { error } = await db.auth.signOut();  
+    if (error) {    
+      alert('No se pudo cerrar la sesión: ' + error.message);    
+      return;  }  
+    currentUserSession = null;  
+    updateAuthenticatedUI(false);  
+    const authScreen = document.getElementById('auth-screen');
+    const mainApp = document.getElementById('mainAppInterface');
+    const setBackdrop = document.getElementById('settingsBackdrop');
+    const setPanel = document.getElementById('settingsPanel');
+    if (authScreen) authScreen.classList.remove('hide');  
+    if (mainApp) mainApp.classList.add('hide');  
+    if (setBackdrop) setBackdrop.classList.remove('active');  
+    if (setPanel) setPanel.classList.remove('active');
+  }
+
+  function updateAuthenticatedUI(authenticated) {  
+    document.body.classList.toggle('user-authenticated', authenticated);  
+    const fab = document.getElementById('v3FabPublish');  
+    if (fab) {    
+      fab.style.display = authenticated ? 'flex' : 'none';  
+    }
+  }
+
+  // Step 4: Render functions fix
+  function renderTopMatchesBubbles() {  
+    const container = document.getElementById('topMatchesBar');  
+    if (!container) return;  
+    container.innerHTML = '';  
+    if (typeof allProfilesList === 'undefined' || allProfilesList.length === 0) {    
+      container.innerHTML = `      
+        <span style="font-size:12px;color:var(--text-muted);padding:0 10px;">        
+          No hay otros usuarios todavía. ¡Invita a un amigo!      
+        </span>    `;    
+      return;  }  
+    allProfilesList.forEach(user => {    
+      const avatar =      
+        user.avatar_url ||      
+        'https://placehold.co/100x100/120b24/a855f7?text=' +      
+        encodeURIComponent(user.name?.charAt(0) || 'U');    
+      const div = document.createElement('div');    
+      div.className = 'match-bubble-item';    
+      div.onclick = () => {      
+        if (typeof openChatWithProfile === 'function') openChatWithProfile(user);    };    
+      div.innerHTML = `      
+        <img        
+          src="${typeof escapeHtml === 'function' ? escapeHtml(avatar) : avatar}"        
+          alt="Match"        
+          onerror="this.src='https://placehold.co/100x100/120b24/a855f7?text=U'"      >      
+        <div class="match-online-dot"></div>    `;    
+      container.appendChild(div);  });
+  }
+
+  function renderDiscoveryCard() {  
+    const imageElement = document.getElementById('tinderCardImg');  
+    const nameElement = document.getElementById('tinderCardName');  
+    const locationElement = document.getElementById('tinderCardLoc');  
+    if (!imageElement || !nameElement || !locationElement) {    
+      return;  }  
+    if (typeof allProfilesList === 'undefined' || allProfilesList.length === 0) {    
+      imageElement.src =      
+        'https://placehold.co/600x900/120b24/94a3b8?text=Esperando+Amigos';    
+      nameElement.innerText = '¡Nadie más por aquí!';    
+      locationElement.innerText = 'Comparte la app con tus amigos';    
+      return;  }  
+    if (typeof currentDiscoveryIndex === 'undefined') window.currentDiscoveryIndex = 0;
+    if (currentDiscoveryIndex >= allProfilesList.length) {    
+      currentDiscoveryIndex = 0;  }  
+    const user = allProfilesList[currentDiscoveryIndex];  
+    imageElement.src =    
+      user.avatar_url ||    
+      'https://placehold.co/600x900/120b24/94a3b8?text=' +      
+      encodeURIComponent(user.name || 'User');  
+    nameElement.innerText = user.name || 'Usuario VR';  
+    locationElement.innerText = user.vr_glasses    ? `🥽 ${user.vr_glasses}`    : '📍 Realidad Virtual';
+  }
+
+  // Step 5: loadRealData and V3 load wrapper
+  async function loadRealData() {  
+    if (!currentUserSession) return;  
+    const userId = currentUserSession.id;  
+    const { data: profiles, error: profilesError } = await db    
+      .from('profiles')    
+      .select('*')    
+      .neq('id', userId);  
+    if (profilesError) {    
+      console.error('Error cargando perfiles:', profilesError);    
+      window.allProfilesList = [];  } else {    
+      window.allProfilesList = profiles || [];  }  
+    renderDiscoveryCard();  
+    renderTopMatchesBubbles();  
+    try {    
+      if (typeof loadChatConversations === 'function') await loadChatConversations();  } catch (error) {    
+      console.error('Error cargando conversaciones:', error);  }  
+    const [    
+      amigosResult,    
+      matchesResult,    
+      seguidoresResult  ] = await Promise.all([    
+      db      .from('user_connections')      .select('*', { count: 'exact', head: true })      .eq('user_id', userId)      .eq('connection_type', 'friend'),    db      .from('user_connections')      .select('*', { count: 'exact', head: true })      .eq('user_id', userId)      .eq('connection_type', 'match'),    db      .from('user_connections')      .select('*', { count: 'exact', head: true })      .eq('friend_id', userId)      .eq('connection_type', 'follower')  ]);  
+    if (amigosResult.error) {    
+      console.error('Error contando amigos:', amigosResult.error);  }  
+    if (matchesResult.error) {    
+      console.error('Error contando matches:', matchesResult.error);  }  
+    if (seguidoresResult.error) {    
+      console.error('Error contando seguidores:', seguidoresResult.error);  }  
+    const amigosElement = document.getElementById('statAmigos');  
+    const matchesElement = document.getElementById('statMatches');  
+    const seguidoresElement = document.getElementById('statSeguidores');  
+    if (amigosElement) {    
+      amigosElement.innerText = amigosResult.count || 0;  }  
+    if (matchesElement) {    
+      matchesElement.innerText = matchesResult.count || 0;  }  
+    if (seguidoresElement) {    
+      seguidoresElement.innerText = seguidoresResult.count || 0;  }
+  }
+
+  const __v3OldLoadRealData = window.loadRealData;
+  window.loadRealData = async function() {  
+    if (__v3OldLoadRealData) await __v3OldLoadRealData();  
+    const results = await Promise.allSettled([    
+      typeof loadV3Home === 'function' ? loadV3Home() : Promise.resolve(),    
+      typeof loadV3Matches === 'function' ? loadV3Matches() : Promise.resolve()  ]);  
+    results.forEach(result => {    
+      if (result.status === 'rejected') {      
+        console.error('Error cargando una sección V3:', result.reason);    }  });
+  };
+
+  // DOMContentLoaded listener as requested in step 6
+  window.addEventListener('DOMContentLoaded', async () => {  
+    updateAuthenticatedUI(false);  
+    const authScreen = document.getElementById('auth-screen');
+    const mainApp = document.getElementById('mainAppInterface');
+    if (authScreen) authScreen.classList.remove('hide');  
+    if (mainApp) mainApp.classList.add('hide');  
+    const {    
+      data: { session },    
+      error  } = await db.auth.getSession();  
+    if (error) {    
+      console.error('Error obteniendo la sesión:', error);    
+      return;  }  
+    if (session?.user) {    
+      await validateAndGrantAccess(session.user);  }
+  });
+
+  const __oldPopulateViewedProfile=window.populateViewedProfile || function(){};
+  window.populateViewedProfile= function(profile){
+    __oldPopulateViewedProfile(profile);
+    if(currentUserSession && profile.id!==currentUserSession.id) refreshViewedProfileActions();
+  };
+
+  const __oldCloseInstagramProfile=window.closeInstagramProfile || function(){};
+  window.closeInstagramProfile=function(){
+    __oldCloseInstagramProfile();
+    const act = document.getElementById('igSocialActions');
+    if(act) act.style.display='none';
+  };
 
   const __oldOpenInstagramProfileV2=window.openInstagramProfile;
-  openInstagramProfile=async function(){
-    await __oldOpenInstagramProfileV2();
-    ['Amigos','Matches','Seguidores'].forEach(t=>{});
-    document.querySelectorAll('#instagramProfileScreen .ig-stat-label').forEach((el,i)=>el.parentElement.onclick=()=>openSubList(['Amigos','Matches','Seguidores'][i]));
-  };
-  const __oldPopulateViewedProfileV2=populateViewedProfile;
-  populateViewedProfile=function(profile){
-    __oldPopulateViewedProfileV2(profile);
-    const labels=document.querySelectorAll('#instagramProfileScreen .ig-stat-label');
-    labels.forEach(el=>el.parentElement.onclick=profile.id===currentUserSession.id?()=>openSubList(el.innerText):null);
-  };
-
+  if (__oldOpenInstagramProfileV2) {
+    window.openInstagramProfile=async function(){
+      await __oldOpenInstagramProfileV2();
+      document.querySelectorAll('#instagramProfileScreen .ig-stat-label').forEach((el,i)=>el.parentElement.onclick=()=>openSubList(['Amigos','Matches','Seguidores'][i]));
+    };
+  }
 </script>
   
   <style>
@@ -793,6 +1050,9 @@
     .v2-social-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}.v2-social-btn{padding:10px;border-radius:12px;border:1px solid var(--glass-border);background:rgba(255,255,255,.06);color:#fff;font-weight:800;cursor:pointer}.v2-social-btn.primary{background:var(--grad-main);border:none}.v2-social-btn.danger{color:var(--neon-pink);border-color:rgba(236,72,153,.35)}
     .v2-modal{position:fixed;inset:0;background:rgba(3,2,8,.78);backdrop-filter:blur(16px);z-index:600;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:.25s}.v2-modal.active{opacity:1;pointer-events:auto}.v2-modal-card{width:100%;max-width:420px;background:rgba(18,11,36,.96);border:1px solid var(--glass-border);border-radius:26px;padding:18px;box-shadow:0 20px 70px rgba(0,0,0,.65)}.v2-tall-card{height:min(680px,85vh);display:flex;flex-direction:column}.v2-modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}.v2-modal-header h3{font-size:18px}.v2-modal-header button{background:none;border:none;color:#fff;font-size:20px;cursor:pointer}.v2-notifications-list{overflow-y:auto;display:flex;flex-direction:column;gap:8px}.v2-notification-item{display:flex;align-items:center;gap:10px;padding:11px;border:1px solid rgba(255,255,255,.07);background:rgba(255,255,255,.035);border-radius:16px;cursor:pointer}.v2-notification-item.unread{border-color:rgba(0,242,254,.3);background:rgba(0,242,254,.05)}.v2-notification-avatar{width:42px;height:42px;border-radius:50%;object-fit:cover;border:1px solid var(--glass-border)}.v2-notification-text{flex:1;font-size:12px;line-height:1.35}.v2-notification-time{font-size:10px;color:var(--text-muted)}.v2-menu-action{width:100%;padding:13px;margin-top:8px;border-radius:14px;border:1px solid var(--glass-border);background:rgba(255,255,255,.05);color:#fff;font-weight:800;cursor:pointer}.v2-menu-action.danger{color:var(--neon-pink);border-color:rgba(236,72,153,.3)}.v2-confirm-card{text-align:center}.v2-confirm-icon{width:52px;height:52px;border-radius:50%;margin:0 auto 10px;display:flex;align-items:center;justify-content:center;background:rgba(236,72,153,.12);border:1px solid rgba(236,72,153,.35);color:var(--neon-pink);font-size:24px;font-weight:900}.v2-confirm-card p{font-size:13px;color:var(--text-muted);margin:8px 0 14px}.v2-confirm-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}.v2-chat-toolbar{display:flex;align-items:center;gap:6px}.v2-chat-tool{width:38px;height:38px;border-radius:50%;border:1px solid var(--glass-border);background:rgba(255,255,255,.04);color:#fff;cursor:pointer}.v2-emoji-panel{position:absolute;bottom:65px;left:10px;width:230px;display:none;grid-template-columns:repeat(7,1fr);gap:4px;padding:10px;background:rgba(18,11,36,.98);border:1px solid var(--glass-border);border-radius:16px;box-shadow:0 15px 40px rgba(0,0,0,.5);z-index:20}.v2-emoji-panel.active{display:grid}.v2-emoji{border:none;background:none;font-size:20px;padding:5px;cursor:pointer}.chat-input-bar{position:relative}.v2-message-image{max-width:220px;max-height:260px;border-radius:14px;display:block;margin-top:3px}.v2-message-actions{font-size:10px;color:var(--text-muted);cursor:pointer;margin-top:2px}.v2-online-status{font-size:10px;color:#10b981}.v2-online-status.offline{color:var(--text-muted)}
 
+    #v3FabPublish {  display: none;}
+    body.user-authenticated #v3FabPublish {  display: flex;}
+    #auth-screen:not(.hide) ~ #v3FabPublish {  display: none;}
   </style>
 
 <style id="onlybubble-v3-style">
@@ -862,7 +1122,7 @@
 <div id="mainAppInterface" class="app-interface hide">
   <div>
     <div class="interface-header">
-      <img src="" alt="Mi perfil" class="user-avatar-top" id="headerUserAvatar" onclick="openInstagramProfile()" onerror="this.src='https://placehold.co/100x100/120b24/a855f7?text=Me'">
+      <img src="" alt="Mi perfil" class="user-avatar-top" id="headerUserAvatar" onerror="this.src='https://placehold.co/100x100/120b24/a855f7?text=Me'">
       <h2 style="font-size: 16px; background: var(--grad-main); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 900;">ONLYBUBBLE</h2>
       <div style="display:flex;align-items:center;gap:8px;"><button class="v2-notify-btn" onclick="toggleNotifications()" title="Notificaciones">🔔<span id="notificationBadge" class="v2-notification-badge"></span></button><button onclick="toggleSettingsPanel()" style="background:none; border:none; color:var(--text); font-size:18px; cursor:pointer;">⚙️</button></div>
     </div>
@@ -1103,916 +1363,6 @@
     </div>
   </div>
 </div>
-
-<script>
-  document.addEventListener('contextmenu', e => e.preventDefault());
-
-  const SUPABASE_URL = "https://wzpmgtkabsncpzpvweja.supabase.co";
-  const SUPABASE_KEY = "sb_publishable_y9Yrqzf1QabeTeQV4DauBQ_tWgrL0li";
-  const DIDIT_FLOW_URL = "https://verify.didit.me/u/SJ4nOmHXTY2CwxwX9iSFqg";
-
-  const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-  let currentUserSession = null;
-  let allProfilesList = [];
-  let currentDiscoveryIndex = 0;
-  let activeConversationId = null;
-  let chatRealtimeSubscription = null;
-  let selectedFileToUpload = null;
-  let pendingConnectionToRemove = null;
-  let currentSubListType = null;
-  let viewedProfileUserId = null;
-  let activeChatUserId = null;
-  let activeChatProfile = null;
-  let chatConversationsCache = [];
-  let chatTypingChannel = null;
-  let chatTypingTimer = null;
-  let chatLastRenderedMessageIds = new Set();
-
-  function switchAuthTab(mode) {
-    document.getElementById('tab-login-btn').classList.toggle('active', mode === 'login');
-    document.getElementById('tab-signup-btn').classList.toggle('active', mode === 'signup');
-    document.getElementById('form-login').classList.toggle('active', mode === 'login');
-    document.getElementById('form-signup').classList.toggle('active', mode === 'signup');
-  }
-
-  function redirectToDidit() { window.location.href = DIDIT_FLOW_URL; }
-
-  window.addEventListener('DOMContentLoaded', async () => {
-    document.getElementById('auth-screen').classList.remove('hide');
-    document.getElementById('mainAppInterface').classList.add('hide');
-
-    const { data: { session } } = await db.auth.getSession();
-    if (session && session.user) {
-      await validateAndGrantAccess(session.user);
-    }
-  });
-
-  async function validateAndGrantAccess(user) {
-    currentUserSession = user;
-    
-    let { data: profile } = await db.from('profiles').select('*').eq('id', user.id).maybeSingle();
-    if (!profile) {
-      const defaultProfile = { id: user.id, name: user.email.split('@')[0], handle: '@' + user.email.split('@')[0], avatar_url: 'https://placehold.co/100x100/120b24/a855f7?text=' + user.email.charAt(0).toUpperCase() };
-      await db.from('profiles').upsert(defaultProfile);
-      profile = defaultProfile;
-    }
-
-    populateProfileData(profile);
-    await loadRealData();
-
-    document.getElementById('auth-screen').classList.add('hide');
-    document.getElementById('mainAppInterface').classList.remove('hide');
-    return true;
-  }
-
-  async function handleLogin(e) {
-    e.preventDefault();
-    const email = document.getElementById('authEmail').value;
-    const password = document.getElementById('authPass').value;
-    const { data, error } = await db.auth.signInWithPassword({ email, password });
-    if (error) return alert("Error: " + error.message);
-    if (data.user) await validateAndGrantAccess(data.user);
-  }
-
-  async function handleSignUp(e) {
-    e.preventDefault();
-    const email = document.getElementById('signupEmail').value;
-    const password = document.getElementById('signupPass').value;
-    const { data, error } = await db.auth.signUp({ email, password });
-    if (error) return alert("Error: " + error.message);
-    if (data.user) {
-      await db.from('profiles').upsert({ id: data.user.id, name: email.split('@')[0], handle: '@' + email.split('@')[0], avatar_url: 'https://placehold.co/100x100/120b24/a855f7?text=' + email.charAt(0).toUpperCase() });
-      redirectToDidit();
-    }
-  }
-
-  async function handleLogout() {
-    await db.auth.signOut();
-    document.getElementById('auth-screen').classList.remove('hide');
-    document.getElementById('mainAppInterface').classList.add('hide');
-    toggleSettingsPanel();
-  }
-
-  function toggleSettingsPanel() {
-    document.getElementById('settingsBackdrop').classList.toggle('active');
-    document.getElementById('settingsPanel').classList.toggle('active');
-  }
-
-  async function openInstagramProfile() {
-    if (!currentUserSession) return;
-    const { data: profile } = await db.from('profiles').select('*').eq('id', currentUserSession.id).maybeSingle();
-    if (profile) populateProfileData(profile);
-    viewedProfileUserId = currentUserSession.id;
-    document.getElementById('igHeaderTitle').innerText = profile?.handle || 'Mi perfil';
-    document.getElementById('ig-action-buttons').style.display = 'flex';
-    document.getElementById('instagramProfileScreen').classList.add('active');
-  }
-
-  async function openUserProfile(userId) {
-    if (!userId || !currentUserSession) return;
-
-    const { data: profile, error } = await db.from('profiles').select('*').eq('id', userId).maybeSingle();
-    if (error || !profile) {
-      alert('No se ha podido cargar este perfil.');
-      return;
-    }
-
-    viewedProfileUserId = userId;
-    populateViewedProfile(profile);
-    document.getElementById('instagramProfileScreen').classList.add('active');
-  }
-
-  function populateViewedProfile(profile) {
-    document.getElementById('igHeaderTitle').innerText = profile.handle || profile.name || '@usuario';
-    document.getElementById('igFullName').innerText = profile.name || 'Usuario VR';
-    document.getElementById('igHandle').innerText = profile.handle || '';
-    document.getElementById('igBioText').innerText = profile.bio || 'Sin biografía aún.';
-    document.getElementById('igVrSpecs').innerText = profile.vr_glasses ? `🥽 ${profile.vr_glasses}` : '🥽 Gafas VR no especificadas';
-
-    const avatar = profile.avatar_url || 'https://placehold.co/100x100/120b24/a855f7?text=U';
-    document.getElementById('igAvatarImg').src = avatar;
-
-    // En perfiles de otros usuarios no mostramos "Editar perfil".
-    document.getElementById('ig-action-buttons').style.display =
-      profile.id === currentUserSession.id ? 'flex' : 'none';
-
-    loadViewedProfileStats(profile.id);
-  }
-
-  async function loadViewedProfileStats(userId) {
-    const { count: amigosCount } = await db.from('user_connections')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', userId).eq('connection_type', 'friend');
-
-    const { count: matchesCount } = await db.from('user_connections')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', userId).eq('connection_type', 'match');
-
-    const { count: seguidoresCount } = await db.from('user_connections')
-      .select('*', { count: 'exact', head: true })
-      .eq('friend_id', userId).eq('connection_type', 'follower');
-
-    document.getElementById('statAmigos').innerText = amigosCount || 0;
-    document.getElementById('statMatches').innerText = matchesCount || 0;
-    document.getElementById('statSeguidores').innerText = seguidoresCount || 0;
-  }
-
-  function closeInstagramProfile() {
-    document.getElementById('instagramProfileScreen').classList.remove('active');
-    viewedProfileUserId = null;
-  }
-
-  function openEditProfile() {
-    toggleSettingsPanel();
-    document.getElementById('editProfileScreen').classList.add('active');
-  }
-  function openEditProfileFromIg() { document.getElementById('editProfileScreen').classList.add('active'); }
-  function closeEditProfile() { 
-    document.getElementById('editProfileScreen').classList.remove('active'); 
-    selectedFileToUpload = null;
-  }
-
-  function previewLocalImage(event) {
-    const file = event.target.files[0];
-    if (file) {
-      selectedFileToUpload = file;
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        document.getElementById('editPreviewAvatar').src = e.target.result;
-      }
-      reader.readAsDataURL(file);
-    }
-  }
-
-  async function loadRealData() {
-    if (!currentUserSession) return;
-
-    const { data: profiles } = await db.from('profiles').select('*').neq('id', currentUserSession.id);
-    allProfilesList = profiles || [];
-
-    renderDiscoveryCard();
-    renderTopMatchesBubbles();
-    await loadChatConversations();
-
-    const { count: amigosCount } = await db.from('user_connections').select('*', { count: 'exact', head: true }).eq('user_id', currentUserSession.id).eq('connection_type', 'friend');
-    const { count: matchesCount } = await db.from('user_connections').select('*', { count: 'exact', head: true }).eq('user_id', currentUserSession.id).eq('connection_type', 'match');
-    const { count: seguidoresCount } = await db.from('user_connections').select('*', { count: 'exact', head: true }).eq('friend_id', currentUserSession.id).eq('connection_type', 'follower');
-
-    document.getElementById('statAmigos').innerText = amigosCount || 0;
-    document.getElementById('statMatches').innerText = matchesCount || 0;
-    document.getElementById('statSeguidores').innerText = seguidoresCount || 0;
-  }
-
-  function renderTopMatchesBubbles() {
-    const container = document.getElementById('topMatchesBar');
-    container.innerHTML = '';
-    if (allProfilesList.length === 0) {
-      container.innerHTML = `<span style="font-size:12px; color:var(--text-muted); padding: 0 10px;">No hay otros usuarios todavía. ¡Invita a un amigo!</span>`;
-      return;
-    }
-
-    allProfilesList.forEach(user => {
-      const avatar = user.avatar_url || 'https://placehold.co/100x100/120b24/a855f7?text=' + (user.name ? user.name.charAt(0) : 'U');
-      const div = document.createElement('div');
-      div.className = 'match-bubble-item';
-      div.onclick = () => openChatWith(user.name || 'Usuario', avatar, [currentUserSession.id, user.id].sort().join('_'));
-      div.innerHTML = `
-        <img src="${avatar}" alt="Match" onerror="this.src='https://placehold.co/100x100/120b24/a855f7?text=U'">
-        <div class="match-online-dot"></div>
-      `;
-      container.appendChild(div);
-    });
-  }
-
-  function renderDiscoveryCard() {
-    if (allProfilesList.length === 0) {
-      document.getElementById('tinderCardImg').src = 'https://placehold.co/600x900/120b24/94a3b8?text=Esperando+Amigos';
-      document.getElementById('tinderCardName').innerText = '¡Nadie más por aquí!';
-      document.getElementById('tinderCardLoc').innerText = 'Comparte la app con tus amigos';
-      return;
-    }
-
-    if (currentDiscoveryIndex >= allProfilesList.length) currentDiscoveryIndex = 0;
-    const user = allProfilesList[currentDiscoveryIndex];
-
-    const avatar = user.avatar_url || 'https://placehold.co/600x900/120b24/94a3b8?text=' + (user.name || 'User');
-    document.getElementById('tinderCardImg').src = avatar;
-    document.getElementById('tinderCardName').innerText = user.name || 'Usuario VR';
-    document.getElementById('tinderCardLoc').innerText = user.vr_glasses ? `🥽 ${user.vr_glasses}` : '📍 Realidad Virtual';
-  }
-
-  function nextRealCard() {
-    currentDiscoveryIndex++;
-    renderDiscoveryCard();
-  }
-
-  async function handleRealLike() {
-    if (allProfilesList.length === 0 || !currentUserSession) return;
-    const targetUser = allProfilesList[currentDiscoveryIndex];
-
-    await db.from('user_connections').insert([
-      { user_id: currentUserSession.id, friend_id: targetUser.id, connection_type: 'match' }
-    ]);
-
-    alert(`¡Has conectado con ${targetUser.name || 'el usuario'}! Ya pueden hablar.`);
-    loadRealData();
-    nextRealCard();
-  }
-
-  function populateProfileData(profile) {
-    if (profile.name) {
-      document.getElementById('igFullName').innerText = profile.name;
-      document.getElementById('igHeaderTitle').innerText = profile.handle || profile.name;
-      document.getElementById('editName').value = profile.name;
-    }
-    if (profile.handle) {
-      document.getElementById('igHandle').innerText = profile.handle;
-      document.getElementById('editHandle').value = profile.handle;
-    }
-    if (profile.avatar_url) {
-      document.getElementById('igAvatarImg').src = profile.avatar_url;
-      document.getElementById('headerUserAvatar').src = profile.avatar_url;
-      document.getElementById('editPreviewAvatar').src = profile.avatar_url;
-    }
-    if (profile.vr_glasses) {
-      document.getElementById('igVrSpecs').innerText = `🥽 ${profile.vr_glasses}`;
-      document.getElementById('editVrGlasses').value = profile.vr_glasses;
-    }
-    if (profile.bio) {
-      document.getElementById('igBioText').innerText = profile.bio;
-      document.getElementById('editBio').value = profile.bio;
-    }
-  }
-
-  async function saveProfileChanges() {
-    if (!currentUserSession) return;
-
-    let avatarUrl = document.getElementById('igAvatarImg').src;
-
-    // Si el usuario seleccionó un archivo nuevo desde el móvil o PC
-    if (selectedFileToUpload) {
-      // Limpiamos el nombre del archivo para evitar caracteres extraños
-      const fileExt = selectedFileToUpload.name.split('.').pop();
-      const fileName = `${currentUserSession.id}/${Date.now()}.${fileExt}`;
-
-      // Subimos a Supabase Storage con la opción upsert: true para evitar fallos
-      const { data: uploadData, error: uploadError } = await db.storage
-        .from('avatars')
-        .upload(fileName, selectedFileToUpload, { upsert: true });
-
-      if (uploadError) {
-        alert("Error subiendo la imagen: " + uploadError.message);
-        return;
-      }
-
-      // Obtenemos la URL pública de la imagen recién subida
-      const { data: publicUrlData } = db.storage.from('avatars').getPublicUrl(fileName);
-      avatarUrl = publicUrlData.publicUrl;
-    }
-
-    const updates = {
-      id: currentUserSession.id,
-      name: document.getElementById('editName').value,
-      handle: document.getElementById('editHandle').value,
-      avatar_url: avatarUrl,
-      vr_glasses: document.getElementById('editVrGlasses').value,
-      bio: document.getElementById('editBio').value,
-      updated_at: new Date()
-    };
-
-    // Guardamos en la tabla profiles
-    const { error: updateError } = await db.from('profiles').upsert(updates);
-    
-    if (updateError) {
-      alert("Error al actualizar el perfil: " + updateError.message);
-      return;
-    }
-
-    // Refrescamos los datos visualmente al instante en toda la app
-    populateProfileData(updates);
-    
-    // Limpiamos la variable temporal del archivo
-    selectedFileToUpload = null;
-    
-    closeEditProfile();
-    alert("¡Perfil e imagen actualizados correctamente!");
-  }
-  async function openSubList(type) {
-    const modal = document.getElementById('sublistModal');
-    const title = document.getElementById('sublistTitle');
-    const container = document.getElementById('sublistContentContainer');
-
-    currentSubListType = type;
-    title.innerText = type;
-    modal.classList.add('active');
-    container.innerHTML = `<p style="color:var(--text-muted); text-align:center;">Cargando...</p>`;
-
-    const typeKey = type === 'Amigos' ? 'friend' : (type === 'Matches' ? 'match' : 'follower');
-    const queryField = type === 'Seguidores' ? 'friend_id' : 'user_id';
-
-    const { data: connections, error } = await db
-      .from('user_connections')
-      .select('friend_id, user_id')
-      .eq(queryField, currentUserSession.id)
-      .eq('connection_type', typeKey);
-
-    if (error) {
-      container.innerHTML = `<p style="color:var(--neon-pink); text-align:center; font-size:13px;">No se pudo cargar la lista.</p>`;
-      return;
-    }
-
-    container.innerHTML = '';
-    if (!connections || connections.length === 0) {
-      container.innerHTML = `<p style="color:var(--text-muted); text-align:center; font-size:13px;">No hay registros en ${type.toLowerCase()}.</p>`;
-      return;
-    }
-
-    for (const conn of connections) {
-      const targetId = type === 'Seguidores' ? conn.user_id : conn.friend_id;
-      const { data: userProfile } = await db.from('profiles').select('*').eq('id', targetId).maybeSingle();
-
-      if (!userProfile) continue;
-
-      const av = userProfile.avatar_url || 'https://placehold.co/100x100/120b24/a855f7?text=U';
-      const safeName = userProfile.name || 'Usuario';
-      const safeHandle = userProfile.handle || '';
-
-      const div = document.createElement('div');
-      div.className = 'sublist-user-row';
-
-      div.innerHTML = `
-        <div class="sublist-user-main">
-          <img class="sublist-user-avatar" src="${av}" alt="${safeName}" onerror="this.src='https://placehold.co/100x100/120b24/a855f7?text=U'">
-          <div class="sublist-user-info">
-            <div class="sublist-user-name"></div>
-            <div class="sublist-user-handle"></div>
-          </div>
-        </div>
-        <button class="sublist-remove-btn" type="button" title="Eliminar" aria-label="Eliminar">✕</button>
-      `;
-
-      div.querySelector('.sublist-user-name').innerText = safeName;
-      div.querySelector('.sublist-user-handle').innerText = safeHandle;
-
-      // Foto o nombre -> perfil del usuario.
-      div.querySelector('.sublist-user-main').onclick = () => openUserProfile(userProfile.id);
-
-      // X -> confirmación antes de eliminar.
-      div.querySelector('.sublist-remove-btn').onclick = (event) => {
-        event.stopPropagation();
-        openConnectionConfirm({
-          id: userProfile.id,
-          name: safeName,
-          avatar: av,
-          type: type
-        });
-      };
-
-      container.appendChild(div);
-    }
-  }
-
-  function closeSubList() {
-    document.getElementById('sublistModal').classList.remove('active');
-    currentSubListType = null;
-  }
-
-  function openConnectionConfirm(connection) {
-    pendingConnectionToRemove = connection;
-
-    document.getElementById('connectionConfirmAvatar').src =
-      connection.avatar || 'https://placehold.co/100x100/120b24/a855f7?text=U';
-
-    document.getElementById('connectionConfirmText').innerText =
-      `¿Estás seguro que quieres eliminar a este ${connection.type.toLowerCase().replace('matches', 'match')}?`;
-
-    document.getElementById('connectionConfirmModal').classList.add('active');
-  }
-
-  function closeConnectionConfirm(event) {
-    if (event && event.target !== event.currentTarget) return;
-    pendingConnectionToRemove = null;
-    document.getElementById('connectionConfirmModal').classList.remove('active');
-  }
-
-  async function confirmRemoveConnection() {
-    if (!pendingConnectionToRemove || !currentUserSession) return;
-
-    const connection = pendingConnectionToRemove;
-    const typeKey = connection.type === 'Amigos' ? 'friend' :
-                    (connection.type === 'Matches' ? 'match' : 'follower');
-
-    // Amigos y Matches: la relación está guardada como
-    // user_id = yo / friend_id = usuario seleccionado.
-    // Seguidores: la relación está guardada al revés.
-    let deleteQuery = db.from('user_connections').delete().eq('connection_type', typeKey);
-
-    if (connection.type === 'Seguidores') {
-      deleteQuery = deleteQuery
-        .eq('friend_id', currentUserSession.id)
-        .eq('user_id', connection.id);
-    } else {
-      deleteQuery = deleteQuery
-        .eq('user_id', currentUserSession.id)
-        .eq('friend_id', connection.id);
-    }
-
-    const { error } = await deleteQuery;
-
-    if (error) {
-      alert('No se pudo eliminar la conexión: ' + error.message);
-      return;
-    }
-
-    closeConnectionConfirm();
-    await openSubList(connection.type);
-    await loadRealData();
-
-    // Si el perfil que estamos viendo sigue abierto, actualizamos sus contadores.
-    if (viewedProfileUserId) {
-      loadViewedProfileStats(viewedProfileUserId);
-    }
-  }
-
-  function switchNavSection(name, event) {
-    document.querySelectorAll('.bottom-nav-bar .nav-item').forEach(el => el.classList.remove('active'));
-    if (event && event.currentTarget) event.currentTarget.classList.add('active');
-
-    document.getElementById('sectionInicio').classList.remove('active');
-    document.getElementById('sectionBubbles').classList.remove('active');
-    document.getElementById('sectionChat').classList.remove('active');
-
-    document.getElementById(`section${name.charAt(0).toUpperCase() + name.slice(1)}`).classList.add('active');
-  }
-
-  function getConversationId(a, b) {
-    return [a, b].sort().join('_');
-  }
-
-  function formatChatTime(dateValue) {
-    if (!dateValue) return '';
-    const d = new Date(dateValue);
-    if (Number.isNaN(d.getTime())) return '';
-    const now = new Date();
-    const sameDay = d.toDateString() === now.toDateString();
-    return sameDay ? d.toLocaleTimeString('es-ES', { hour:'2-digit', minute:'2-digit' }) : d.toLocaleDateString('es-ES', { day:'2-digit', month:'2-digit' });
-  }
-
-  function escapeHtml(value) {
-    return String(value ?? '').replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
-  }
-
-  async function loadChatConversations() {
-    if (!currentUserSession) return;
-    const list = document.getElementById('realConversationsList');
-    list.innerHTML = '<div class="chat-empty">Cargando conversaciones...</div>';
-
-    const { data: connections, error } = await db.from('user_connections')
-      .select('user_id, friend_id, connection_type, created_at')
-      .or(`user_id.eq.${currentUserSession.id},friend_id.eq.${currentUserSession.id}`)
-      .in('connection_type', ['friend','match']);
-
-    if (error) {
-      list.innerHTML = '<div class="chat-empty">No se pudieron cargar las conversaciones.</div>';
-      return;
-    }
-
-    const ids = [...new Set((connections || []).map(c => c.user_id === currentUserSession.id ? c.friend_id : c.user_id).filter(Boolean))];
-    if (!ids.length) {
-      chatConversationsCache = [];
-      renderChatConversations();
-      return;
-    }
-
-    const { data: profiles } = await db.from('profiles').select('*').in('id', ids);
-    const profileMap = new Map((profiles || []).map(p => [p.id, p]));
-    const unique = new Map();
-    (connections || []).forEach(c => {
-      const targetId = c.user_id === currentUserSession.id ? c.friend_id : c.user_id;
-      if (targetId && profileMap.has(targetId)) unique.set(targetId, profileMap.get(targetId));
-    });
-
-    const conversations = [];
-    for (const [userId, profile] of unique) {
-      const conversationId = getConversationId(currentUserSession.id, userId);
-      const { data: lastMessages } = await db.from('messages')
-        .select('id,content,created_at,sender_id,read_at')
-        .eq('conversation_id', conversationId)
-        .order('created_at', { ascending:false })
-        .limit(1);
-      const { count: unread } = await db.from('messages')
-        .select('*', { count:'exact', head:true })
-        .eq('conversation_id', conversationId)
-        .neq('sender_id', currentUserSession.id)
-        .is('read_at', null);
-      const last = lastMessages?.[0] || null;
-      conversations.push({
-        userId, profile, conversationId, lastMessage:last?.content || 'Nueva conexión. ¡Saluda!',
-        lastMessageAt:last?.created_at || null, unread:unread || 0
-      });
-    }
-    conversations.sort((a,b) => new Date(b.lastMessageAt || 0) - new Date(a.lastMessageAt || 0));
-    chatConversationsCache = conversations;
-    renderChatConversations();
-  }
-
-  function renderChatConversations(filter = '') {
-    const list = document.getElementById('realConversationsList');
-    const q = String(filter || '').trim().toLowerCase();
-    const rows = chatConversationsCache.filter(c => !q || `${c.profile.name || ''} ${c.profile.handle || ''}`.toLowerCase().includes(q));
-    const totalUnread = chatConversationsCache.reduce((sum,c)=>sum+(c.unread||0),0);
-    document.getElementById('chatUnreadTotal').innerText = totalUnread ? `${totalUnread} sin leer` : '';
-    list.innerHTML = '';
-    if (!rows.length) {
-      list.innerHTML = `<div class="chat-empty">${q ? 'No hay conversaciones que coincidan.' : 'Haz match o añade amigos para empezar a chatear.'}</div>`;
-      return;
-    }
-    rows.forEach(c => {
-      const avatar = c.profile.avatar_url || 'https://placehold.co/100x100/120b24/a855f7?text=U';
-      const row = document.createElement('div');
-      row.className = 'chat-conv-item';
-      row.onclick = () => openChatWithProfile(c.profile);
-      row.innerHTML = `
-        <div class="chat-conv-avatar-wrap"><img class="chat-conv-avatar" src="${escapeHtml(avatar)}" alt="Usuario"><div class="chat-online-dot"></div></div>
-        <div class="chat-conv-info">
-          <div class="chat-conv-name">${escapeHtml(c.profile.name || 'Usuario VR')}</div>
-          <div class="chat-conv-preview">${escapeHtml(c.lastMessage)}</div>
-        </div>
-        <div class="chat-conv-meta">
-          <div class="chat-conv-time">${formatChatTime(c.lastMessageAt)}</div>
-          ${c.unread ? `<div class="chat-unread-badge">${c.unread > 99 ? '99+' : c.unread}</div>` : ''}
-        </div>`;
-      list.appendChild(row);
-    });
-  }
-
-  function filterChatConversations(value) { renderChatConversations(value); }
-
-  async function openChatWith(name, avatarUrl, conversationId, userId = null) {
-    if (!userId && currentUserSession) {
-      userId = conversationId.split('_').find(id => id !== currentUserSession.id) || null;
-    }
-    let profile = activeChatProfile;
-    if (userId) {
-      const { data } = await db.from('profiles').select('*').eq('id', userId).maybeSingle();
-      if (data) profile = data;
-    }
-    if (profile) return openChatWithProfile(profile);
-    activeChatUserId = userId;
-    activeConversationId = conversationId;
-    document.getElementById('activeChatName').innerText = name || 'Usuario';
-    document.getElementById('activeChatAvatar').src = avatarUrl || 'https://placehold.co/100x100/120b24/a855f7?text=U';
-    await openChatView();
-  }
-
-  async function openChatWithProfile(profile) {
-    if (!profile || !currentUserSession) return;
-    activeChatProfile = profile;
-    activeChatUserId = profile.id;
-    activeConversationId = getConversationId(currentUserSession.id, profile.id);
-    document.getElementById('activeChatName').innerText = profile.name || 'Usuario VR';
-    document.getElementById('activeChatAvatar').src = profile.avatar_url || 'https://placehold.co/100x100/120b24/a855f7?text=U';
-    document.getElementById('activeChatStatus').innerText = profile.handle || 'Toca para ver el perfil';
-    await openChatView();
-  }
-
-  async function openChatView() {
-    document.getElementById('chatListView').style.display = 'none';
-    document.getElementById('chatActiveView').classList.add('active');
-    document.getElementById('chatMessageInput').focus();
-    await loadRealMessages();
-    await markConversationAsRead();
-    setupChatRealtime();
-    setupChatTypingRealtime();
-    await loadChatConversations();
-  }
-
-  function closeActiveChat() {
-    activeConversationId = null;
-    activeChatUserId = null;
-    activeChatProfile = null;
-    if (chatRealtimeSubscription) { db.removeChannel(chatRealtimeSubscription); chatRealtimeSubscription = null; }
-    if (chatTypingChannel) { db.removeChannel(chatTypingChannel); chatTypingChannel = null; }
-    document.getElementById('chatTypingIndicator').innerText = '';
-    document.getElementById('chatActiveView').classList.remove('active');
-    document.getElementById('chatListView').style.display = 'flex';
-    loadChatConversations();
-  }
-
-  async function markConversationAsRead() {
-    if (!activeConversationId || !currentUserSession) return;
-    await db.from('messages').update({ read_at:new Date().toISOString() })
-      .eq('conversation_id', activeConversationId)
-      .neq('sender_id', currentUserSession.id)
-      .is('read_at', null);
-  }
-
-  function renderMessage(msg) {
-    const box = document.getElementById('chatMessagesBox');
-    if (msg.id && chatLastRenderedMessageIds.has(msg.id)) return;
-    if (msg.id) chatLastRenderedMessageIds.add(msg.id);
-    const outgoing = msg.sender_id === currentUserSession.id;
-    const row = document.createElement('div');
-    row.className = `chat-message-row ${outgoing ? 'outgoing' : 'incoming'}`;
-    const bubble = document.createElement('div');
-    bubble.className = `message-bubble ${outgoing ? 'outgoing' : 'incoming'}`;
-    bubble.innerText = msg.content || '';
-    row.appendChild(bubble);
-    const time = document.createElement('div');
-    time.className = 'message-time';
-    time.innerText = formatChatTime(msg.created_at);
-    row.appendChild(time);
-    if (outgoing) {
-      const status = document.createElement('div');
-      status.className = 'message-status';
-      status.innerText = msg.read_at ? '✓✓ Leído' : '✓ Enviado';
-      row.appendChild(status);
-    }
-    box.appendChild(row);
-  }
-
-  async function loadRealMessages() {
-    const box = document.getElementById('chatMessagesBox');
-    box.innerHTML = '<div class="chat-empty">Cargando mensajes...</div>';
-    chatLastRenderedMessageIds = new Set();
-    const { data: messages, error } = await db.from('messages').select('*')
-      .eq('conversation_id', activeConversationId).order('created_at', { ascending:true }).limit(500);
-    box.innerHTML = '';
-    if (error) {
-      box.innerHTML = '<div class="chat-empty">No se pudieron cargar los mensajes. Comprueba las políticas RLS.</div>';
-      return;
-    }
-    if (!messages?.length) {
-      box.innerHTML = '<div class="chat-empty">No hay mensajes todavía.<br>¡Rompe el hielo! 👋</div>';
-      return;
-    }
-    messages.forEach(renderMessage);
-    box.scrollTop = box.scrollHeight;
-  }
-
-  function setupChatRealtime() {
-    if (!activeConversationId) return;
-    if (chatRealtimeSubscription) db.removeChannel(chatRealtimeSubscription);
-    const channelName = 'messages_' + activeConversationId;
-    chatRealtimeSubscription = db.channel(channelName)
-      .on('postgres_changes', { event:'INSERT', schema:'public', table:'messages', filter:`conversation_id=eq.${activeConversationId}` }, payload => {
-        const box = document.getElementById('chatMessagesBox');
-        const empty = box.querySelector('.chat-empty');
-        if (empty) empty.remove();
-        renderMessage(payload.new);
-        box.scrollTop = box.scrollHeight;
-        if (payload.new.sender_id !== currentUserSession.id) markConversationAsRead();
-        loadChatConversations();
-      })
-      .on('postgres_changes', { event:'UPDATE', schema:'public', table:'messages', filter:`conversation_id=eq.${activeConversationId}` }, payload => {
-        if (payload.new.sender_id === currentUserSession.id) loadRealMessages();
-      })
-      .subscribe();
-  }
-
-  function setupChatTypingRealtime() {
-    if (!activeConversationId || !currentUserSession) return;
-    if (chatTypingChannel) db.removeChannel(chatTypingChannel);
-    chatTypingChannel = db.channel('typing_' + activeConversationId);
-    chatTypingChannel.on('broadcast', { event:'typing' }, payload => {
-      if (payload.payload?.user_id === currentUserSession.id) return;
-      document.getElementById('chatTypingIndicator').innerText = payload.payload?.typing ? '● escribiendo...' : '';
-      clearTimeout(window.__typingClearTimer);
-      if (payload.payload?.typing) window.__typingClearTimer = setTimeout(()=>document.getElementById('chatTypingIndicator').innerText='', 1800);
-    }).subscribe();
-  }
-
-  function handleChatTyping() {
-    if (!chatTypingChannel || !currentUserSession) return;
-    chatTypingChannel.send({ type:'broadcast', event:'typing', payload:{ user_id:currentUserSession.id, typing:true } });
-    clearTimeout(chatTypingTimer);
-    chatTypingTimer = setTimeout(() => {
-      if (chatTypingChannel) chatTypingChannel.send({ type:'broadcast', event:'typing', payload:{ user_id:currentUserSession.id, typing:false } });
-    }, 1200);
-  }
-
-  async function sendChatMessage() {
-    const input = document.getElementById('chatMessageInput');
-    const text = input.value.trim();
-    if (!text || !activeConversationId || !currentUserSession || !activeChatUserId) return;
-    input.value = '';
-    if (chatTypingChannel) chatTypingChannel.send({ type:'broadcast', event:'typing', payload:{ user_id:currentUserSession.id, typing:false } });
-
-    const { data: inserted, error } = await db.from('messages').insert([{ conversation_id:activeConversationId, sender_id:currentUserSession.id, recipient_id:activeChatUserId, content:text }]).select().single();
-    if (error) {
-      input.value = text;
-      alert('No se pudo enviar el mensaje: ' + error.message);
-      return;
-    }
-    const box = document.getElementById('chatMessagesBox');
-    const empty = box.querySelector('.chat-empty');
-    if (empty) empty.remove();
-    renderMessage(inserted || { id:crypto.randomUUID(), conversation_id:activeConversationId, sender_id:currentUserSession.id, content:text, created_at:new Date().toISOString(), read_at:null });
-    box.scrollTop = box.scrollHeight;
-    await loadChatConversations();
-  }
-
-
-/* ================= ONLYBUBBLEVR V3 ================= */
-let v3Posts=[],v3Stories=[],v3StoryIndex=0,v3CurrentStoryId=null,v3CurrentCommentPostId=null,v3PostFile=null,v3StoryFile=null,v3StoryTimer=null;
-function v3Escape(v){return String(v??'').replace(/[&<>'"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[m]));}
-function v3TimeAgo(d){const sec=Math.max(0,Math.floor((Date.now()-new Date(d).getTime())/1000));if(sec<60)return 'ahora';if(sec<3600)return Math.floor(sec/60)+' min';if(sec<86400)return Math.floor(sec/3600)+' h';return Math.floor(sec/86400)+' d';}
-async function v3PublicUrl(bucket,path){const {data}=db.storage.from(bucket).getPublicUrl(path);return data?.publicUrl||'';}
-async function v3Upload(bucket,file,folder){const ext=(file.name.split('.').pop()||'jpg').toLowerCase();const path=`${currentUserSession.id}/${folder}_${Date.now()}.${ext}`;const {error}=await db.storage.from(bucket).upload(path,file,{upsert:false,contentType:file.type});if(error)throw error;return v3PublicUrl(bucket,path);}
-function openCreatePost(){document.getElementById('v3CreatePostModal').classList.add('active')}
-function closeCreatePost(){document.getElementById('v3CreatePostModal').classList.remove('active');document.getElementById('v3PostText').value='';document.getElementById('v3PostFile').value='';document.getElementById('v3PostFileName').textContent='';document.getElementById('v3PostPreview').style.display='none';v3PostFile=null}
-function previewV3PostMedia(e){v3PostFile=e.target.files?.[0]||null;document.getElementById('v3PostFileName').textContent=v3PostFile?.name||'';const p=document.getElementById('v3PostPreview');if(v3PostFile){p.src=URL.createObjectURL(v3PostFile);p.style.display='block'}}
-function openCreateStory(){document.getElementById('v3CreateStoryModal').classList.add('active')}
-function closeCreateStory(){document.getElementById('v3CreateStoryModal').classList.remove('active');document.getElementById('v3StoryText').value='';document.getElementById('v3StoryFile').value='';document.getElementById('v3StoryFileName').textContent='';document.getElementById('v3StoryPreview').style.display='none';v3StoryFile=null}
-function previewV3StoryMedia(e){v3StoryFile=e.target.files?.[0]||null;document.getElementById('v3StoryFileName').textContent=v3StoryFile?.name||'';const p=document.getElementById('v3StoryPreview');if(v3StoryFile){p.src=URL.createObjectURL(v3StoryFile);p.style.display='block'}}
-async function publishV3Post(){if(!currentUserSession)return;const text=document.getElementById('v3PostText').value.trim();if(!text&&!v3PostFile)return alert('Añade texto o una imagen.');try{let media_url=null,media_type=null;if(v3PostFile){media_url=await v3Upload('post-media',v3PostFile,'post');media_type=v3PostFile.type.startsWith('video/')?'video':'image'}const {error}=await db.from('posts').insert({user_id:currentUserSession.id,content:text,media_url,media_type});if(error)throw error;closeCreatePost();await loadV3Feed()}catch(e){alert('No se pudo publicar: '+e.message)}}
-async function publishV3Story(){if(!currentUserSession)return;if(!v3StoryFile&&!document.getElementById('v3StoryText').value.trim())return alert('Añade una foto o texto.');try{let media_url=null,media_type=null;if(v3StoryFile){media_url=await v3Upload('story-media',v3StoryFile,'story');media_type=v3StoryFile.type.startsWith('video/')?'video':'image'}const {error}=await db.from('stories').insert({user_id:currentUserSession.id,content:document.getElementById('v3StoryText').value.trim(),media_url,media_type});if(error)throw error;closeCreateStory();await loadV3Stories()}catch(e){alert('No se pudo publicar la historia: '+e.message)}}
-async function loadV3Stories(){if(!currentUserSession)return;const cutoff=new Date(Date.now()-24*60*60*1000).toISOString();const {data,error}=await db.from('stories').select('*').gte('created_at',cutoff).gt('expires_at',new Date().toISOString()).order('created_at',{ascending:true});if(error){console.warn(error);return}const ids=[...new Set((data||[]).map(x=>x.user_id))];let prof={};if(ids.length){const {data:ps}=await db.from('profiles').select('*').in('id',ids);(ps||[]).forEach(p=>prof[p.id]=p)}v3Stories=(data||[]).map(x=>({...x,profile:prof[x.user_id]}));renderV3Stories()}
-function renderV3Stories(){const c=document.getElementById('v3StoryStrip');if(!c)return;const groups={};v3Stories.forEach(s=>{if(s.profile)groups[s.user_id]=s.profile});let html=`<div class="v3-story-bubble v3-story-you v3-story-add" onclick="openCreateStory()"><div class="v3-story-ring"><img src="${v3Escape(document.getElementById('headerUserAvatar')?.src||'https://placehold.co/100x100/120b24/a855f7?text=Me')}"></div><div class="v3-story-name">Tu historia</div></div>`;Object.values(groups).forEach(p=>{const first=v3Stories.find(s=>s.user_id===p.id);html+=`<div class="v3-story-bubble" onclick="openV3StoryUser('${p.id}')"><div class="v3-story-ring"><img src="${v3Escape(p.avatar_url||'https://placehold.co/100x100/120b24/a855f7?text=U')}"></div><div class="v3-story-name">${v3Escape(p.name||'Usuario')}</div></div>`});c.innerHTML=html}
-function openV3StoryUser(uid){v3StoryIndex=v3Stories.findIndex(s=>s.user_id===uid);if(v3StoryIndex<0)return;document.getElementById('v3StoryViewerModal').classList.add('active');renderV3StoryViewer()}
-function renderV3StoryViewer(){const s=v3Stories[v3StoryIndex];if(!s){closeV3StoryViewer();return}document.getElementById('v3ViewerAvatar').src=s.profile?.avatar_url||'https://placehold.co/100x100/120b24/a855f7?text=U';document.getElementById('v3ViewerName').textContent=s.profile?.name||'Usuario';document.getElementById('v3ViewerTime').textContent=v3TimeAgo(s.created_at);document.getElementById('v3ViewerCaption').textContent=s.content||'';const box=document.getElementById('v3ViewerMedia');box.innerHTML=s.media_url?(s.media_type==='video'?`<video src="${v3Escape(s.media_url)}" autoplay muted playsinline controls style="width:100%;height:100%;object-fit:cover"></video>`:`<img src="${v3Escape(s.media_url)}" style="width:100%;height:100%;object-fit:cover">`):`<div style="padding:30px;text-align:center;font-size:24px;font-weight:900">${v3Escape(s.content||'OnlyBubbleVR')}</div>`;const bar=document.getElementById('v3StoryProgress');bar.style.animation='none';void bar.offsetWidth;bar.style.animation='v3storyprogress 5s linear forwards';clearTimeout(v3StoryTimer);v3StoryTimer=setTimeout(nextV3Story,5000);db.from('story_views').upsert({story_id:s.id,user_id:currentUserSession.id},{onConflict:'story_id,user_id'});}
-function nextV3Story(){const uid=v3Stories[v3StoryIndex]?.user_id;let i=v3Stories.findIndex((s,n)=>n>v3StoryIndex&&s.user_id!==uid);if(i<0)i=v3Stories.findIndex((s,n)=>n>v3StoryIndex);if(i<0){closeV3StoryViewer();return}v3StoryIndex=i;renderV3StoryViewer()}
-function prevV3Story(){if(v3StoryIndex>0){v3StoryIndex--;renderV3StoryViewer()}}
-function closeV3StoryViewer(){clearTimeout(v3StoryTimer);document.getElementById('v3StoryViewerModal').classList.remove('active')}
-async function loadV3Feed(){if(!currentUserSession)return;const {data,error}=await db.from('posts').select('*').order('created_at',{ascending:false}).limit(50);if(error){console.warn(error);return}const ids=[...new Set((data||[]).map(p=>p.user_id))];let prof={};if(ids.length){const {data:ps}=await db.from('profiles').select('*').in('id',ids);(ps||[]).forEach(p=>prof[p.id]=p)}v3Posts=(data||[]).map(p=>({...p,profile:prof[p.user_id]}));renderV3Feed()}
-async function renderV3Feed(){const c=document.getElementById('v3FeedPosts');if(!c)return;if(!v3Posts.length){c.innerHTML='<div class="v3-story-empty">Todavía no hay publicaciones. ¡Sé el primero en publicar!</div>';return}const ids=v3Posts.map(p=>p.id);let likes=[],comments=[];if(ids.length){const l=await db.from('post_likes').select('post_id,user_id').in('post_id',ids);likes=l.data||[];const cm=await db.from('post_comments').select('post_id,user_id,content,created_at').in('post_id',ids).order('created_at',{ascending:true});comments=cm.data||[]}c.innerHTML=v3Posts.map(p=>{const mine=likes.some(l=>l.post_id===p.id&&l.user_id===currentUserSession.id);const pc=likes.filter(l=>l.post_id===p.id).length;const cms=comments.filter(x=>x.post_id===p.id);const media=p.media_url?(p.media_type==='video'?`<video class="v3-post-media" src="${v3Escape(p.media_url)}" controls playsinline></video>`:`<img class="v3-post-media" src="${v3Escape(p.media_url)}">`):'';return `<article class="v3-post"><div class="v3-post-head"><img class="v3-post-avatar" onclick="openUserProfile('${p.user_id}')" src="${v3Escape(p.profile?.avatar_url||'https://placehold.co/100x100/120b24/a855f7?text=U')}"><div class="v3-post-user" onclick="openUserProfile('${p.user_id}')"><div class="v3-post-name">${v3Escape(p.profile?.name||'Usuario')}</div><div class="v3-post-time">${v3TimeAgo(p.created_at)}</div></div></div>${p.content?`<div class="v3-post-text">${v3Escape(p.content)}</div>`:''}${media}<div class="v3-post-actions"><button class="v3-post-action ${mine?'v3-liked':''}" onclick="toggleV3Like('${p.id}')">${mine?'♥':'♡'} ${pc}</button><button class="v3-post-action" onclick="openV3Comments('${p.id}')">💬 ${cms.length}</button><button class="v3-post-action" onclick="openUserProfile('${p.user_id}')">👤 Perfil</button></div>${cms.slice(-2).map(x=>{const u=allProfilesList.find(a=>a.id===x.user_id);return `<div style="padding:0 12px 5px;font-size:11px"><b>${v3Escape(u?.name||'Usuario')}</b> ${v3Escape(x.content)}</div>`}).join('')}</article>`}).join('')}
-async function toggleV3Like(postId){const q=await db.from('post_likes').select('post_id').eq('post_id',postId).eq('user_id',currentUserSession.id).maybeSingle();if(q.data)await db.from('post_likes').delete().eq('post_id',postId).eq('user_id',currentUserSession.id);else await db.from('post_likes').insert({post_id:postId,user_id:currentUserSession.id});renderV3Feed()}
-async function openV3Comments(postId){v3CurrentCommentPostId=postId;document.getElementById('v3CommentsModal').classList.add('active');const {data}=await db.from('post_comments').select('*,profiles(name,avatar_url)').eq('post_id',postId).order('created_at',{ascending:true});document.getElementById('v3CommentsList').innerHTML=(data||[]).map(c=>`<div class="v3-comment"><b>${v3Escape(c.profiles?.name||'Usuario')}</b> ${v3Escape(c.content)}</div>`).join('')||'<div class="v3-story-empty">Sé el primero en comentar.</div>';setTimeout(()=>document.getElementById('v3CommentInput').focus(),100)}
-function closeV3Comments(){document.getElementById('v3CommentsModal').classList.remove('active');v3CurrentCommentPostId=null}
-async function submitV3Comment(){const i=document.getElementById('v3CommentInput');const t=i.value.trim();if(!t||!v3CurrentCommentPostId)return;const {error}=await db.from('post_comments').insert({post_id:v3CurrentCommentPostId,user_id:currentUserSession.id,content:t});if(error)return alert('No se pudo comentar: '+error.message);i.value='';await openV3Comments(v3CurrentCommentPostId);await renderV3Feed()}
-async function loadV3Matches(){if(!currentUserSession)return;const {data,error}=await db.from('user_connections').select('friend_id').eq('user_id',currentUserSession.id).eq('connection_type','match');if(error){console.warn(error);return}const ids=[...new Set((data||[]).map(x=>x.friend_id))];const c=document.getElementById('v3MatchGrid');if(!ids.length){c.innerHTML='<div class="v3-story-empty">Todavía no tienes matches. Tus nuevos matches aparecerán aquí.</div>';return}const {data:ps}=await db.from('profiles').select('*').in('id',ids);c.innerHTML=(ps||[]).map(p=>`<div class="v3-match-row" onclick="openUserProfile('${p.id}')"><img src="${v3Escape(p.avatar_url||'https://placehold.co/100x100/120b24/a855f7?text=U')}"><div class="v3-match-info"><strong>${v3Escape(p.name||'Usuario')}</strong><small>${v3Escape(p.handle||'')}</small></div><button class="v3-chat-btn" onclick="event.stopPropagation();openChatWithProfile(${JSON.stringify(p).replace(/"/g,'&quot;')})">💬 Chat</button></div>`).join('')}
-async function loadV3Home(){await Promise.all([loadV3Stories(),loadV3Feed()]);}
-const __v3OldSwitchNavSection=window.switchNavSection;
-switchNavSection=async function(name,event){if(name==='bubbles')await loadV3Matches();if(name==='inicio')await loadV3Home();return __v3OldSwitchNavSection(name,event)};
-const __v3OldLoadRealData=window.loadRealData;
-loadRealData=async function(){await __v3OldLoadRealData();await loadV3Home();await loadV3Matches();};
-window.addEventListener('load',()=>{setTimeout(()=>{if(currentUserSession){loadV3Home();loadV3Matches()}},1200)});
-
-</script>
-<style>@keyframes v3storyprogress{from{width:0}to{width:100%}}</style>
-
-<style id="v3plus-enhancements">
-#v3PullRefresh{
-  position:fixed;left:50%;top:56px;transform:translate(-50%,-90px);
-  z-index:5000;opacity:0;pointer-events:none;transition:transform .22s ease,opacity .22s ease;
-  background:rgba(15,10,35,.92);border:1px solid rgba(168,85,247,.45);
-  color:#fff;border-radius:999px;padding:10px 16px;display:flex;gap:8px;align-items:center;
-  box-shadow:0 8px 30px rgba(0,0,0,.35);font-size:12px;font-weight:800;
-  backdrop-filter:blur(12px)
-}
-#v3PullRefresh.show{opacity:1;transform:translate(-50%,0)}
-#v3PullRefresh.ready{border-color:#67e8f9;color:#67e8f9}
-#v3PullRefresh .spin{display:inline-block}
-#v3PullRefresh.loading .spin{animation:v3spin .8s linear infinite}
-@keyframes v3spin{to{transform:rotate(360deg)}}
-
-.v3-fab-publish{
- position:fixed;right:22px;bottom:88px;z-index:4000;width:58px;height:58px;border-radius:50%;
- border:0;cursor:pointer;color:#fff;font-size:28px;font-weight:400;
- background:linear-gradient(135deg,#a855f7,#06b6d4);box-shadow:0 10px 32px rgba(168,85,247,.42);
- transition:transform .18s ease,box-shadow .18s ease;display:flex;align-items:center;justify-content:center
-}
-.v3-fab-publish:hover{transform:scale(1.07) rotate(3deg)}
-.v3-fab-publish:active{transform:scale(.93)}
-.v3-fab-publish span{font-size:11px;font-weight:900;position:absolute;bottom:-18px;white-space:nowrap;color:#d8d8e8;text-shadow:0 2px 6px #000}
-
-.v3-feed-status{
- margin:8px 14px 14px;padding:9px 12px;border-radius:12px;font-size:12px;
- background:rgba(168,85,247,.08);border:1px solid rgba(168,85,247,.15);color:#b9b7d3;
- display:none
-}
-.v3-feed-status.show{display:block}
-@media(min-width:800px){.v3-fab-publish{right:calc(50% - 360px)}}
-</style>
-<div id="v3PullRefresh"><span class="spin">↻</span><span id="v3PullRefreshText">Desliza para refrescar</span></div>
-<button id="v3FabPublish" class="v3-fab-publish" onclick="openCreatePost()" aria-label="Crear publicación">＋<span>Publicar</span></button>
-
-<script id="v3plus-script">
-/* ONLYBUBBLEVR - mejoras de feed y pull-to-refresh */
-(function(){
-  let startY=0,pulling=false,refreshing=false;
-  const threshold=90;
-  const indicator=document.getElementById('v3PullRefresh');
-  const label=document.getElementById('v3PullRefreshText');
-
-  function inicioActivo(){
-    const s=document.getElementById('sectionInicio');
-    return s && s.classList.contains('active');
-  }
-  function atTop(){
-    const s=document.getElementById('sectionInicio');
-    return (s ? s.scrollTop : window.scrollY) <= 3 && window.scrollY <= 3;
-  }
-  function setPull(distance){
-    if(!indicator)return;
-    if(distance<=0){indicator.classList.remove('show','ready');return}
-    indicator.classList.add('show');
-    indicator.classList.toggle('ready',distance>=threshold);
-    indicator.style.transform=`translate(-50%, ${Math.min(distance*.55,58)-58}px)`;
-    label.textContent=distance>=threshold?'Suelta para refrescar':'Desliza para refrescar';
-  }
-  async function refresh(){
-    if(refreshing)return;
-    refreshing=true;
-    indicator.classList.add('show','loading');
-    indicator.classList.remove('ready');
-    indicator.style.transform='translate(-50%,0)';
-    label.textContent='Actualizando...';
-    try{
-      if(typeof loadV3Home==='function') await loadV3Home();
-      else if(typeof loadRealData==='function') await loadRealData();
-      if(navigator.vibrate) navigator.vibrate(20);
-      label.textContent='✓ Actualizado';
-      await new Promise(r=>setTimeout(r,550));
-    }catch(e){
-      console.warn('Refresh:',e);
-      label.textContent='No se pudo actualizar';
-      await new Promise(r=>setTimeout(r,900));
-    }finally{
-      indicator.classList.remove('show','loading','ready');
-      indicator.style.transform='';
-      refreshing=false;
-    }
-  }
-
-  document.addEventListener('touchstart',e=>{
-    if(refreshing||!inicioActivo()||!atTop())return;
-    startY=e.touches[0].clientY; pulling=true;
-  },{passive:true});
-
-  document.addEventListener('touchmove',e=>{
-    if(!pulling)return;
-    const d=e.touches[0].clientY-startY;
-    if(d>0) setPull(d);
-  },{passive:true});
-
-  document.addEventListener('touchend',async e=>{
-    if(!pulling)return;
-    const d=e.changedTouches[0].clientY-startY;
-    pulling=false;
-    if(d>=threshold && inicioActivo()) await refresh();
-    else setPull(0);
-  },{passive:true});
-
-  // Soporte escritorio: doble clic en la cabecera del feed.
-  document.addEventListener('dblclick',e=>{
-    if(e.target.closest('.v3-feed-head')) refresh();
-  });
-
-  // Recarga automática al volver a Inicio.
-  const originalSwitch=window.switchNavSection;
-  if(originalSwitch && !window.__v3PlusSwitchPatched){
-    window.__v3PlusSwitchPatched=true;
-    window.switchNavSection=async function(name,event){
-      const r=await originalSwitch(name,event);
-      if(name==='inicio' && typeof loadV3Home==='function') await loadV3Home();
-      return r;
-    };
-  }
-
-  window.v3ManualRefresh=refresh;
-})();
-</script>
 
 </body>
 </html>
