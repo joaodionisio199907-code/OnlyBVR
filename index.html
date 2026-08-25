@@ -838,7 +838,7 @@
     }
   });
 
-  async function validateAndGrantAccess(user) {
+ async function validateAndGrantAccess(user) {
     currentUserSession = user;
     
     let { data: profile } = await db.from('profiles').select('*').eq('id', user.id).maybeSingle();
@@ -850,12 +850,16 @@
 
     populateProfileData(profile);
     await loadRealData();
+    
+    // Añade esta línea para que cargue los posts automáticamente al entrar
+    if (typeof loadFeedPosts === 'function') {
+      loadFeedPosts();
+    }
 
     document.getElementById('auth-screen').classList.add('hide');
     document.getElementById('mainAppInterface').classList.remove('hide');
     return true;
   }
-
   async function handleLogin(e) {
     e.preventDefault();
     const email = document.getElementById('authEmail').value;
