@@ -1287,10 +1287,10 @@ async function submitNewPost() {
     loadFeedPosts();
   }
 }
-  async function loadFeedPosts() {
-  const feedContainer = document.getElementById('feedPostsContainer');
+async function loadFeedPosts() {
+  const feedContainer = document.getElementById('v3FeedPosts'); // <--- CAMBIADO AQUÍ
   if (!feedContainer) return;
-
+  // ... resto de tu código
   feedContainer.innerHTML = '<div style="text-align:center; color:var(--text-muted); padding:20px;">Cargando publicaciones...</div>';
 
   // 1. Obtenemos los posts ordenados por fecha
