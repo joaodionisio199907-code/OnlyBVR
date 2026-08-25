@@ -1218,27 +1218,57 @@
   function openCreatePost() {
   document.getElementById('createPostModal').classList.add('active');
 }
+let selectedPostFile = null;
 
+function previewPostFile(event) {
+  const file = event.target.files[0];
+  if (file) {
+    selectedPostFile = file;
+  }
+}
+
+// Modifica la función de cierre del modal para limpiar esto también
 function closeCreatePostModal() {
   document.getElementById('createPostModal').classList.remove('active');
   document.getElementById('newPostContent').value = '';
-  document.getElementById('newPostMediaUrl').value = '';
+  const fileInput = document.getElementById('newPostFile');
+  if (fileInput) fileInput.value = '';
+  selectedPostFile = null;
 }
 
 async function submitNewPost() {
   if (!currentUserSession) return;
   const content = document.getElementById('newPostContent').value.trim();
-  const mediaUrl = document.getElementById('newPostMediaUrl').value.trim();
 
-  if (!content) {
-    alert("Escribe algo para poder publicar.");
+  if (!content && !selectedPostFile) {
+    alert("Escribe algo o añade una imagen para poder publicar.");
     return;
   }
 
+  let mediaUrl = null;
+
+  // Si hay un archivo seleccionado, lo subimos al Storage de Supabase
+  if (selectedPostFile) {
+    const fileExt = selectedPostFile.name.split('.').pop();
+    const fileName = `${currentUserSession.id}/${Date.now()}.${fileExt}`;
+    
+    // Asegúrate de tener un bucket en Supabase llamado 'posts' o usa el de 'avatars' si prefieres
+    const { error: uploadError } = await db.storage.from('posts').upload(fileName, selectedPostFile, { upsert: true });
+    
+    if (uploadError) {
+      alert("Error al subir la imagen del post: " + uploadError.message);
+      return;
+    }
+
+    const { data: publicUrlData } = db.storage.from('posts').getPublicUrl(fileName);
+    mediaUrl = publicUrlData.publicUrl;
+  }
+
+  // Guardamos el post en la base de datos
   const { error } = await db.from('posts').insert({
     user_id: currentUserSession.id,
     content: content,
-    media_url: mediaUrl || null
+    media_url: mediaUrl
   });
 
   if (error) {
@@ -1253,6 +1283,7 @@ async function submitNewPost() {
     loadFeedPosts();
   }
 }
+
 </script>
 <!-- MODAL PARA CREAR PUBLICACIÓN -->
 <div id="createPostModal" class="v3-modal">
@@ -1266,8 +1297,9 @@ async function submitNewPost() {
         <textarea id="newPostContent" class="input-app" placeholder="¿Qué quieres compartir en VRChat hoy?"></textarea>
       </div>
       <div class="input-group">
-        <input type="text" id="newPostMediaUrl" class="input-app" placeholder="URL de imagen o video (opcional)">
-      </div>
+  <label style="font-size:12px; color:var(--text-muted); font-weight:700;">Foto o archivo adjunto</label>
+  <input type="file" id="newPostFile" class="input-app" accept="image/*" onchange="previewPostFile(event)">
+</div>
       <button type="button" class="btn-app-main" onclick="submitNewPost()">PUBLICAR AHORA</button>
     </div>
   </div>
